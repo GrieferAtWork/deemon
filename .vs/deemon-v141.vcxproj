@@ -599,6 +599,7 @@
 		<ClCompile Include="..\src\deemon\compiler\optimize\opt_try.c" />
 		<ClCompile Include="..\src\deemon\compiler\optimize\optimize.c" />
 		<ClCompile Include="..\src\deemon\compiler\optimize\traits.c" />
+		<ClCompile Include="..\src\deemon\compiler\parser.c" />
 		<ClCompile Include="..\src\deemon\compiler\parser\asm.c" />
 		<ClCompile Include="..\src\deemon\compiler\parser\assert.c" />
 		<ClCompile Include="..\src\deemon\compiler\parser\brace.c" />

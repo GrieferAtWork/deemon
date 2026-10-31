@@ -3059,7 +3059,7 @@ decwriter_putobject_ex(DeeDecWriter *__restrict self,
 	}
 #endif /* Dee_CONFIG_BOOL_TLS */
 
-	/* Check if "obj" points into a dex module, or the deemon core */
+	/* Check if "obj" points into a dec/dex module, or the deemon core */
 	mod = DeeModule_OfPointer(obj);
 	if (mod) {
 		int result;

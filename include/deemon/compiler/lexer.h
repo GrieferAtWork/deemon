@@ -1151,7 +1151,6 @@ typedef struct Dee_lexer {
 
 
 struct ast;
-#define Dee_ast_loc ast_loc
 struct ast_loc {
 #ifdef CONFIG_EXPERIMENTAL_USE_TPP3
 	char const *l_name; /* [0..1] Filename (either statically allocated, or points into a `tpp_keyword`.
@@ -1208,6 +1207,14 @@ struct ast_loc {
 #define ast_loc_getline(self) tpp_lcinfo_getline((self)->l_lc)
 #define ast_loc_getcol(self)  tpp_lcinfo_getcol((self)->l_lc)
 
+/* Forward-compatibility */
+typedef struct ast_loc DeeAstLoc;
+#define DeeAstLoc_InitEmpty(self) ast_loc_init_empty(self)
+#define DeeAstLoc_IsEmpty(self)   ast_loc_isempty(self)
+#define DeeAstLoc_GetName(self)   ast_loc_getname(self)
+#define DeeAstLoc_GetLc(self)     ast_loc_getlc(self)
+#define DeeAstLoc_GetLine(self)   ast_loc_getline(self)
+#define DeeAstLoc_GetCol(self)    ast_loc_getcol(self)
 
 /* Fill the given AST location with the current LC source position.
  * @return: 0 : Success
@@ -1336,6 +1343,7 @@ DeeLexer_IsIdentifier(DeeLexer *self, tpp_keyword const *__restrict name);
 
 #define DeeLexer_IsIdentifier(self, name) tpp_lexer_isidentifier(&(self)->dl_lexer, name)
 
+#ifndef CONFIG_EXPERIMENTAL_USE_STATELESS_PARSER
 /* Describe a region of code where `TPP_TOK_LF` should not be produced. */
 #define DeeLexer_NoLf_Push(self)                                                            \
 	do {                                                                                    \
@@ -1359,6 +1367,7 @@ DeeLexer_IsIdentifier(DeeLexer *self, tpp_keyword const *__restrict name);
 #define DeeLexer_EnableLf_Pop(self)    \
 		DeeLexer_EnableLf_Break(self); \
 	}	__WHILE0
+#endif /* !CONFIG_EXPERIMENTAL_USE_STATELESS_PARSER */
 
 
 struct ast;
@@ -1420,8 +1429,7 @@ INTDEF WUNUSED NONNULL((1, 2)) tpp_ssize TPPCALL
 DeeLexer_PrintSymbolDeclaration(tpp_lexer const *self, struct symbol const *__restrict sym,
                                 tpp_formatprinter printer, void *arg);
 
-#define DeeLexer_Skip(self, expected_tok) \
-	tpp_lexer_skip(&(self)->dl_lexer, expected_tok)
+#define DeeLexer_Skip(self, expected_tok) tpp_lexer_skip(&(self)->dl_lexer, expected_tok)
 INTDEF WUNUSED NONNULL((1, 2)) tpp_token_id DFCALL
 _DeeLexer_ParenBegin(DeeLexer *self, bool *__restrict p_has_paren);
 #define DeeLexer_ParenBegin(self, p_has_paren)            \

@@ -26,7 +26,7 @@
 #include <deemon/bool.h>              /* Dee_False, Dee_True */
 #include <deemon/compiler/ast.h>      /* AST_*, ast, ast_* */
 #include <deemon/compiler/compiler.h> /* DeeCompiler_Current */
-#include <deemon/compiler/lexer.h>    /* DeeLexer, DeeLexer_*, TPPCALL, TPP_*, advance_wraplf, ast_loc, peek_keyword, peek_next_advance, peek_next_token, tpp_* */
+#include <deemon/compiler/lexer.h>    /* DeeLexer, DeeParser_*, TPPCALL, TPP_*, advance_wraplf, ast_loc, peek_keyword, peek_next_advance, peek_next_token, tpp_* */
 #include <deemon/compiler/optimize.h> /* ast_optimize_all */
 #include <deemon/compiler/parser.h>   /* AST_COMMA_*, AST_PARSE_WASEXPR_NO, CASE_TOKEN_IS_*, PARSE_UNARY_DISALLOW_CASTS, P_OPERATOR_FNORMAL, TOKEN_IS_*, ast_*, current_tags, parse_tags_block */
 #include <deemon/compiler/symbol.h>   /* LOOKUP_SYM_*, SYMBOL_TYPE_*, current_basescope, current_scope, decl_ast_skip, get_current_this, lookup_nth, lookup_symbol, new_unnamed_symbol, symbol */
@@ -51,6 +51,1928 @@
 
 DECL_BEGIN
 
+#ifdef CONFIG_EXPERIMENTAL_USE_TPP3
+struct fixed_length_suffix_type {
+	char flst_suffix[6];
+	char flst_ctype[10];
+};
+
+PRIVATE struct fixed_length_suffix_type const fixed_length_suffix_types[] = {
+	{ "u", /*    */ "uint" },
+	{ "l", /*    */ "long" },
+	{ "ul", /*   */ "ulong" },
+	{ "ll", /*   */ "llong" },
+	{ "ull", /*  */ "ullong" },
+	{ "i8", /*   */ "int8_t" },
+	{ "ui8", /*  */ "uint8_t" },
+	{ "i16", /*  */ "int16_t" },
+	{ "ui16", /* */ "uint16_t" },
+	{ "i32", /*  */ "int32_t" },
+	{ "ui32", /* */ "uint32_t" },
+	{ "i64", /*  */ "int64_t" },
+	{ "ui64", /* */ "uint64_t" },
+	{ "i128", /* */ "int128_t" },
+	{ "ui128", /**/ "uint128_t" },
+};
+
+PRIVATE WUNUSED NONNULL((1, 2, 3, 4)) tpp_char const *DCALL
+bse_trylskip(tpp_lexer *__restrict lexer,
+             tpp_char const *start, tpp_char const *end,
+             char const *match_text) {
+	for (;;) {
+		tpp_char ch = (tpp_char)*match_text++;
+		if (ch == '\0')
+			return start;
+		if (start >= end)
+			break;
+		if (*start != ch)
+			break;
+		start = tpp_preparse_skipbse_fwd(lexer, start + 1, end);
+	}
+	return NULL;
+}
+
+PRIVATE WUNUSED NONNULL((1, 2, 4)) bool DCALL
+bse_equals(tpp_lexer *__restrict lexer,
+           tpp_char const *text, tpp_size len,
+           char const *match_text) {
+	tpp_char const *end = text + len;
+	text = bse_trylskip(lexer, text, end, match_text);
+	return text == end;
+}
+#endif /* CONFIG_EXPERIMENTAL_USE_TPP3 */
+
+
+#ifdef CONFIG_EXPERIMENTAL_USE_STATELESS_PARSER
+
+PRIVATE WUNUSED NONNULL((1)) DeeAst *DFCALL
+DeeParser_DecodeUnaryInt(DeeParser *__restrict self) {
+	DeeAst *result;
+	tpp_errno error;
+	DREF DeeIntObject *resval;
+	tpp_char const *suffix_start;
+	ASSERT(TPP_TOK_ISINT(DeeParser_GetTok(self)));
+#if 0 /* TODO: Implement as part of TPP3's `tpp_lexer_decodeint_ex()` */
+	/* Verify that thousands-separators (if present) are used consistently. */
+	if unlikely(verify_consistent_grouping(self))
+		goto err;
+#endif
+	error = tpp_lexer_decodeint_ex(&self->p_lexer.dl_lexer, &resval, &suffix_start);
+	if (TPP_ISERR(error))
+		goto err;
+	result = DeeAst_NewConst(Dee_AsObject(resval));
+	if unlikely(!result)
+		goto err;
+	if (DeeAst_SetLocHere(result, &self->p_lexer))
+		goto err_r;
+	if (suffix_start < DeeParser_GetTokenEnd(self)) {
+		if (tpp_lexer_getextension(&self->p_lexer.dl_lexer, TPP_EXT_FIXED_LENGTH_INTEGRALS)) {
+			/* "-ffixed-length-integrals":
+			 * >> 123ull
+			 * Compile as:
+			 * >> (ullong from ctypes)(123) */
+			size_t i;
+			DeeAst *ctypes_function;
+			DeeAstLoc ctypes_loc;
+			tpp_size suffix_len = (tpp_size)(DeeParser_GetTokenEnd(self) - suffix_start);
+			for (i = 0;; ++i) {
+				if (i >= COMPILER_LENOF(fixed_length_suffix_types))
+					goto unknown_suffix;
+				if (bse_equals(&self->p_lexer.dl_lexer, suffix_start, suffix_len,
+				               fixed_length_suffix_types[i].flst_suffix))
+					break; /* Found it! */
+			}
+			ctypes_function = DeeAst_NewSymRefExternByName("ctypes",
+			                                               fixed_length_suffix_types[i].flst_ctype,
+			                                               &self->p_lexer);
+			if unlikely(!ctypes_function)
+				goto err_r;
+			ctypes_loc.l_name = result->a_loc.l_name;
+			ctypes_loc.l_lc   = tpp_lexer_getlcinfoat(&self->p_lexer.dl_lexer, suffix_start);
+			DeeAst_SetLoc(ctypes_function, &ctypes_loc);
+			result = DeeAst_NewOperator2(OPERATOR_CALL, ctypes_function, result);
+			if unlikely(!result)
+				goto err;
+			DeeAst_SetLoc(result, &ctypes_loc);
+		} else {
+unknown_suffix:
+			if (DeeParser_Warnf(self, TPP_W_INVALID_INTEGER))
+				goto err_r;
+		}
+	}
+	return result;
+err_r:
+	DeeAst_Destroy(result);
+err:
+	return NULL;
+}
+
+INTERN WUNUSED NONNULL((1)) DeeAst *DFCALL /* TPP_CASE_TPP_TOK_INT */
+DeeParser_ParseUnaryInt(DeeParser *__restrict self) {
+	DeeAst *result = DeeParser_DecodeUnaryInt(self);
+	if (result && TPP_TOK_ISERR(DeeParser_Yield(self)))
+		goto err_r;
+	return result;
+err_r:
+	DeeAst_Destroy(result);
+/*err:*/
+	return NULL;
+}
+
+/* TPP_CASE_TPP_TOK_STRING (DeeParser_Has(self, CHARACTER_LITERALS)) */
+INTERN WUNUSED NONNULL((1)) DeeAst *DFCALL
+DeeParser_ParseUnaryCharacterLiteral(DeeParser *__restrict self) {
+	tpp_errno error;
+	tpp_uintmax literal_value;
+	DREF DeeObject *literal_value_ob;
+	DeeAst *result;
+	DeeAstLoc loc;
+	ASSERT(TPP_TOK_ISSTRING(DeeParser_GetTok(self)));
+	if (DeeParser_GetLoc(self, &loc))
+		goto err;
+	if (DeeParser_Warnf(self, TPP_W_DEPRECATED_CHARACTER_INT))
+		goto err;
+	error = tpp_lexer_parsecharacter_literal(&self->p_lexer.dl_lexer, &literal_value,
+	                                         TPP_LEXER_PARSESTRING_FLAG_STOPONLF);
+	if (TPP_ISERR(error))
+		goto err;
+	literal_value_ob = DeeInt_NEWU(literal_value);
+	if unlikely(!literal_value_ob)
+		goto err;
+	result = DeeAst_NewConst(literal_value_ob);
+	result = DeeAst_TrySetLoc(result, &loc);
+	return result;
+err:
+	return NULL;
+}
+
+
+
+/************************************************************************/
+/* STRING                                                               */
+/************************************************************************/
+struct string_parser {
+	struct Dee_unicode_printer sp_printer; /* String printer */
+	size_t                     sp_paramc;  /* Allocated / used # of parameters in `sp_paramv` */
+	DeeAst                    *sp_paramv;  /* [0..sp_paramc][owned] Format-string params (or "NULL" if `sp_printer` is a string constant).
+	                                        * When `sp_paramc > 0`, this is the `Dee_AST_MULTI` that will be used ast the first argument
+	                                        * in the call to `string.format`. It also means that `{` and `}` must be escaped in `sp_printer`. */
+	DeeAstLoc                  sp_loc;     /* String start location */
+};
+
+/* Escape existing `{` and `}` characters in `self` */
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+string_parser_escape_braces(struct string_parser *__restrict self) {
+	char const *current_str, *current_end, *current_iter;
+	DREF DeeStringObject *current;
+	current = (DREF DeeStringObject *)Dee_unicode_printer_pack(&self->sp_printer);
+	if unlikely(!current)
+		goto err_reinit_printer;
+
+	/* Can use `DeeString_STR` because we're only looking for `{` and `}` */
+	current_str = DeeString_STR(current);
+	current_end = current_str + WSTR_LENGTH(current_str);
+
+	/* Search for `{` and `}` */
+	for (current_iter = current_str;; ++current_iter) {
+		char ch;
+		if (current_iter >= current_end)
+			goto no_braces_found;
+		ch = *current_iter;
+		if (ch == '{')
+			break;
+		if (ch == '}')
+			break;
+	}
+
+	/* String *does* contain (at least 1) brace character
+	 * -> really have to escape. */
+	Dee_unicode_printer_init(&self->sp_printer);
+	current_str = DeeString_AsUtf8(current);
+	if unlikely(!current_str)
+		goto err_current;
+	current_end = current_str + WSTR_LENGTH(current_str);
+
+	for (current_iter = current_str;
+	     current_iter < current_end; ++current_iter) {
+		char ch = *current_iter;
+		if (ch == '{' || ch == '}') {
+			/* Flush up to (and including) the brace character */
+			if (Dee_unicode_printer_printutf8(&self->sp_printer, current_str,
+			                                  (size_t)((current_iter + 1) - current_str)) < 0)
+				goto err_current;
+			/* Reset flush base to brace character (thus causing
+			 * it to be printed twice, which is how it needs to
+			 * be escaped) */
+			current_str = current_iter;
+		}
+	}
+
+	/* Flush remainder */
+	if (Dee_unicode_printer_printutf8(&self->sp_printer, current_str,
+	                                  (size_t)(current_end - current_str)) < 0)
+		goto err_current;
+	Dee_Decref_likely(current);
+	return 0;
+no_braces_found:
+	Dee_unicode_printer_init_string(&self->sp_printer, Dee_AsObject(current));
+	return 0;
+err_current:
+	Dee_Decref_likely(current);
+	return -1;
+/*err_reinit_printer_with_current:
+	Dee_unicode_printer_init_string(&self->sp_printer, Dee_AsObject(current));
+	return -1;*/
+err_reinit_printer:
+	Dee_unicode_printer_init(&self->sp_printer);
+	return -1;
+}
+
+PRIVATE tpp_ssize DPRINTER_CC
+string_parser_printutf8(void *arg, char const *__restrict data, size_t len) {
+	char const *iter, *end;
+	struct string_parser *me = (struct string_parser *)arg;
+
+	/* Check for simple case: no template params -> no need to do any escaping. */
+	if (me->sp_paramc <= 0)
+		return Dee_unicode_printer_printutf8(&me->sp_printer, data, len);
+
+	/* Must double-escape `{` and `}` characters from `data` */
+	end = (iter = data) + len;
+	for (; iter < end; ++iter) {
+		char ch = *iter;
+		if (ch == '{' || ch == '}') {
+			/* Must escape! */
+			if (Dee_unicode_printer_printutf8(&me->sp_printer, data, (size_t)((iter + 1) - data)) < 0)
+				goto err;
+
+			/* Set flush start o print `ch` a second time. */
+			data = iter;
+		}
+	}
+
+	/* Flush remainder */
+	if (Dee_unicode_printer_printutf8(&me->sp_printer, data, (size_t)(end - data)) < 0)
+		goto err;
+	return 0;
+err:
+	return -1;
+}
+
+PRIVATE tpp_ssize DPRINTER_CC
+string_parser_printdata(void *arg, char const *__restrict data, size_t len) {
+	/* Same as `string_parser_printutf8()`, but use `Dee_unicode_printer_print8()` */
+	char const *iter, *end;
+	struct string_parser *me = (struct string_parser *)arg;
+	if (me->sp_paramc <= 0)
+		return Dee_unicode_printer_print8(&me->sp_printer, (uint8_t const *)data, len);
+	end = (iter = data) + len;
+	for (; iter < end; ++iter) {
+		char ch = *iter;
+		if (ch == '{' || ch == '}') {
+			if (Dee_unicode_printer_print8(&me->sp_printer, (uint8_t const *)data, (size_t)((iter + 1) - data)) < 0)
+				goto err;
+			data = iter;
+		}
+	}
+	if (Dee_unicode_printer_print8(&me->sp_printer, (uint8_t const *)data, (size_t)(end - data)) < 0)
+		goto err;
+	return 0;
+err:
+	return -1;
+}
+
+/* parse the actual expression that is embedded within a template string. */
+PRIVATE WUNUSED NONNULL((1)) DeeAst *TPPCALL
+string_parser_printexpr_parse(DeeParser *self) {
+	/* TPP doesn't yield the first token for us (so we can decide how
+	 * to yield that token) As such, this is where we yield said token. */
+	if (TPP_TOK_ISERR(DeeParser_Yield(self)))
+		goto err;
+	return DeeParser_ParseExpr(self);
+err:
+	return NULL;
+}
+
+PRIVATE tpp_ssize TPPCALL
+string_parser_printexpr(void *arg, tpp_lexer *tpp_restrict lexer) {
+	struct string_parser *me = (struct string_parser *)arg;
+	DeeAst *params;
+	DeeAst *expr;
+	DeeParser *self = DeeParser_OfTPP(lexer);
+
+	/* Parse expression */
+	expr = string_parser_printexpr_parse(self);
+	if unlikely(!expr)
+		goto err;
+
+	/* Check for special case: first time we get
+	 * here, we must escape already-printed text,
+	 * as well as allocate the params-sequence! */
+	if (me->sp_paramc <= 0) {
+		if unlikely(string_parser_escape_braces(me))
+			goto err_expr;
+	}
+	params = DeeAst_ReallocUninitializedMulti(me->sp_paramv, me->sp_paramc + 1);
+	if unlikely(!params)
+		goto err_expr;
+	DeeAst_GetMultiElem(params)[me->sp_paramc] = expr; /* Inherit */
+	me->sp_paramv = params;
+	++me->sp_paramc;
+
+	/* Print the template parameter marker
+	 * HINT: When `expr` is something like `repr`,
+	 *       this will be optimized to `{!r}` later! */
+	switch (DeeParser_GetTok(self)) {
+
+	case '!':
+	TPP_CASE_TPP_TOK_MC_STARTSWITH_EXCLAIM
+	case ':':
+	TPP_CASE_TPP_TOK_MC_STARTSWITH_COLON {
+		/* Special case: remainder of current file (which is a special
+		 * sub-file pushed by the TPP engine) must be used as-is as the
+		 * template string format arguments:
+		 * >> local x = f"foo = {foo!r}";
+		 * >> local x = "foo = {!r}".format({foo}); // Same as this
+		 *
+		 * Because the template expression may also contain macros, we
+		 * must also unwind the #include-stack until its very bottom
+		 * (our caller will have made it so we can't pop beyond the
+		 * fake file used to describe the template expression):
+		 *
+		 * >> #define EXCLAIM() !
+		 * >> local x = f"foo = {foo EXCLAIM()r}";
+		 * >> local x = "foo = {!r}".format({foo}); // Same as this
+		 */
+		tpp_file *const file = DeeParser_GetFile(self);
+		tpp_char const *params_start;
+		tpp_char const *params_end;
+		if (Dee_unicode_printer_putascii(&me->sp_printer, '{'))
+			goto err;
+		for (;;) {
+			params_start = tpp_file_getlastpos(file);
+			params_end   = tpp_file_getend(file);
+			if (Dee_unicode_printer_printutf8(&me->sp_printer, (char const *)params_start,
+				                              (size_t)(params_end - params_start)) < 0)
+				goto err;
+			if (!tpp_lexer_canpopfile(&self->p_lexer.dl_lexer))
+				break;
+			tpp_lexer_popfile(&self->p_lexer.dl_lexer);
+		}
+
+		/* Consume all input */
+		DeeLexer_SetTokenRange(&self->p_lexer, params_end, params_end);
+		DeeLexer_SetTokenId(&self->p_lexer, TPP_TOK_EOF);
+		return Dee_unicode_printer_putascii(&me->sp_printer, '}');
+	}	break;
+
+	default: break;
+	}
+	return Dee_UNICODE_PRINTER_PRINT(&me->sp_printer, "{}");
+err_expr:
+	DeeAst_Destroy(expr);
+err:
+	return -1;
+}
+
+PRIVATE WUNUSED NONNULL((1)) DeeAst *TPPCALL
+string_parser_pack(/*inherit(always)*/ struct string_parser *__restrict self) {
+	DeeAst *params_ast;
+	DeeAst *template_str_ast;
+	DeeAst *result;
+	DREF DeeObject *template_str;
+
+	/* Pack string template (or constant string if there aren't any params) */
+	template_str = Dee_unicode_printer_pack(&self->sp_printer);
+	if unlikely(!template_str)
+		goto err__expr;
+
+	/* Pack string template into an AST */
+	template_str_ast = DeeAst_NewConst(template_str);
+	if unlikely(!template_str_ast)
+		goto err__expr;
+	DeeAst_SetLoc(template_str_ast, &self->sp_loc);
+
+	/* Check for simple case: without any format-params, we're already done! */
+	if likely(self->sp_paramc <= 0)
+		return template_str_ast;
+	params_ast = DeeAst_PackMulti(self->sp_paramv, Dee_AST_MULTI_KIND_GENERIC_SEQ, self->sp_paramc);
+	DeeAst_SetLoc(params_ast, &self->sp_loc);
+	result = DeeAst_NewCallAttrConst(template_str_ast, Dee_AsObject(&str_format), 1, &params_ast);
+	if unlikely(!result)
+		goto err;
+	DeeAst_SetLoc(result, &self->sp_loc);
+	return result;
+err__expr:
+	if (self->sp_paramc > 0) {
+		DeeAst_Destroyv(DeeAst_GetMultiElem(self->sp_paramv), self->sp_paramc);
+		DeeAst_FreeUninitializedMulti(self->sp_paramv);
+	}
+err:
+	return NULL;
+}
+
+
+/* Parse a TPP_TOK_ISSTRING()-like token into an AST (includes template string handling) */
+INTERN WUNUSED NONNULL((1)) DeeAst *DFCALL
+DeeParser_ParseUnaryString(DeeParser *__restrict self) {
+	tpp_ssize status;
+	tpp_lexer_decodestring_config config;
+	struct string_parser parser;
+	ASSERT(TPP_TOK_ISSTRING(DeeParser_GetTok(self)));
+
+	/* Setup string parser. */
+	if (DeeParser_GetLoc(self, &parser.sp_loc))
+		goto err;
+	Dee_unicode_printer_init(&parser.sp_printer);
+	parser.sp_paramc = 0;
+	parser.sp_paramv = NULL;
+
+	/* Setup decode config. */
+	config.tldsc_dataprinter = &string_parser_printdata;
+	config.tldsc_utf8printer = &string_parser_printutf8;
+	config.tldsc_formatexpr  = &string_parser_printexpr;
+	config.tldsc_arg         = &parser;
+#if TPP_HAVE_STRING_ESCAPE_BIGCHAR
+#error "Deemon doesn't support `tldsc_bigprinter`"
+#endif /* TPP_HAVE_STRING_ESCAPE_BIGCHAR */
+
+	/* Parse string...
+	 * NOTE: Stop if an LF token is encountered (if they're enabled, they have special meaning) */
+	ASSERT(DeeParser_GetTokenStart(self) >= tpp_string_str(tpp_file_getchunk(DeeParser_GetFile(self))));
+	ASSERT(DeeParser_GetTokenEnd(self) <= tpp_string_end(tpp_file_getchunk(DeeParser_GetFile(self))));
+	status = tpp_lexer_parsestring_ex(&self->p_lexer.dl_lexer, &config, TPP_LEXER_PARSESTRING_FLAG_STOPONLF);
+	if (TPP_SSIZE_ISERR(status))
+		goto err_parser;
+
+	/* Pack parser into a string AST */
+	return string_parser_pack(&parser);
+err_parser:
+	Dee_unicode_printer_fini(&parser.sp_printer);
+	if (parser.sp_paramc > 0) {
+		DeeAst_Destroyv(DeeAst_GetMultiElem(parser.sp_paramv), parser.sp_paramc);
+		DeeAst_FreeUninitializedMulti(parser.sp_paramv);
+	}
+err:
+	return NULL;
+}
+
+
+/* TPP_CASE_TPP_TOK_FLOAT */
+PRIVATE WUNUSED NONNULL((1)) DeeAst *DFCALL
+DeeParser_DecodeUnaryFloat(DeeParser *__restrict self) {
+	tpp_float value;
+	DREF DeeFloatObject *value_obj;
+	DeeAst *value_ast;
+	tpp_errno error;
+	tpp_char const *suffix_start;
+	error = tpp_lexer_decodefloat_ex(&self->p_lexer.dl_lexer, &value, &suffix_start);
+	if (TPP_ISERR(error))
+		goto err;
+	if (suffix_start < DeeParser_GetTokenEnd(self)) {
+		if (DeeParser_Warnf(self, TPP_W_INVALID_FLOAT))
+			goto err;
+	}
+	value_obj = (DREF DeeFloatObject *)DeeFloat_New((double)value);
+	if unlikely(!value_obj)
+		goto err;
+	value_ast = DeeAst_NewConst(Dee_AsObject(value_obj));
+	if unlikely(!value_ast)
+		goto err;
+	if (DeeAst_SetLocHere(value_ast, &self->p_lexer))
+		goto err_value_ast;
+	return value_ast;
+err_value_ast:
+	DeeAst_Destroy(value_ast);
+err:
+	return NULL;
+}
+
+INTERN WUNUSED NONNULL((1)) DeeAst *DFCALL
+DeeParser_ParseUnaryFloat(DeeParser *__restrict self) {
+	DeeAst *result = DeeParser_DecodeUnaryFloat(self);
+	if (result && TPP_TOK_ISERR(DeeParser_Yield(self)))
+		goto err_r;
+	return result;
+err_r:
+	DeeAst_Destroy(result);
+/*err:*/
+	return NULL;
+}
+
+
+/* TPP_TOK_IS_UNARY_BUILTIN_CONSTANT */
+PRIVATE WUNUSED NONNULL((1)) DeeAst *DFCALL
+DeeParser_DecodeUnaryBuiltinConstant(DeeParser *__restrict self) {
+	DeeAst *result;
+	DeeObject *const_value;
+	ASSERT(TPP_TOK_IS_UNARY_BUILTIN_CONSTANT(DeeParser_GetTok(self)));
+	switch (DeeParser_GetTok(self)) {
+	case TPP_KWD_none:
+		const_value = Dee_None;
+		break;
+	case TPP_KWD_true:
+		const_value = Dee_True;
+		break;
+	case TPP_KWD_false:
+		const_value = Dee_False;
+		break;
+	default: __builtin_unreachable();
+	}
+	Dee_Incref(const_value);
+	result = DeeAst_NewConst(const_value);
+	result = DeeAst_TrySetLocHere(result, &self->p_lexer);
+	return result;
+}
+
+INTERN WUNUSED NONNULL((1)) DeeAst *DFCALL
+DeeParser_ParseUnaryBuiltinConstant(DeeParser *__restrict self) {
+	DeeAst *result = DeeParser_DecodeUnaryBuiltinConstant(self);
+	if (result && TPP_TOK_ISERR(DeeParser_Yield(self)))
+		goto err_r;
+	return result;
+err_r:
+	DeeAst_Destroy(result);
+/*err:*/
+	return NULL;
+}
+
+
+/* TPP_KWD_bound `bound(expr)` */
+INTERN WUNUSED NONNULL((1)) DeeAst *DFCALL
+DeeParser_ParseUnaryBound(DeeParser *__restrict self) {
+	DeeAstLoc loc;
+	bool has_paren;
+	DeeAst *bound_expr;
+	ASSERT(DeeParser_GetTok(self) == TPP_KWD_bound);
+	if (DeeParser_GetLoc(self, &loc))
+		goto err;
+	DeeParser_NoLf_Push(self);
+	if (TPP_TOK_ISERR(DeeParser_Yield(self))) {
+err_nolf_break:
+		DeeParser_NoLf_Break(self);
+		goto err;
+	}
+	if (DeeParser_ParenBegin(self, &has_paren))
+		goto err_nolf_break;
+	bound_expr = DeeParser_ParseExpr(self);
+	if unlikely(!bound_expr)
+		goto err_nolf_break;
+	bound_expr = DeeAst_Transform_Bound(bound_expr, &self->p_lexer, &loc);
+	if unlikely(!bound_expr)
+		goto err_nolf_break;
+	DeeParser_NoLf_Pop(self);
+	if (DeeParser_ParenEnd(self, has_paren))
+		goto err;
+	return bound_expr;
+err:
+	return NULL;
+}
+
+
+/* TPP_TOK_IS_UNARY_BUILTIN_FUNCTION */
+INTDEF WUNUSED NONNULL((1)) DeeAst *DFCALL
+DeeParser_ParseUnaryBuiltinFunction(DeeParser *__restrict self) {
+	bool has_paren;
+	DeeAstLoc loc;
+	DeeAst *result;
+	tpp_token_id tok;
+	tpp_token_id const mode = DeeParser_GetTok(self);
+	ASSERT(TPP_TOK_IS_UNARY_BUILTIN_FUNCTION(mode));
+	if (DeeParser_GetLoc(self, &loc))
+		goto err;
+	DeeParser_NoLf_Push(self);
+	tok = DeeParser_Yield(self);
+	if (TPP_TOK_ISERR(tok)) {
+err_nolf_break:
+		DeeParser_NoLf_Break(self);
+		goto err;
+	}
+	if (tok == '(' || tok == TPP_KWD_pack) {
+		if (DeeParser_ParenBegin(self, &has_paren))
+			goto err_nolf_break;
+		result = DeeParser_ParseExpr(self);
+	} else {
+		has_paren = false;
+		result = DeeParser_ParseUnary(self);
+	}
+	if unlikely(!result)
+		goto err_nolf_break;
+	switch (mode) {
+	case TPP_KWD_str: result = DeeAst_NewOperator1(OPERATOR_STR, result); break;
+	case TPP_KWD_repr: result = DeeAst_NewOperator1(OPERATOR_REPR, result); break;
+	case TPP_KWD_copy: result = DeeAst_NewOperator1(OPERATOR_COPY, result); break;
+	case TPP_KWD_type: result = DeeAst_NewAct1(Dee_AST_ACT1_TYPEOF, result); break;
+	case TPP_KWD_deepcopy: result = DeeAst_NewAct1(Dee_AST_ACT1_DEEPCOPY, result); break;
+	default: __builtin_unreachable();
+	}
+	if unlikely(!result)
+		goto err_nolf_break;
+	DeeAst_SetLoc(result, &loc);
+	DeeParser_NoLf_Pop(self);
+	if (DeeParser_ParenEnd(self, has_paren))
+		goto err;
+	return result;
+err:
+	return NULL;
+}
+
+
+/* TPP_TOK_IS_UNARY_OPERATOR */
+INTDEF WUNUSED NONNULL((1)) DeeAst *DFCALL
+DeeParser_ParseUnaryOperator(DeeParser *__restrict self) {
+	DeeAst *result;
+	DeeAstLoc loc;
+	tpp_token_id tok;
+	tpp_token_id const mode = DeeParser_GetTok(self);
+	ASSERT(TPP_TOK_IS_UNARY_BUILTIN_FUNCTION(mode));
+	if (DeeParser_GetLoc(self, &loc))
+		goto err;
+	if (TPP_TOK_ISERR(DeeParser_Yield(self)))
+		goto err;
+	result = DeeParser_ParseUnary(self);
+	if unlikely(!result)
+		goto err;
+	switch (mode) {
+	case '#': result = DeeAst_NewOperator1(OPERATOR_SIZE, result); break;
+	case '~': result = DeeAst_NewOperator1(OPERATOR_INV, result); break;
+	case '+': result = DeeAst_NewOperator1(OPERATOR_POS, result); break;
+	case '-': result = DeeAst_NewOperator1(OPERATOR_NEG, result); break;
+	case '!': result = DeeAst_NewAct1(Dee_AST_ACT1_NOT, result); break;
+	case TPP_TOK_PLUS_PLUS: result = DeeAst_NewOperator1(OPERATOR_INC, result); break;
+	case TPP_TOK_MINUS_MINUS: result = DeeAst_NewOperator1(OPERATOR_DEC, result); break;
+	default: __builtin_unreachable();
+	}
+	if unlikely(!result)
+		goto err;
+	DeeAst_SetLoc(result, &loc);
+	return result;
+err:
+	return NULL;
+}
+
+/* '<' + TPP_TOK_MC_STARTSWITH_LANGLE */
+INTERN ATTR_NOINLINE WUNUSED NONNULL((1)) DeeAst *DFCALL
+DeeParser_ParseUnaryCell(DeeParser *__restrict self) {
+	/* I admit it. I was an idiot for adding this dedicated syntax for constructing
+	 * Cell objects. I wasn't thinking and as a result of that, I have to maintain
+	 * it for backwards compatibility.
+	 * Anyways... The most I can do for now is have it emit a warning, telling that
+	 * you should be using `Cell from deemon` instead (which actually won't even
+	 * break backwards-compatibility with the old deemon, who's `Cell` object
+	 * offered you the same functionality)
+	 * NOTE: To ensure backwards-compatibility, you may place this
+	 *       in your code in order to simply always use `Cell(...)`:
+	 * >> #if __DEEMON__ >= 200
+	 * >> import Cell from deemon;
+	 * >> #else
+	 * >> #define Cell(...) < __VA_ARGS__ >
+	 * >> #endif */
+	ASSERT(DeeParser_GetTok(self) == '<' ||
+	       TPP_TOK_MC_STARTSWITH_LANGLE(DeeParser_GetTok(self)));
+
+	/* TODO */
+}
+
+
+INTERN WUNUSED NONNULL((1)) DeeAst *DFCALL
+DeeParser_ParseUnaryHead(DeeParser *__restrict self) {
+	switch (DeeParser_GetTok(self)) {
+
+	TPP_CASE_TPP_TOK_INT
+		return DeeParser_ParseUnaryInt(self);
+	TPP_CASE_TPP_TOK_STRING_SQUOTE
+		if (DeeParser_Has(self, BUILTIN_EXPR_CHARACTER_LITERALS))
+			return DeeParser_ParseUnaryCharacterLiteral(self);
+		ATTR_FALLTHROUGH
+	TPP_CASE_TPP_TOK_STRING_DQUOTE
+		return DeeParser_ParseUnaryString(self);
+	TPP_CASE_TPP_TOK_FLOAT
+		return DeeParser_ParseUnaryFloat(self);
+	TPP_CASE_TPP_TOK_UNARY_BUILTIN_CONSTANT
+		return DeeParser_ParseUnaryBuiltinConstant(self);
+	case TPP_KWD_bound:
+		return DeeParser_ParseUnaryBound(self);
+	TPP_CASE_TPP_TOK_UNARY_BUILTIN_FUNCTION
+		return DeeParser_ParseUnaryBuiltinFunction(self);
+	TPP_CASE_TPP_TOK_UNARY_OPERATOR
+		return DeeParser_ParseUnaryOperator(self);
+
+	case '<': /* Cell (deprecated syntax) */
+	TPP_CASE_TPP_TOK_MC_STARTSWITH_LANGLE
+		return DeeParser_ParseUnaryCell(self);
+
+	}
+#if 0
+	switch (DeeParser_GetTok(self)) {
+
+	case '<': /* Cell (deprecated syntax) */
+		if (DeeParser_GetLoc(self, &loc))
+			goto err;
+		if (DeeParser_Warnf(self, TPP_W_DEPRECATED_CELL_SYNTAX))
+			goto err;
+		if (TPP_TOK_ISERR(DeeParser_Yield(self)))
+			goto err;
+		if (DeeParser_GetTok(self) == '>') {
+			/* empty Cell. */
+#ifndef CONFIG_EXPERIMENTAL_USE_TPP3
+do_empty_cell:
+#endif /* !CONFIG_EXPERIMENTAL_USE_TPP3 */
+			result = ast_action0(AST_FACTION_CELL0);
+			if unlikely(!result)
+				goto err;
+			if (TPP_TOK_ISERR(DeeParser_Yield(self)))
+				goto err_r;
+		} else {
+			result = ast_parse_unary(self, LOOKUP_SYM_SECONDARY);
+			if unlikely(!result)
+				goto err;
+			if (DeeParser_Skip2(self, TPP_TOK_OFCHAR('>'), TPP_W_EXPECTED_RANGLE_AFTER_LANGLE))
+				goto err_r;
+			merge = ast_action1(AST_FACTION_CELL1, result);
+			ast_decref(result);
+			result = merge;
+		}
+		return ast_setddi(result, &loc);
+
+	case TPP_KWD_if: {
+		/* if-in-expressions. */
+		DREF struct ast *tt_branch;
+		DREF struct ast *ff_branch;
+		uint16_t expect;
+		bool has_paren;
+		expect = current_tags.at_expect;
+		if (DeeParser_GetLoc(self, &loc))
+			goto err;
+		DeeParser_NoLf_Push(self);
+		if (TPP_TOK_ISERR(DeeParser_Yield(self))) {
+err_if_flags:
+			DeeParser_NoLf_Break(self);
+			goto err;
+		}
+		if (DeeParser_ParenBegin2(self, &has_paren, W_EXPECTED_LPAREN_AFTER_IF))
+			goto err_if_flags;
+		result = ast_parse_expr(self, LOOKUP_SYM_SECONDARY);
+		DeeParser_NoLf_Pop(self);
+		if unlikely(!result)
+			goto err;
+		if (DeeParser_ParenEnd2(self, has_paren, W_EXPECTED_RPAREN_AFTER_IF))
+			goto err;
+		tt_branch = NULL;
+		if (DeeParser_GetTok(self) != TPP_KWD_else && DeeParser_GetTok(self) != TPP_KWD_elif) {
+			tt_branch = ast_parse_expr(self, LOOKUP_SYM_SECONDARY);
+			if unlikely(!tt_branch)
+				goto err_r;
+		}
+		ff_branch = NULL;
+		if (DeeParser_GetTok(self) == TPP_KWD_elif) {
+			DeeParser_SetTokenId(self, TPP_KWD_if); /* Cheat a bit... */
+			goto do_else_branch;
+		}
+		if (DeeParser_GetTok(self) == TPP_KWD_else) {
+			if (TPP_TOK_ISERR(DeeParser_Yield(self))) {
+err_tt:
+				ast_xdecref(tt_branch);
+				goto err_r;
+			}
+do_else_branch:
+			ff_branch = ast_parse_expr(self, LOOKUP_SYM_SECONDARY);
+			if unlikely(!ff_branch)
+				goto err_tt;
+		}
+		merge = ast_setddi(ast_conditional(AST_FCOND_EVAL | expect, result, tt_branch, ff_branch), &loc);
+		ast_xdecref(ff_branch);
+		ast_xdecref(tt_branch);
+		ast_xdecref(result);
+		return merge;
+	}	break;
+
+	case TPP_KWD_assert:
+		return ast_parse_assert(self, true);
+
+	case TPP_KWD_function: {
+		tpp_keyword const *function_name;
+		if (DeeParser_Warnf(self, TPP_W_DEPRECATED_FUNCTION_IN_EXPRESSION))
+			goto err;
+		/* Create a new function */
+		if (DeeParser_GetLoc(self, &loc))
+			goto err;
+		function_name = NULL;
+		if (TPP_TOK_ISERR(DeeParser_Yield(self)))
+			goto err;
+		if (DeeParser_HasTokenKwd(self)) {
+			function_name = DeeParser_GetTokenKwd(self);
+			if (TPP_TOK_ISERR(DeeParser_Yield(self)))
+				goto err;
+		}
+		return ast_parse_function(self, function_name, NULL, false, &loc, NULL, NULL);
+	}	break;
+
+	case TPP_KWD_final: {
+		tpp_keyword const *class_name;
+		uint16_t class_flags;
+		class_flags = TP_FFINAL;
+		if (TPP_TOK_ISERR(DeeParser_Yield(self)))
+			goto err;
+#ifdef CONFIG_EXPERIMENTAL_USE_TPP3
+		if (TPP_TOK_ISERR(DeeParser_Require(self, TPP_KWD_class)))
+			goto err;
+#else /* CONFIG_EXPERIMENTAL_USE_TPP3 */
+		if (unlikely(DeeParser_GetTok(self) != TPP_KWD_class)) {
+			if (DeeParser_Warnf(self, TPP_W_EXPECTED_CLASS_AFTER_FINAL))
+				goto err;
+		}
+#endif /* !CONFIG_EXPERIMENTAL_USE_TPP3 */
+		goto do_create_class;
+	case TPP_KWD_class:
+		class_flags = TP_FNORMAL;
+do_create_class:
+		/* Create a new function */
+		if (DeeParser_GetLoc(self, &loc))
+			goto err;
+		class_name = NULL;
+		if (TPP_TOK_ISERR(DeeParser_Yield(self)))
+			goto err;
+		if (DeeParser_HasTokenKwd(self)) {
+			if (DeeParser_GetTok(self) == TPP_KWD_final && !(class_flags & TP_FFINAL)) {
+				/* allow `class final` as an alias for `final class` */
+				if (TPP_TOK_ISERR(DeeParser_Yield(self)))
+					goto err;
+				class_flags |= TP_FFINAL;
+			}
+			if (DeeParser_HasTokenKwd(self)) {
+				class_name = DeeParser_GetTokenKwd(self);
+				if (TPP_TOK_ISERR(DeeParser_Yield(self)))
+					goto err;
+			}
+		}
+		/* Actually do parse the class now. */
+		result = ast_parse_class(self, class_flags, class_name,
+		                         false, LOOKUP_SYM_NORMAL);
+		return ast_setddi(result, &loc);
+	}	break;
+
+	case TPP_KWD_pack: {
+		int has_paren;
+		bool inside_macro = tpp_file_ismacro(DeeParser_GetFile(self));
+		if (DeeParser_GetLoc(self, &loc))
+			goto err;
+		if (TPP_TOK_ISERR(DeeParser_Yield(self)))
+			goto err;
+		has_paren = 0;
+		DeeParser_NoLf_Push(self);
+		if (DeeParser_GetTok(self) == '(') {
+			if (TPP_TOK_ISERR(DeeParser_Yield(self))) {
+err_pack_flags:
+				DeeParser_NoLf_Break(self);
+				goto err;
+			}
+			has_paren = DeeParser_GetTok(self) == '(' ? 2 : 1;
+		} else if (!inside_macro) {
+			if (DeeParser_WarnfLoc(self, &loc, TPP_W_PACK_USED_OUTSIDE_OF_MACRO))
+				goto err_pack_flags;
+		}
+		if (DeeParser_GetTok(self) == '{') {
+			/* Statements in expressions. */
+			result = ast_parse_statement_or_braces(self, NULL);
+		} else {
+			int temp;
+			temp = maybe_expression_begin(self);
+			if (temp <= 0) {
+				if unlikely(temp < 0)
+					goto err_pack_flags;
+				result = ast_constexpr(Dee_EmptyTuple);
+			} else {
+				/* Parse the packed expression. */
+				result = ast_parse_comma(self,
+				                         has_paren
+				                         ? AST_COMMA_FORCEMULTIPLE
+				                         : AST_COMMA_FORCEMULTIPLE | AST_COMMA_STRICTCOMMA,
+				                         AST_FMULTIPLE_TUPLE,
+				                         NULL);
+#if 0 /* Because of the `AST_COMMA_FORCEMULTIPLE`, this is unnecessary */
+				if likely(result && result->a_type == AST_EXPAND) {
+					/* Wrap into a single-item tuple multiple-branch:
+					 * >> print pack get_items()...; // Convert to tuple. */
+					DREF struct ast **exprv;
+					ast_setddi(result, &loc);
+					exprv = (DREF struct ast **)Dee_Mallocc(1, sizeof(DREF struct ast *));
+					if unlikely(!exprv) {
+err_pack_flags_r:
+						ast_decref(result);
+						goto err_pack_flags;
+					}
+					exprv[0] = result; /* Inherit */
+					merge    = ast_multiple(AST_FMULTIPLE_TUPLE, 1, exprv);
+					if unlikely(!merge) {
+						Dee_Free(exprv);
+						goto err_pack_flags_r;
+					}
+					result = merge; /* Inherit */
+				}
+#endif
+			}
+		}
+		ast_setddi(result, &loc);
+		DeeParser_NoLf_Pop(self);
+		if unlikely(!result)
+			goto err;
+		if (has_paren) {
+			if (DeeParser_Skip2(self, TPP_TOK_OFCHAR(')'), W_EXPECTED_RPAREN_AFTER_PACK))
+				goto err_r;
+#if 0 /* The `result->a_type != AST_MULTIPLE` would never \
+       * fly, because of the `AST_COMMA_FORCEMULTIPLE` */
+			if (has_paren == 1 && result->a_type != AST_MULTIPLE &&
+			    !(lookup_mode & PARSE_UNARY_DISALLOW_CASTS)) {
+				/* C-style cast expression (only for single-parenthesis expressions) */
+				merge = ast_parse_cast(self, result);
+				ast_decref(result);
+				result = merge;
+			}
+#endif
+		}
+		return result;
+	}	break;
+
+	case TPP_KWD_import:
+		return ast_parse_import_expression(self);
+
+	case TPP_KWD_do:
+	case TPP_KWD_while:
+	case TPP_KWD_for:
+	case TPP_KWD_foreach:
+		/* Loop expressions. */
+		return ast_parse_loopexpr(self);
+
+	case '(': {
+		bool allow_cast;
+		unsigned int was_expression;
+
+		/* Parenthesis. */
+		if (DeeParser_GetLoc(self, &loc))
+			goto err;
+		DeeParser_NoLf_Push(self);
+		if (TPP_TOK_ISERR(DeeParser_Yield(self))) {
+err_lparen_flags:
+			DeeParser_NoLf_Break(self);
+			goto err;
+		}
+		allow_cast = DeeParser_GetTok(self) != '(' && !(lookup_mode & PARSE_UNARY_DISALLOW_CASTS);
+		if (DeeParser_GetTok(self) != '{') {
+			if (DeeParser_GetTok(self) == ')') {
+				DeeParser_NoLf_Break(self);
+				if (DeeParser_Skip2(self, TPP_TOK_OFCHAR(')'), W_EXPECTED_RPAREN_AFTER_LPAREN))
+					goto err;
+
+				/* Support for java-style lambda with empty argument list. */
+				if (DeeParser_GetTok(self) == TPP_TOK_MINUS_RANGLE) {
+					result = ast_parse_function_java_lambda(self, NULL, NULL);
+					result = ast_setddi(result, &loc);
+					return result;
+				}
+				if (DeeParser_GetTok(self) == ':') {
+					tpp_token_id tok_after_decl;
+					tok_after_decl = peek_token_after_decl_ast_skip(self);
+					if (TPP_TOK_ISERR(tok_after_decl))
+						goto err;
+					if (tok_after_decl == TPP_TOK_MINUS_RANGLE) {
+						result = ast_parse_function_java_lambda(self, NULL, NULL);
+						result = ast_setddi(result, &loc);
+						return result;
+					}
+				}
+
+				/* Empty tuple. */
+				result = ast_constexpr(Dee_EmptyTuple);
+				if unlikely(!result)
+					goto err;
+				allow_cast = false; /* Don't allow empty tuples for cast expressions. */
+			} else {
+				/* Lambda function. */
+				int error = ast_is_after_lparen_of_java_lambda(self);
+				if (error != 0) {
+					DeeParser_NoLf_Break(self);
+					if unlikely(error < 0)
+						goto err;
+					result = ast_parse_function_java_lambda(self, NULL, NULL);
+					result = ast_setddi(result, &loc);
+					return result;
+				}
+
+				/* Parenthesis / tuple expression. */
+				result = ast_parse_comma(self,
+				                         AST_COMMA_NORMAL,
+				                         AST_FMULTIPLE_TUPLE,
+				                         NULL);
+				if unlikely(!result)
+					goto err_lparen_flags;
+				if (result->a_type == AST_EXPAND) {
+					/* Wrap into a single-item tuple multiple-branch:
+					 * >> print (get_items()...); // Convert to tuple. */
+					DREF struct ast **exprv;
+					ast_setddi(result, &loc);
+					exprv = (DREF struct ast **)Dee_Mallocc(1, sizeof(DREF struct ast *));
+					if unlikely(!exprv) {
+err_lparen_flags_r:
+						ast_decref(result);
+						goto err_lparen_flags;
+					}
+					exprv[0] = result; /* Inherit */
+					merge = ast_multiple(AST_FMULTIPLE_TUPLE, 1, exprv);
+					if unlikely(!merge) {
+/*err_lparen_flags_r_exprv:*/
+						Dee_Free(exprv);
+						goto err_lparen_flags_r;
+					}
+					result = merge; /* Inherit */
+				}
+				if (result->a_type == AST_MULTIPLE)
+					allow_cast = false; /* Don't allow comma-lists for cast expressions. */
+				DeeParser_NoLf_Break(self);
+				if (DeeParser_Skip2(self, TPP_TOK_OFCHAR(')'), W_EXPECTED_RPAREN_AFTER_LPAREN))
+					goto err_r;
+			}
+			if (DeeParser_GetTok(self) == '{' && !allow_cast) {
+				if (DeeParser_Warnf(self, TPP_W_PROBABLY_MISSING_ARROW))
+					goto err_r;
+			}
+			goto set_lparen_ddi;
+		}
+
+		/* Statements in expressions. */
+		result = ast_parse_statement_or_braces(self, &was_expression);
+		if unlikely(!result)
+			goto err_lparen_flags;
+		allow_cast = false; /* Don't allow braces, or statements as cast expressions. */
+		if (DeeParser_GetTok(self) == ',' && was_expression != AST_PARSE_WASEXPR_NO) {
+			DREF struct ast **tuple_branchv;
+			if (TPP_TOK_ISERR(DeeParser_Yield(self)))
+				goto err_lparen_flags_r;
+			if (DeeParser_GetTok(self) == ')') {
+				/* single-element tuple expression, where the single element is a sequence. */
+				tuple_branchv = (struct ast **)Dee_Mallocc(1, sizeof(DREF struct ast *));
+				if unlikely(!tuple_branchv)
+					goto err_lparen_flags_r;
+				tuple_branchv[0] = result; /* Inherit reference. */
+				merge            = ast_multiple(AST_FMULTIPLE_TUPLE, 1, tuple_branchv);
+				if unlikely(!merge) {
+					Dee_Free(tuple_branchv);
+					goto err_lparen_flags_r;
+				}
+				result = merge;
+			} else {
+				/* There are more items! */
+				merge = ast_parse_comma(self,
+				                        AST_COMMA_FORCEMULTIPLE,
+				                        AST_FMULTIPLE_TUPLE,
+				                        NULL);
+				if unlikely(!merge)
+					goto err_lparen_flags_r;
+				ASSERT(merge->a_type == AST_MULTIPLE ||
+				       (merge->a_type == AST_CONSTEXPR &&
+				        merge->a_constexpr == Dee_EmptyTuple));
+				if (merge->a_constexpr == Dee_EmptyTuple) {
+					tuple_branchv = (struct ast **)Dee_Mallocc(1, sizeof(DREF struct ast *));
+					if unlikely(!tuple_branchv) {
+err_lparen_flags_r_merge:
+						ast_decref(merge);
+						goto err_lparen_flags_r;
+					}
+					Dee_DecrefNokill(merge->a_constexpr);
+					merge->a_type            = AST_MULTIPLE;
+					merge->a_flag            = AST_FMULTIPLE_TUPLE;
+					merge->a_multiple.m_astc = 1;
+				} else {
+					tuple_branchv = (struct ast **)Dee_Reallocc(merge->a_multiple.m_astv,
+					                                            merge->a_multiple.m_astc + 1,
+					                                            sizeof(DREF struct ast *));
+					if unlikely(!tuple_branchv)
+						goto err_lparen_flags_r_merge;
+					memmoveupc(tuple_branchv + 1,
+					           tuple_branchv,
+					           merge->a_multiple.m_astc,
+					           sizeof(DREF struct ast *));
+					++merge->a_multiple.m_astc;
+				}
+				tuple_branchv[0]         = result; /* Inherit reference. */
+				merge->a_multiple.m_astv = tuple_branchv;
+				result                   = merge; /* Inherit reference. */
+			}
+		}
+		if (DeeParser_GetTok(self) != ')' && was_expression != AST_PARSE_WASEXPR_NO) {
+			result = ast_parse_postexpr(self, result);
+			if unlikely(!result)
+				goto err_lparen_flags;
+			/*was_expression = AST_PARSE_WASEXPR_YES;*/
+		}
+		DeeParser_NoLf_Pop(self);
+		if (DeeParser_Skip2(self, TPP_TOK_OFCHAR(')'), W_EXPECTED_RPAREN_AFTER_LPAREN))
+			goto err_r;
+
+set_lparen_ddi:
+		result = ast_putddi(result, &loc);
+		if (allow_cast && result->a_type != AST_MULTIPLE) {
+			/* C-style cast expression (only for single-parenthesis expressions) */
+			merge = ast_parse_cast(self, result);
+			ast_decref(result);
+			result = merge;
+		}
+		return result;
+	}	break;
+
+	case '{':
+		/* Brace-style sequence or mapping expression. */
+		if (DeeParser_GetLoc(self, &loc))
+			goto err;
+		DeeParser_NoLf_Push(self);
+		if (TPP_TOK_ISERR(DeeParser_Yield(self))) {
+/*err_lbrace_flags:*/
+			DeeParser_NoLf_Break(self);
+			goto err;
+		}
+		result = ast_setddi(ast_parse_brace_items(self), &loc);
+		DeeParser_NoLf_Pop(self);
+		if unlikely(!result)
+			goto err;
+		if (DeeParser_Skip2(self, TPP_TOK_OFCHAR('}'), W_EXPECTED_RBRACE_AFTER_BRACEINIT))
+			goto err_r;
+		return result;
+
+	case TPP_KWD_del: {
+		bool has_paren;
+
+		/* Delete expression. */
+		if (DeeParser_GetLoc(self, &loc))
+			goto err;
+		DeeParser_NoLf_Push(self);
+		if (TPP_TOK_ISERR(DeeParser_Yield(self))) {
+err_del_flags:
+			DeeParser_NoLf_Break(self);
+			goto err;
+		}
+		if (DeeParser_ParenBegin2(self, &has_paren, W_EXPECTED_LPAREN_AFTER_DEL))
+			goto err_del_flags;
+		result = ast_putddi(ast_parse_del(self, lookup_mode & ~PARSE_UNARY_DISALLOW_CASTS), &loc);
+		DeeParser_NoLf_Pop(self);
+		if unlikely(!result)
+			goto err;
+		if (DeeParser_ParenEnd2(self, has_paren, W_EXPECTED_RPAREN_AFTER_DEL))
+			goto err_r;
+		return result;
+	}	break;
+
+	case TPP_KWD_with:
+		return ast_parse_with(self, false, false);
+
+	case TPP_KWD_try:
+		return ast_parse_try(self, false);
+
+	case TPP_KWD_operator: {
+		int32_t name;
+		/* Named, but unbound operator invocation. */
+		if (TPP_TOK_ISERR(DeeParser_Yield(self)))
+			goto err;
+		if (DeeParser_GetLoc(self, &loc))
+			goto err;
+		name = ast_parse_operator_name(self, P_OPERATOR_FNORMAL);
+		if unlikely(name < 0)
+			goto err;
+		if (DeeParser_GetTok(self) != '(') {
+			/* Bound-operator expression. */
+			merge = ast_operator_func((Dee_operator_t)name, NULL);
+		} else {
+			DeeParser_NoLf_Push(self);
+			if (TPP_TOK_ISERR(DeeParser_Yield(self))) {
+/*err_operator_flags:*/
+				DeeParser_NoLf_Break(self);
+				goto err;
+			}
+			if (DeeParser_GetTok(self) == ')') {
+				result = ast_constexpr(Dee_EmptyTuple);
+			} else {
+				result = ast_parse_comma(self,
+				                        AST_COMMA_FORCEMULTIPLE,
+				                        AST_FMULTIPLE_TUPLE,
+				                        NULL);
+			}
+			DeeParser_NoLf_Pop(self);
+			if unlikely(!result)
+				goto err;
+			if (DeeParser_Skip2(self, TPP_TOK_OFCHAR(')'), W_EXPECTED_RPAREN))
+				goto err_r;
+			merge = ast_build_operator((Dee_operator_t)name,
+			                           /* Set the MAYBEPFX flag to suppress errors that
+			                            * would normally cause the assembler to fail when
+			                            * attempting to use an inplace operator on a
+			                            * non-inplace symbol. */
+			                           AST_OPERATOR_FMAYBEPFX,
+			                           result);
+			ast_decref(result);
+		}
+		if unlikely(!merge)
+			goto err;
+		return ast_setddi(merge, &loc);
+	}	break;
+
+	case '[': /* List */
+		if (DeeParser_GetLoc(self, &loc))
+			goto err;
+		DeeParser_NoLf_Push(self);
+		if (TPP_TOK_ISERR(DeeParser_Yield(self))) {
+err_lbracket_flags:
+			DeeParser_NoLf_Break(self);
+			goto err;
+		}
+		if (DeeParser_GetTok(self) == '&' ||
+		    DeeParser_GetTok(self) == '=') {
+			if (DeeParser_Warnf(self, TPP_W_DEPRECATED_LAMBDA_MODE))
+				goto err_lbracket_flags;
+			if (DeeParser_GetLoc(self, &loc))
+				goto err_lbracket_flags;
+			if (TPP_TOK_ISERR(DeeParser_Yield(self)))
+				goto err_lbracket_flags;
+			DeeParser_NoLf_Break(self);
+			if (DeeParser_Skip2(self, TPP_TOK_OFCHAR(']'), W_EXPECTED_RBRACKET_AFTER_LAMBDA))
+				goto err;
+			goto do_lambda;
+		}
+		if (DeeParser_GetTok(self) == ']') {
+			DeeParser_NoLf_Break(self);
+			if (TPP_TOK_ISERR(DeeParser_Yield(self)))
+				goto err;
+			if (DeeParser_GetTok(self) == ':') {
+				/* If the current token is ':', try to skip over the return type
+				 * annotation and check if the next token thereafter is '->' or '{'. */
+				tpp_token_id tok_after_decl;
+				tok_after_decl = peek_token_after_decl_ast_skip(self);
+				if (TPP_TOK_ISERR(tok_after_decl))
+					goto err;
+				if (tok_after_decl == '{' || tok_after_decl == TPP_TOK_MINUS_RANGLE)
+					goto do_lambda; /* Yup: it's a lambda! */
+			}
+			if (DeeParser_GetTok(self) == '(' ||
+			    DeeParser_GetTok(self) == '{' ||
+			    DeeParser_GetTok(self) == TPP_TOK_MINUS_RANGLE)
+				goto do_lambda;
+			result = ast_multiple(AST_FMULTIPLE_LIST, 0, NULL);
+			goto set_list_loc;
+		}
+		if (DeeParser_GetTok(self) == ':') {
+			DREF struct ast *start_expression;
+			DREF struct ast *step_expression;
+			result = ast_constexpr(Dee_None);
+			if unlikely(!result)
+				goto err_lbracket_flags;
+			/* Range without begin index. */
+do_range_expression:
+			if (TPP_TOK_ISERR(DeeParser_Yield(self))) {
+err_lbracket_flags_r:
+				ast_decref(result);
+				goto err_lbracket_flags;
+			}
+			start_expression = result; /* Inherit reference. */
+			/* Parse the end index. */
+			if (DeeParser_GetTok(self) == ',') {
+				/* No end index given. */
+				result = ast_constexpr(Dee_None);
+			} else {
+				result = ast_parse_expr(self, LOOKUP_SYM_SECONDARY);
+			}
+			if unlikely(!result) {
+				ast_decref(start_expression);
+				goto err_lbracket_flags;
+			}
+			if (DeeParser_GetTok(self) == ',') {
+				if (TPP_TOK_ISERR(DeeParser_Yield(self))) {
+err_lbracket_flags_r_start:
+					ast_decref(start_expression);
+					goto err_lbracket_flags_r;
+				}
+				step_expression = ast_parse_expr(self, LOOKUP_SYM_SECONDARY);
+			} else {
+				step_expression = ast_constexpr(Dee_None);
+			}
+			if unlikely(!step_expression)
+				goto err_lbracket_flags_r_start;
+			/* Create the range expression. */
+			merge = ast_action3(AST_FACTION_RANGE, start_expression, result, step_expression);
+			ast_decref(start_expression);
+			ast_decref(result);
+			ast_decref(step_expression);
+			if unlikely(!merge)
+				goto err_lbracket_flags;
+			result = merge;
+		} else {
+			result = ast_parse_comma(self,
+			                         AST_COMMA_FORCEMULTIPLE,
+			                         AST_FMULTIPLE_LIST,
+			                         NULL);
+			if unlikely(!result)
+				goto err_lbracket_flags;
+			if (DeeParser_GetTok(self) == ':' &&
+			    result->a_type == AST_MULTIPLE &&
+			    result->a_multiple.m_astc == 1) {
+				merge = result->a_multiple.m_astv[0];
+				ast_incref(merge);
+				ast_decref(result);
+				result = merge;
+				/* Range with custom start index. */
+				goto do_range_expression;
+			}
+		}
+		DeeParser_NoLf_Pop(self);
+		if (DeeParser_Skip2(self, TPP_TOK_OFCHAR(']'), W_EXPECTED_RBRACKET_AFTER_LIST))
+			goto err_r;
+set_list_loc:
+		return ast_setddi(result, &loc);
+do_lambda:
+		DeeParser_NoLf_Push(self);
+		if unlikely(parse_tags_block(self)) {
+/*err_lambda_flags:*/
+			DeeParser_NoLf_Break(self);
+			goto err;
+		}
+		result = ast_parse_function(self, NULL, NULL, true, &loc, NULL, NULL);
+		DeeParser_NoLf_Pop(self);
+		return result;
+
+	case TPP_KWD_this: {
+		struct symbol *this_sym;
+		this_sym = get_current_this();
+		if (!this_sym)
+			goto default_case;
+		result = ast_sethere(self, ast_sym(this_sym));
+		if (TPP_TOK_ISERR(DeeParser_Yield(self)))
+			goto err_r;
+		return result;
+	}	break;
+
+	case TPP_KWD_super: {
+		struct symbol *this_sym;
+		DREF struct ast *this_ast;
+		if (!current_scope->s_class ||
+		    !current_scope->s_class->cs_super)
+			goto default_case;
+		this_sym = get_current_this();
+		if (!this_sym)
+			goto default_case;
+		this_ast = ast_sethere(self, ast_sym(this_sym));
+		if unlikely(!this_ast)
+			goto err;
+		merge = ast_sethere(self, ast_sym(current_scope->s_class->cs_super));
+		if unlikely(!merge) {
+			ast_decref(this_ast);
+			goto err;
+		}
+		result = ast_sethere(self, ast_action2(AST_FACTION_AS, this_ast, merge));
+		ast_decref(merge);
+		ast_decref(this_ast);
+		if unlikely(!result)
+			goto err;
+		if (TPP_TOK_ISERR(DeeParser_Yield(self)))
+			goto err_r;
+		return result;
+	}	break;
+
+	case TPP_KWD___nth: {
+		bool has_paren;
+		DeeParser_NoLf_Push(self);
+		if (TPP_TOK_ISERR(DeeParser_Yield(self))) {
+err_nth_flags:
+			DeeParser_NoLf_Break(self);
+			goto err;
+		}
+		if (DeeParser_ParenBegin2(self, &has_paren, W_EXPECTED_LPAREN_AFTER_NTH))
+			goto err_nth_flags;
+		result = ast_parse_expr(self, LOOKUP_SYM_SECONDARY);
+		DeeParser_NoLf_Pop(self);
+		if unlikely(!result)
+			goto err;
+		/* Optimize the ast-expression to propagate constant, thus
+		 * allowing the use of `__nth(2+3)` instead of forcing the
+		 * user to write `__nth(5)` or `__nth(__TPP_EVAL(2+3))` */
+		if (ast_optimize_all(result, true))
+			goto err_r;
+		if (result->a_type != AST_CONSTEXPR) {
+			if (DeeParser_Warnf(self, TPP_W_EXPECTED_CONSTANT_AFTER_NTH))
+				goto err_r;
+		}
+		if (DeeParser_ParenEnd2(self, has_paren, W_EXPECTED_RPAREN_AFTER_NTH))
+			goto err_r;
+		if (DeeParser_HasTokenKwd(self)) {
+			unsigned int nth_symbol = 0;
+			struct symbol *sym;
+			if (result->a_type == AST_CONSTEXPR &&
+			    DeeObject_AsUInt(result->a_constexpr, &nth_symbol)) {
+				DeeError_Handled(ERROR_HANDLED_RESTORE);
+				if (DeeParser_Warnf(self, TPP_W_EXPECTED_CONSTANT_AFTER_NTH))
+					goto err_r;
+			}
+			ast_decref(result);
+			sym = lookup_nth(self, nth_symbol, DeeParser_GetTokenKwd(self));
+			if likely(sym) {
+				result = ast_sym(sym);
+			} else {
+				if (DeeParser_Warnf(self, TPP_W_UNKNOWN_NTH_SYMBOL, nth_symbol))
+					goto err;
+				result = ast_constexpr(Dee_None);
+			}
+			if unlikely(!result)
+				goto err;
+			result = ast_sethere(self, result);
+			if (TPP_TOK_ISERR(DeeParser_Yield(self)))
+				goto err_r;
+		} else {
+			if (DeeParser_Warnf(self, TPP_W_EXPECTED_KEYWORD_AFTER_NTH))
+				goto err_r;
+		}
+		return result;
+	}	break;
+
+	case TPP_TOK_COLON_COLON:
+		if (DeeParser_Warnf(self, TPP_W_DEPRECATED_GLOBAL_PREFIX))
+			goto err;
+		ATTR_FALLTHROUGH
+	case TPP_KWD_global:
+		lookup_mode |= LOOKUP_SYM_VGLOBAL;
+		goto do_warn_deprecated_modifier;
+	case TPP_KWD_local:
+		lookup_mode |= LOOKUP_SYM_VLOCAL;
+do_warn_deprecated_modifier:
+		if (DeeParser_Warnf(self, TPP_W_DEPRECATED_PREFIX_IN_EXPRESSION))
+			goto err;
+		if (TPP_TOK_ISERR(DeeParser_Yield(self)))
+			goto err;
+		goto default_case;
+
+	case TPP_TOK_DOT_DOT_DOT:
+		if (current_basescope->bs_varargs) {
+			DREF struct ast *new_result;
+			/* Reference the varargs portion of the argument list. */
+			result = ast_sethere(self, ast_sym(current_basescope->bs_varargs));
+			if unlikely(!result)
+				goto err;
+			/* The old deemon neglected to do this, but we re-package
+			 * the varargs portion of the argument list as an expand
+			 * expression, thus allowing it to simply be forwarded
+			 * in other function calls:
+			 * >> function foo(a, b) {
+			 * >>     print a, b;
+			 * >> }
+			 * >> function bar(...) {
+			 * >>     foo(...); // In the old deemon you'd have to write `foo((...)...);`
+			 * >> }
+			 */
+			new_result = ast_sethere(self, ast_expand(result));
+			ast_decref(result);
+			if unlikely(!new_result)
+				goto err;
+			result = new_result;
+			if (TPP_TOK_ISERR(DeeParser_Yield(self)))
+				goto err_r;
+			return result;
+		}
+		ATTR_FALLTHROUGH
+	default:
+default_case:
+		if (DeeParser_HasTokenKwd(self)) {
+			/* Perform a regular symbol lookup. */
+			tpp_keyword const *name;
+#ifndef CONFIG_EXPERIMENTAL_USE_TPP3
+do_keyword:
+#endif /* !CONFIG_EXPERIMENTAL_USE_TPP3 */
+			name = DeeParser_GetTokenKwd(self);
+			if (DeeParser_GetLoc(self, &loc))
+				goto err;
+			if (TPP_TOK_ISERR(DeeParser_Yield(self)))
+				goto err;
+			if (DeeParser_GetTok(self) == TPP_KWD_from) {
+				/* `Error from deemon` - Short form of `import Error from deemon` */
+				if (DeeParser_GetLoc(self, &loc))
+					goto err;
+				if (TPP_TOK_ISERR(DeeParser_Yield(self)))
+					goto err;
+				result = ast_parse_import_single(self, name);
+				if (result && (DeeParser_GetTok(self) != ';' &&
+				               DeeParser_GetTok(self) != ',' &&
+				               DeeParser_GetTok(self) != ')' &&
+				               DeeParser_GetTok(self) != '}' &&
+				               DeeParser_GetTok(self) != ']' &&
+				               DeeParser_GetTok(self) != '\n' &&
+#ifndef CONFIG_EXPERIMENTAL_USE_TPP3
+				               TPPLexer_Current->l_token.t_id != TOK_ERR &&
+#endif /* !CONFIG_EXPERIMENTAL_USE_TPP3 */
+				               /* Don't emit this warning from macros! */
+				               !tpp_file_ismacro(DeeParser_GetFile(self)))) {
+					/* Warn about bad readability in code like:
+					 * >> int from deemon(42)
+					 * Which should really be written as:
+					 * >> (int from deemon)(42) */
+					char const *symname = "<symbol>";
+					char const *modname = "<module>";
+					if (result->a_type == AST_SYM) {
+						struct symbol *sym = result->a_sym;
+						if (sym->s_type == SYMBOL_TYPE_EXTERN) {
+							symname = sym->s_extern.e_symbol->ss_name;
+							modname = DeeModule_GetShortName(sym->s_extern.e_module);
+						}
+					}
+					if (DeeParser_WarnfLoc(self, &loc, TPP_W_UNCLEAR_SYMBOL_FROM_MODULE,
+					                      symname, modname))
+						goto err;
+				}
+			} else if (DeeParser_GetTok(self) == TPP_TOK_MINUS_RANGLE) {
+				/* Support for java-style lambda with singular argument. */
+				result = ast_parse_function_java_lambda(self, name, &loc);
+			} else {
+				DREF struct symbol *sym;
+				sym = lookup_symbol(self, lookup_mode & ~PARSE_UNARY_DISALLOW_CASTS, name, &loc);
+				if unlikely(!sym)
+					goto err;
+				result = ast_sym(sym);
+			}
+		} else {
+			if (DeeParser_Warnf(self, TPP_W_UNEXPECTED_TOKEN_IN_EXPRESSION))
+				goto err;
+			result = ast_constexpr(Dee_None);
+		}
+		return ast_setddi(result, &loc);
+	}
+	__builtin_unreachable();
+#endif
+err_r:
+	ast_decref(result);
+err:
+	return NULL;
+}
+
+INTERN WUNUSED NONNULL((1, 2)) DeeAst *DFCALL
+DeeParser_ParseUnaryOperand(DeeParser *__restrict self,
+                            /*inherit(always)*/ DeeAst *__restrict lhs) {
+	DeeAstLoc loc;
+again:
+	switch (DeeParser_GetTok(self)) {
+
+	case TPP_TOK_COLON_COLON:
+		/* Backwards compatibility with deemon 100+ */
+		if (DeeParser_Warnf(self, TPP_W_DEPRECATED_ATTRIBUTE_SYNTAX))
+			goto err_lhs;
+		ATTR_FALLTHROUGH
+	case '.': /* Attribute lookup */
+		if (DeeParser_GetLoc(self, &loc))
+			goto err_lhs;
+		if (TPP_TOK_ISERR(DeeParser_Yield(self)))
+			goto err_lhs;
+		switch (DeeParser_GetTok(self)) {
+
+		case TPP_KWD_this:
+			/* This is really just a no-op. */
+yield_and_again:
+			if (TPP_TOK_ISERR(DeeParser_Yield(self)))
+				goto err_lhs;
+			goto again;
+
+		case TPP_KWD_class:
+			/* Return the real class of a type, properly unwinding super. */
+			lhs = DeeAst_NewAct1(Dee_AST_ACT1_CLASSOF, lhs);
+			if unlikely(!lhs)
+				goto err;
+			DeeAst_SetLoc(lhs, &loc);
+			goto yield_and_again;
+
+		case TPP_KWD_super:
+			/* Return the real class of a type, properly unwinding super. */
+			lhs = DeeAst_NewAct1(Dee_AST_ACT1_SUPEROF, lhs);
+			if unlikely(!lhs)
+				goto err;
+			DeeAst_SetLoc(lhs, &loc);
+			goto yield_and_again;
+
+		case TPP_KWD_operator: {
+			/* Named & bound operator invocation. */
+			DeeAst *operator_args;
+			struct Dee_ast_operator_id operator_name;
+			if (TPP_TOK_ISERR(DeeParser_Yield(self)))
+				goto err_lhs;
+			if (DeeParser_GetLoc(self, &loc))
+				goto err_lhs;
+			if (DeeParser_ParseOperatorName(self, &operator_name))
+				goto err_lhs;
+			if (DeeParser_GetTok(self) != '(') {
+				/* Bound-operator expression. */
+				DeeAst *operator_function = DeeAst_NewOperatorFunction(&operator_name, &self->p_lexer);
+				if unlikely(!operator_function)
+					goto err_lhs;
+				lhs = DeeAst_BindInstanceMethod(operator_function, lhs, &self->p_lexer);
+				if unlikely(!lhs)
+					goto err;
+				goto again;
+			}
+			DeeParser_NoLf_Push(self);
+			if (TPP_TOK_ISERR(DeeParser_Yield(self))) {
+				DeeParser_NoLf_Break(self);
+err_lhs_operator_name:
+				Dee_ast_operator_id_fini(&operator_name);
+				goto err_lhs;
+			}
+			if (DeeParser_GetTok(self) == ')') {
+				operator_args = DeeAst_NewConst(DeeTuple_NewEmpty());
+			} else {
+				operator_args = ast_parse_comma(self,
+				                                AST_COMMA_FORCEMULTIPLE,
+				                                AST_FMULTIPLE_TUPLE,
+				                                NULL);
+			}
+			DeeParser_NoLf_Pop(self);
+			if unlikely(!operator_args)
+				goto err_lhs_operator_name;
+			lhs = DeeAst_NewOperatorEx2(&operator_name, Dee_AST_OPERATOR_FLAG_VARARG,
+			                            lhs, operator_args);
+			if unlikely(!lhs)
+				goto err;
+			DeeAst_SetLoc(lhs, &loc);
+			if (DeeParser_Skip(self, TPP_TOK_OFCHAR(')')))
+				goto err_lhs;
+			goto again;
+		}	break;
+
+		default:
+			break;
+		}
+
+		if (DeeParser_HasTokenKwd(self)) {
+			DREF DeeObject *attr_name;
+			DeeAst *attr_name_ast;
+			if (DeeParser_IsIdentifier(self, DeeParser_GetTokenKwd(self))) {
+				if (DeeParser_Warnf(self, TPP_W_RESERVED_ATTRIBUTE_NAME,
+				                   DeeParser_GetTokenKwdCStr(self)))
+					goto err_lhs;
+			}
+			attr_name = DeeString_NewSized(DeeParser_GetTokenKwdCStr(self),
+			                               DeeParser_GetTokenKwdLen(self));
+			if unlikely(!attr_name)
+				goto err_lhs;
+			attr_name_ast = DeeAst_NewConst(attr_name);
+			if unlikely(!attr_name_ast)
+				goto err_lhs;
+			if (DeeAst_SetLocHere(attr_name_ast, &self->p_lexer)) {
+				DeeAst_Destroy(attr_name_ast);
+				goto err_lhs;
+			}
+			lhs = DeeAst_NewOperator2(OPERATOR_GETATTR, lhs, attr_name_ast);
+			if unlikely(!lhs)
+				goto err;
+			DeeAst_SetLoc(lhs, &loc);
+			goto yield_and_again;
+		}
+
+		if (DeeParser_Warnf(self, TPP_W_EXPECTED_KEYWORD_AFTER_DOT))
+			goto err_lhs;
+		goto again;
+
+	case '[': {
+		DeeAst *range_start;
+
+		/* sequence operator */
+		if (DeeParser_GetLoc(self, &loc))
+			goto err_lhs;
+		DeeParser_NoLf_Push(self);
+		if (TPP_TOK_ISERR(DeeParser_Yield(self))) {
+err_lhs_lbracket_flags:
+			DeeParser_NoLf_Break(self);
+			goto err_lhs;
+		}
+		if (DeeParser_GetTok(self) == ':') {
+			range_start = DeeAst_NewConst(DeeNone_NewRef());
+		} else {
+			range_start = DeeParser_ParseExpr(self);
+		}
+		if unlikely(!range_start)
+			goto err_lhs_lbracket_flags;
+		if (DeeParser_GetTok(self) == ':') {
+			DeeAst *range_end;
+			if (TPP_TOK_ISERR(DeeParser_Yield(self))) {
+err_lhs_lbracket_flags_range_start:
+				DeeAst_Destroy(range_start);
+				goto err_lhs_lbracket_flags;
+			}
+			if (DeeParser_GetTok(self) == ']') {
+				range_end = DeeAst_NewConst(DeeNone_NewRef());
+			} else {
+				range_end = DeeParser_ParseExpr(self);
+			}
+			if unlikely(!range_end)
+				goto err_lhs_lbracket_flags_range_start;
+			lhs = DeeAst_NewOperator3(OPERATOR_GETRANGE, lhs, range_start, range_end);
+		} else {
+			lhs = DeeAst_NewOperator2(OPERATOR_GETITEM, lhs, range_start);
+		}
+		DeeParser_NoLf_Pop(self);
+		if unlikely(!lhs)
+			goto err;
+		DeeAst_SetLoc(lhs, &loc);
+		if (DeeParser_Skip(self, TPP_TOK_OFCHAR(']')))
+			goto err_lhs;
+		goto again;
+	}	break;
+
+	case '{': { /* Brace initializers. */
+		if (DeeParser_GetLoc(self, &loc))
+			goto err_lhs;
+
+	}	break;
+
+#if 0
+		case '{':
+			other = ast_parse_unaryhead(self, LOOKUP_SYM_SECONDARY);
+			if unlikely(!other)
+				goto err_r;
+			/* Use the brace AST in a single-argument call to `result` */
+			DREF struct ast **elemv;
+			elemv = (DREF struct ast **)Dee_Mallocc(1, sizeof(DREF struct ast *));
+			if unlikely(!elemv) {
+err_other:
+				ast_decref(other);
+				goto err_r;
+			}
+			elemv[0] = other;
+			merge    = ast_setddi(ast_multiple(AST_FMULTIPLE_TUPLE, 1, elemv), &loc);
+			if unlikely(!merge) {
+				Dee_Free(elemv);
+				goto err_other;
+			}
+			other = ast_setddi(ast_operator2(OPERATOR_CALL, 0, result, merge), &loc);
+			ast_decref(merge);
+			/* Override the result AST when a special type-initialization was performed. */
+			ast_decref(result);
+			result = other;
+			break;
+
+		case TPP_KWD_pack: {
+			int temp;
+			DREF struct ast *kw_labels;
+			bool inside_macro = tpp_file_ismacro(DeeParser_GetFile(self));
+			/* Call expression without parenthesis. */
+			if (DeeParser_GetLoc(self, &loc))
+				goto err_r;
+			if (TPP_TOK_ISERR(DeeParser_Yield(self)))
+				goto err_r;
+			if (DeeParser_GetTok(self) == '(')
+				goto do_normal_call_with_loc;
+			if (!inside_macro) {
+				if (DeeParser_WarnfLoc(self, &loc, TPP_W_PACK_USED_OUTSIDE_OF_MACRO))
+					goto err_r;
+			}
+			temp = maybe_expression_begin(self);
+			if (temp <= 0) {
+				if unlikely(temp < 0)
+					goto err_r;
+				other = ast_setddi(ast_constexpr(Dee_EmptyTuple), &loc);
+				kw_labels = NULL;
+			} else {
+				other = ast_parse_argument_list(self,
+				                                AST_COMMA_FORCEMULTIPLE |
+				                                AST_COMMA_STRICTCOMMA,
+				                                &kw_labels);
+			}
+			if unlikely(!other)
+				goto err_r;
+			if (kw_labels) {
+				merge = ast_action3(AST_FACTION_CALL_KW,
+				                    result,
+				                    other,
+				                    kw_labels);
+				ast_decref(kw_labels);
+			} else {
+				merge = ast_operator2(OPERATOR_CALL, 0, result, other);
+			}
+			merge = ast_setddi(merge, &loc);
+			ast_decref(other);
+			ast_decref(result);
+			if unlikely(!merge)
+				goto err;
+			result = merge;
+		}	break;
+
+		case '(': {
+			DREF struct ast *kw_labels;
+			/* Call expression. */
+			if (DeeParser_GetLoc(self, &loc))
+				goto err_r;
+do_normal_call_with_loc:
+			DeeParser_NoLf_Push(self);
+			if (TPP_TOK_ISERR(DeeParser_Yield(self))) {
+err_r_lparen_flags:
+				DeeParser_NoLf_Break(self);
+				goto err_r;
+			}
+			if (DeeParser_GetTok(self) == ')') {
+				other     = ast_setddi(ast_constexpr(Dee_EmptyTuple), &loc);
+				kw_labels = NULL;
+			} else {
+				other = ast_parse_argument_list(self, AST_COMMA_FORCEMULTIPLE, &kw_labels);
+			}
+			if unlikely(!other)
+				goto err_r_lparen_flags;
+			if (kw_labels) {
+				merge = ast_action3(AST_FACTION_CALL_KW,
+				                    result,
+				                    other,
+				                    kw_labels);
+				ast_decref(kw_labels);
+			} else {
+				merge = ast_operator2(OPERATOR_CALL, 0, result, other);
+			}
+			merge = ast_setddi(merge, &loc);
+			ast_decref(other);
+			ast_decref(result);
+			DeeParser_NoLf_Pop(self);
+			if unlikely(!merge)
+				goto err;
+			result = merge;
+			if (DeeParser_Skip2(self, TPP_TOK_OFCHAR(')'), W_EXPECTED_RPAREN_AFTER_CALL))
+				goto err_r;
+		}	break;
+
+		case TPP_TOK_PLUS_PLUS: {
+			Dee_operator_t opid;
+			/* Inplace operators. */
+			opid = OPERATOR_INC;
+			goto do_inplace_op;
+		case TPP_TOK_MINUS_MINUS:
+			opid = OPERATOR_DEC;
+do_inplace_op:
+			merge = ast_sethere(self, ast_operator1(opid, AST_OPERATOR_FPOSTOP, result));
+			ast_decref(result);
+			if unlikely(!merge)
+				goto err;
+			result = merge;
+			if (TPP_TOK_ISERR(DeeParser_Yield(self)))
+				goto err_r;
+		}	break;
+
+		case TPP_TOK_DOT_DOT_DOT: /* Expand expression. */
+			merge = ast_sethere(self, ast_expand(result));
+			ast_decref(result);
+			if unlikely(!merge)
+				goto err;
+			result = merge;
+			if (TPP_TOK_ISERR(DeeParser_Yield(self)))
+				goto err_r;
+			break;
+
+		default:
+			goto done;
+		}
+	} while (result);
+done:
+	return result;
+err_r_other:
+	ast_decref(other);
+err_r:
+	ast_decref(result);
+err:
+	return NULL;
+#endif
+
+	default: break;
+	}
+	return lhs;
+err_lhs:
+	DeeAst_Destroy(lhs);
+err:
+	return NULL;
+}
+
+INTERN WUNUSED NONNULL((1)) DeeAst *DFCALL
+DeeParser_ParseUnary(DeeParser *__restrict self) {
+	DeeAst *result = DeeParser_ParseUnaryHead(self);
+	if likely(result)
+		result = DeeParser_ParseUnaryOperand(self, result);
+	return result;
+}
+
+
+INTERN WUNUSED NONNULL((1, 2)) DeeAst *DFCALL
+DeeParser_ParseProdOperand(DeeParser *__restrict self, /*inherit(always)*/ DeeAst *__restrict lhs) {
+
+}
+
+INTERN WUNUSED NONNULL((1, 2)) DeeAst *DFCALL DeeParser_ParseSumOperand(DeeParser *__restrict self, /*inherit(always)*/ DeeAst *__restrict lhs);
+INTERN WUNUSED NONNULL((1, 2)) DeeAst *DFCALL DeeParser_ParseShiftOperand(DeeParser *__restrict self, /*inherit(always)*/ DeeAst *__restrict lhs);
+INTERN WUNUSED NONNULL((1, 2)) DeeAst *DFCALL DeeParser_ParseCmpOperand(DeeParser *__restrict self, /*inherit(always)*/ DeeAst *__restrict lhs);
+INTERN WUNUSED NONNULL((1, 2)) DeeAst *DFCALL DeeParser_ParseCmpeqOperand(DeeParser *__restrict self, /*inherit(always)*/ DeeAst *__restrict lhs);
+INTERN WUNUSED NONNULL((1, 2)) DeeAst *DFCALL DeeParser_ParseAndOperand(DeeParser *__restrict self, /*inherit(always)*/ DeeAst *__restrict lhs);
+INTERN WUNUSED NONNULL((1, 2)) DeeAst *DFCALL DeeParser_ParseXorOperand(DeeParser *__restrict self, /*inherit(always)*/ DeeAst *__restrict lhs);
+INTERN WUNUSED NONNULL((1, 2)) DeeAst *DFCALL DeeParser_ParseOrOperand(DeeParser *__restrict self, /*inherit(always)*/ DeeAst *__restrict lhs);
+INTERN WUNUSED NONNULL((1, 2)) DeeAst *DFCALL DeeParser_ParseAsOperand(DeeParser *__restrict self, /*inherit(always)*/ DeeAst *__restrict lhs);
+INTERN WUNUSED NONNULL((1, 2)) DeeAst *DFCALL DeeParser_ParseLandOperand(DeeParser *__restrict self, /*inherit(always)*/ DeeAst *__restrict lhs);
+INTERN WUNUSED NONNULL((1, 2)) DeeAst *DFCALL DeeParser_ParseLorOperand(DeeParser *__restrict self, /*inherit(always)*/ DeeAst *__restrict lhs);
+INTERN WUNUSED NONNULL((1, 2)) DeeAst *DFCALL DeeParser_ParseCondOperand(DeeParser *__restrict self, /*inherit(always)*/ DeeAst *__restrict lhs);
+INTERN WUNUSED NONNULL((1, 2)) DeeAst *DFCALL DeeParser_ParseAssignOperand(DeeParser *__restrict self, /*inherit(always)*/ DeeAst *__restrict lhs);
+
+
+#else /* CONFIG_EXPERIMENTAL_USE_STATELESS_PARSER */
 #ifndef CONFIG_HAVE_memrchr
 #define CONFIG_HAVE_memrchr
 #undef memrchr
@@ -235,7 +2157,7 @@ tpp_peek_next_non_exclaim(tpp_lexer *__restrict self);
  * @return: -1: Error */
 INTERN WUNUSED NONNULL((1)) int DFCALL
 maybe_expression_begin(DeeLexer *self) {
-	switch (DeeLexer_GetTok(self)) {
+	switch (DeeParser_GetTok(self)) {
 	case '+':
 	case '-':
 	case '~':
@@ -321,7 +2243,7 @@ maybe_expression_begin(DeeLexer *self) {
 	default:
 		/* Any kind of keyword can appear in expressions, either
 		 * a native expression keyword, or as a variable name. */
-		if (DeeLexer_HasTokenKwd(self))
+		if (DeeParser_HasTokenKwd(self))
 			goto yes;
 		/* XXX: TPP_ISUSERKEYWORD()? */
 		goto no;
@@ -572,7 +2494,7 @@ make_bound_expression(DeeLexer *self,
 		                     base_expr->a_operator.o_op0,
 		                     base_expr->a_operator.o_op1);
 	} else {
-		if (DeeLexer_WarnfAst(self, base_expr, TPP_W_CANNOT_TEST_EXPRESSION_BINDING))
+		if (DeeParser_WarnfAst(self, base_expr, TPP_W_CANNOT_TEST_EXPRESSION_BINDING))
 			goto err;
 		/* Fallback-after-warning: Return `true` */
 		result = ast_constexpr(Dee_True);
@@ -643,13 +2565,13 @@ ast_parse_import_expression_after_import(DeeLexer *self, struct ast_loc *__restr
 	result = ast_setddi(ast_sym___import___from_deemon(), import_loc);
 	if unlikely(!result)
 		goto err;
-	DeeLexer_NoLf_Push(self);
-	if (DeeLexer_ParenBegin2(self, &has_paren, W_EXPECTED_LPAREN_AFTER_IMPORT)) {
+	DeeParser_NoLf_Push(self);
+	if (DeeParser_ParenBegin2(self, &has_paren, W_EXPECTED_LPAREN_AFTER_IMPORT)) {
 err_r_flags:
-		DeeLexer_NoLf_Break(self);
+		DeeParser_NoLf_Break(self);
 		goto err_r;
 	}
-	if (DeeLexer_GetLoc(self, &loc))
+	if (DeeParser_GetLoc(self, &loc))
 		goto err_r_flags;
 	other = ast_parse_argument_list(self, AST_COMMA_FORCEMULTIPLE, &kw_labels);
 	if unlikely(!other)
@@ -671,11 +2593,11 @@ err_r_flags:
 	merge = ast_setddi(merge, &loc);
 	ast_decref(other);
 	ast_decref(result);
-	DeeLexer_NoLf_Pop(self);
+	DeeParser_NoLf_Pop(self);
 	if unlikely(!merge)
 		goto err;
 	result = merge;
-	if (DeeLexer_ParenEnd2(self, has_paren, W_EXPECTED_RPAREN_AFTER_IMPORT))
+	if (DeeParser_ParenEnd2(self, has_paren, W_EXPECTED_RPAREN_AFTER_IMPORT))
 		goto err_r;
 	return result;
 err_r:
@@ -687,9 +2609,9 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF struct ast *DFCALL
 ast_parse_import_expression(DeeLexer *self) {
 	struct ast_loc import_loc;
-	if (DeeLexer_GetLoc(self, &import_loc))
+	if (DeeParser_GetLoc(self, &import_loc))
 		goto err;
-	if (TPP_TOK_ISERR(DeeLexer_Yield(self)))
+	if (TPP_TOK_ISERR(DeeParser_Yield(self)))
 		goto err;
 	return ast_parse_import_expression_after_import(self, &import_loc);
 err:
@@ -721,8 +2643,8 @@ verify_consistent_grouping(DeeLexer *self) {
 #endif /* CONFIG_EXPERIMENTAL_USE_TPP3 */
 	char const *tok_start, *tok_end, *iter, *lastsep;
 	size_t interval, wanted_interval;
-	tok_start = (char const *)DeeLexer_GetTokenStart(self);
-	tok_end   = (char const *)DeeLexer_GetTokenEnd(self);
+	tok_start = (char const *)DeeParser_GetTokenStart(self);
+	tok_end   = (char const *)DeeParser_GetTokenEnd(self);
 	iter      = (char const *)memrchr(tok_start, '_', (size_t)(tok_end - tok_start));
 	if likely(!iter)
 		return 0; /* No separators present. */
@@ -738,7 +2660,7 @@ verify_consistent_grouping(DeeLexer *self) {
 			continue;
 		offset = count_chars_without_escaped_linefeeds(iter + 1, lastsep);
 		if (offset != interval) {
-			if (DeeLexer_Warnf(self, TPP_W_INCONSISTENT_THOUSANDS_SEPERATORS,
+			if (DeeParser_Warnf(self, TPP_W_INCONSISTENT_THOUSANDS_SEPERATORS,
 			                   (unsigned int)interval,
 			                   (unsigned int)offset))
 				goto err;
@@ -751,7 +2673,7 @@ verify_consistent_grouping(DeeLexer *self) {
 	 * For every other radix, the interval should be `4`. */
 	wanted_interval = *tok_start == '0' ? 4 : 3;
 	if (wanted_interval != interval) {
-		if (DeeLexer_Warnf(self, TPP_W_INCORRECT_THOUSANDS_SEPERATORS,
+		if (DeeParser_Warnf(self, TPP_W_INCORRECT_THOUSANDS_SEPERATORS,
 		                   (unsigned int)wanted_interval,
 		                   (unsigned int)interval))
 			goto err;
@@ -768,7 +2690,7 @@ peek_token_after_decl_ast_skip(DeeLexer *self) {
 #ifdef CONFIG_EXPERIMENTAL_USE_TPP3
 	tpp_token_id result;
 	tpp_char const *colon_ptr;
-	tpp_file *const file = DeeLexer_GetFile(self);
+	tpp_file *const file = DeeParser_GetFile(self);
 	tpp_size rel_colon_ptr;
 
 	/* Prevent going out of the current file */
@@ -789,11 +2711,11 @@ peek_token_after_decl_ast_skip(DeeLexer *self) {
 	/* Ensure that text doesn't get unloaded (so we can always roll back)
 	 * At the same time, configure the file to keep everything that makes
 	 * up the currently loaded token (which is a `:`-token) in-memory. */
-	colon_ptr = DeeLexer_GetTokenStart(self);
+	colon_ptr = DeeParser_GetTokenStart(self);
 	ASSERT(colon_ptr == tpp_file_getlastpos(file));
 	ASSERT(*colon_ptr == ':');
-	ASSERT(DeeLexer_GetTok(self) == ':');
-	ASSERT(DeeLexer_GetTokenLen(self) == 1);
+	ASSERT(DeeParser_GetTok(self) == ':');
+	ASSERT(DeeParser_GetTokenLen(self) == 1);
 	tpp_file_pushkeep(file, colon_ptr);
 
 	/* Get a persistent descriptor for the in-memory offset of the `:`-token,
@@ -802,15 +2724,15 @@ peek_token_after_decl_ast_skip(DeeLexer *self) {
 	rel_colon_ptr = tpp_file_keep_ptr2rel(file, colon_ptr);
 
 	/* Yield to whatever comes after the `:`-token.
-	 * Still use `DeeLexer_Yield()` since we need its (or rather:  */
-	result = DeeLexer_Yield(self);
+	 * Still use `DeeParser_Yield()` since we need its (or rather:  */
+	result = DeeParser_Yield(self);
 	if (!TPP_TOK_ISERR(result)) {
 		/* Actually do the job of skipping a decl-ast token-sequence. */
 		if unlikely(decl_ast_skip(self)) {
 			result = TPP_TOK_EDEEMON;
 		} else {
 			/* decl-ast sequence skipped -> see what the current token is! */
-			result = DeeLexer_GetTok(self);
+			result = DeeParser_GetTok(self);
 		}
 	}
 
@@ -825,8 +2747,8 @@ peek_token_after_decl_ast_skip(DeeLexer *self) {
 	 * use macros where keywords are also accepted in decl expressions,
 	 * but not for stuff like substituting unmatched `)` or-the-like) */
 	colon_ptr = tpp_file_keep_rel2ptr(file, rel_colon_ptr);
-	DeeLexer_SetTokenRange(self, colon_ptr, colon_ptr + 1);
-	DeeLexer_SetTokenId(self, TPP_TOK_OFCHAR(':'));
+	DeeParser_SetTokenRange(self, colon_ptr, colon_ptr + 1);
+	DeeParser_SetTokenId(self, TPP_TOK_OFCHAR(':'));
 
 	/* Pop context... */
 	tpp_file_popkeep(file);
@@ -840,11 +2762,11 @@ peek_token_after_decl_ast_skip(DeeLexer *self) {
 	struct TPPLexerPosition pos;
 	if unlikely(!TPPLexer_SavePosition(&pos))
 		goto err;
-	if (TPP_TOK_ISERR(DeeLexer_Yield(self)))
+	if (TPP_TOK_ISERR(DeeParser_Yield(self)))
 		goto err_restore_pos;
 	if unlikely(decl_ast_skip(self))
 		goto err_restore_pos;
-	result = DeeLexer_GetTok(self);
+	result = DeeParser_GetTok(self);
 	TPPLexer_LoadPosition(&pos);
 	return result;
 err_restore_pos:
@@ -855,55 +2777,6 @@ err:
 }
 
 #ifdef CONFIG_EXPERIMENTAL_USE_TPP3
-struct fixed_length_suffix_type {
-	char flst_suffix[6];
-	char flst_ctype[10];
-};
-
-PRIVATE struct fixed_length_suffix_type const fixed_length_suffix_types[] = {
-	{ "u", /*    */ "uint" },
-	{ "l", /*    */ "long" },
-	{ "ul", /*   */ "ulong" },
-	{ "ll", /*   */ "llong" },
-	{ "ull", /*  */ "ullong" },
-	{ "i8", /*   */ "int8_t" },
-	{ "ui8", /*  */ "uint8_t" },
-	{ "i16", /*  */ "int16_t" },
-	{ "ui16", /* */ "uint16_t" },
-	{ "i32", /*  */ "int32_t" },
-	{ "ui32", /* */ "uint32_t" },
-	{ "i64", /*  */ "int64_t" },
-	{ "ui64", /* */ "uint64_t" },
-	{ "i128", /* */ "int128_t" },
-	{ "ui128", /**/ "uint128_t" },
-};
-
-PRIVATE WUNUSED NONNULL((1, 2, 3, 4)) tpp_char const *DCALL
-bse_trylskip(DeeLexer *__restrict lexer,
-             tpp_char const *start, tpp_char const *end,
-             char const *match_text) {
-	for (;;) {
-		tpp_char ch = (tpp_char)*match_text++;
-		if (ch == '\0')
-			return start;
-		if (start >= end)
-			break;
-		if (*start != ch)
-			break;
-		start = tpp_preparse_skipbse_fwd(&lexer->dl_lexer, start + 1, end);
-	}
-	return NULL;
-}
-
-PRIVATE WUNUSED NONNULL((1, 2, 4)) bool DCALL
-bse_equals(DeeLexer *__restrict lexer,
-           tpp_char const *text, tpp_size len,
-           char const *match_text) {
-	tpp_char const *end = text + len;
-	text = bse_trylskip(lexer, text, end, match_text);
-	return text == end;
-}
-
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeModuleObject *DFCALL
 get_ctypes_module(DeeLexer *__restrict self, struct ast_loc *loc) {
 	DREF DeeModuleObject *result;
@@ -917,13 +2790,13 @@ get_ctypes_module(DeeLexer *__restrict self, struct ast_loc *loc) {
 		if unlikely(result == DeeModule_IMPORT_ERROR)
 			goto err;
 		if (result == DeeModule_IMPORT_ENOENT) {
-			if (DeeLexer_WarnfLoc(self, loc, TPP_W_MODULE_NOT_FOUND,
+			if (DeeParser_WarnfLoc(self, loc, TPP_W_MODULE_NOT_FOUND,
 			                      ctypes_name))
 				goto err;
 		} else if (result == DeeModule_IMPORT_ERECUR) {
 			struct Dee_import_frame *current = DeeThread_Self()->t_import_curr;
 			char const *current_name = current ? current->if_absfile : "?";
-			if (DeeLexer_WarnfLoc(self, loc, TPP_W_RECURSIVE_MODULE_DEPENDENCY,
+			if (DeeParser_WarnfLoc(self, loc, TPP_W_RECURSIVE_MODULE_DEPENDENCY,
 			                      ctypes_name, current_name))
 				goto err;
 		}
@@ -948,7 +2821,7 @@ get_ctypes_symbol(DeeLexer *self, struct ast_loc *loc, char const *symbol_name) 
 		goto err_ctypes;
 	ctypes_symbol = DeeModule_GetSymbolString(ctypes, symbol_name);
 	if unlikely(!ctypes_symbol) {
-		if (DeeLexer_Warnf(self, TPP_W_MODULE_IMPORT_NOT_FOUND,
+		if (DeeParser_Warnf(self, TPP_W_MODULE_IMPORT_NOT_FOUND,
 		                   symbol_name, DeeModule_GetShortName(ctypes)))
 			goto err_ctypes;
 		extern_symbol->s_type   = SYMBOL_TYPE_MODULE;
@@ -994,7 +2867,7 @@ ast_wrap_fixed_length_integer(DeeLexer *self, DeeIntObject *value,
 	for (i = 0;; ++i) {
 		if (i >= COMPILER_LENOF(fixed_length_suffix_types))
 			return (DREF struct ast *)ITER_DONE;
-		if (bse_equals(self, suffix_start, suffix_len,
+		if (bse_equals(&self->dl_lexer, suffix_start, suffix_len,
 		               fixed_length_suffix_types[i].flst_suffix))
 			break; /* Found it! */
 	}
@@ -1035,7 +2908,7 @@ ast_parse_unaryhead(DeeLexer *self, unsigned int lookup_mode) {
 	DREF struct ast *result;
 	DREF struct ast *merge;
 	struct ast_loc loc;
-	switch (DeeLexer_GetTok(self)) {
+	switch (DeeParser_GetTok(self)) {
 
 	TPP_CASE_TPP_TOK_INT {
 		DREF DeeObject *resval;
@@ -1051,26 +2924,26 @@ ast_parse_unaryhead(DeeLexer *self, unsigned int lookup_mode) {
 			error = tpp_lexer_decodeint_ex(&self->dl_lexer, (DeeIntObject **)&resval, &suffix_start);
 			if (TPP_ISERR(error))
 				goto err;
-			if (suffix_start < DeeLexer_GetTokenEnd(self)) {
+			if (suffix_start < DeeParser_GetTokenEnd(self)) {
 				/* "-ffixed-length-integrals":
 				 * >> 123ull
 				 * Compile as:
 				 * >> (ullong from ctypes)(123)
 				 */
 				if (tpp_lexer_getextension(&self->dl_lexer, TPP_EXT_FIXED_LENGTH_INTEGRALS)) {
-					tpp_size suffix_len = (tpp_size)(DeeLexer_GetTokenEnd(self) - suffix_start);
+					tpp_size suffix_len = (tpp_size)(DeeParser_GetTokenEnd(self) - suffix_start);
 					result = ast_wrap_fixed_length_integer(self, (DeeIntObject *)resval,
 					                                       suffix_start, suffix_len);
 					if (result != (DREF struct ast *)ITER_DONE) {
 						Dee_Decref(resval);
 						if unlikely(!result)
 							goto err;
-						if (TPP_TOK_ISERR(DeeLexer_Yield(self)))
+						if (TPP_TOK_ISERR(DeeParser_Yield(self)))
 							goto err_r;
 						return result;
 					}
 				}
-				if (DeeLexer_Warnf(self, TPP_W_INVALID_INTEGER)) {
+				if (DeeParser_Warnf(self, TPP_W_INVALID_INTEGER)) {
 					Dee_Decref(resval);
 					goto err;
 				}
@@ -1079,14 +2952,14 @@ ast_parse_unaryhead(DeeLexer *self, unsigned int lookup_mode) {
 #else /* CONFIG_EXPERIMENTAL_USE_TPP3 */
 		/* Use our own integer parser, so we can process arbitrary-precision integers. */
 		{
-			size_t toklen = DeeLexer_GetTokenLen(self);
-			resval = DeeInt_FromString((char const *)DeeLexer_GetTokenStart(self), toklen,
+			size_t toklen = DeeParser_GetTokenLen(self);
+			resval = DeeInt_FromString((char const *)DeeParser_GetTokenStart(self), toklen,
 			                           Dee_INT_STRING(0, Dee_INT_STRING_FESCAPED |
 			                                             Dee_INT_STRING_FTRY));
 		}
 		/* Check if the integer failed to be parsed. */
 		if unlikely(resval == ITER_DONE) {
-			if (DeeLexer_Warnf(self, TPP_W_INVALID_INTEGER))
+			if (DeeParser_Warnf(self, TPP_W_INVALID_INTEGER))
 				goto err;
 			goto create_none;
 		}
@@ -1098,19 +2971,19 @@ create_constexpr:
 		Dee_Decref(resval);
 		if unlikely(!result)
 			goto err;
-		if (TPP_TOK_ISERR(DeeLexer_Yield(self)))
+		if (TPP_TOK_ISERR(DeeParser_Yield(self)))
 			goto err_r;
 		return result;
 
 #ifndef CONFIG_EXPERIMENTAL_USE_TPP3
 	TPP_CASE_TPP_TOK_STRING_SQUOTE
-		if (!DeeLexer_Has(self, CHARACTER_LITERALS)) {
+		if (!DeeParser_Has(self, CHARACTER_LITERALS)) {
 			goto decode_string;
 		} else {
 			tint_t value;
 			if unlikely(TPP_Atoi(&value) == TPP_ATOI_ERR)
 				goto err;
-			if (DeeLexer_Warnf(self, TPP_W_DEPRECATED_CHARACTER_INT))
+			if (DeeParser_Warnf(self, TPP_W_DEPRECATED_CHARACTER_INT))
 				goto err;
 			resval = DeeInt_NewInt64(value);
 		}
@@ -1124,11 +2997,11 @@ create_constexpr:
 		tpp_errno error;
 		tpp_uintmax value;
 		DREF DeeObject *resval;
-		if (!DeeLexer_Has(self, BUILTIN_EXPR_CHARACTER_LITERALS))
+		if (!DeeParser_Has(self, BUILTIN_EXPR_CHARACTER_LITERALS))
 			goto decode_string;
-		if (DeeLexer_GetLoc(self, &loc))
+		if (DeeParser_GetLoc(self, &loc))
 			goto err;
-		if (DeeLexer_Warnf(self, TPP_W_DEPRECATED_CHARACTER_INT))
+		if (DeeParser_Warnf(self, TPP_W_DEPRECATED_CHARACTER_INT))
 			goto err;
 		error = tpp_lexer_parsecharacter_literal(&self->dl_lexer, &value,
 		                                         TPP_LEXER_PARSESTRING_FLAG_STOPONLF);
@@ -1149,7 +3022,7 @@ decode_string:
 #ifdef CONFIG_EXPERIMENTAL_USE_TPP3
 		return ast_parse_string_ast(self);
 #else /* CONFIG_EXPERIMENTAL_USE_TPP3 */
-		if (DeeLexer_GetLoc(self, &loc))
+		if (DeeParser_GetLoc(self, &loc))
 			goto err;
 		{
 			DREF DeeObject *resval = ast_parse_string_const(self);
@@ -1167,10 +3040,10 @@ decode_string:
 	case TPP_KWD_F:
 		/* Check if this might be a template string. */
 		if ((*TPPLexer_Current->l_token.t_end == '\"') ||
-		    (*TPPLexer_Current->l_token.t_end == '\'' && !DeeLexer_Has(self, CHARACTER_LITERALS))) {
-			if (TPP_TOK_ISERR(DeeLexer_Yield(self)))
+		    (*TPPLexer_Current->l_token.t_end == '\'' && !DeeParser_Has(self, CHARACTER_LITERALS))) {
+			if (TPP_TOK_ISERR(DeeParser_Yield(self)))
 				goto err;
-			ASSERT(TPP_TOK_ISSTRING(DeeLexer_GetTok(self)));
+			ASSERT(TPP_TOK_ISSTRING(DeeParser_GetTok(self)));
 			return ast_parse_template_string(self);
 		}
 		goto do_keyword;
@@ -1185,8 +3058,8 @@ decode_string:
 		error = tpp_lexer_decodefloat_ex(&self->dl_lexer, &value, &suffix_start);
 		if (TPP_ISERR(error))
 			goto err;
-		if (suffix_start < DeeLexer_GetTokenEnd(self)) {
-			if (DeeLexer_Warnf(self, TPP_W_INVALID_FLOAT))
+		if (suffix_start < DeeParser_GetTokenEnd(self)) {
+			if (DeeParser_Warnf(self, TPP_W_INVALID_FLOAT))
 				goto err;
 		}
 #else /* CONFIG_EXPERIMENTAL_USE_TPP3 */
@@ -1201,7 +3074,7 @@ decode_string:
 		Dee_Decref(resval);
 		if unlikely(!result)
 			goto err;
-		if (TPP_TOK_ISERR(DeeLexer_Yield(self)))
+		if (TPP_TOK_ISERR(DeeParser_Yield(self)))
 			goto err_r;
 		return result;
 	}	break;
@@ -1216,7 +3089,7 @@ mkconst:
 		result = ast_sethere(self, ast_constexpr(constval));
 		if unlikely(!result)
 			goto err;
-		if (TPP_TOK_ISERR(DeeLexer_Yield(self)))
+		if (TPP_TOK_ISERR(DeeParser_Yield(self)))
 			goto err_r;
 		return result;
 	case TPP_KWD_true:
@@ -1228,11 +3101,11 @@ mkconst:
 	}	break;
 
 	case TPP_KWD_bound: {
-		if (DeeLexer_GetLoc(self, &loc))
+		if (DeeParser_GetLoc(self, &loc))
 			goto err;
-		if (TPP_TOK_ISERR(DeeLexer_Yield(self)))
+		if (TPP_TOK_ISERR(DeeParser_Yield(self)))
 			goto err;
-		if (DeeLexer_GetTok(self) == '(') {
+		if (DeeParser_GetTok(self) == '(') {
 			result = ast_parse_unaryhead(self,
 			                             LOOKUP_SYM_SECONDARY |
 			                             PARSE_UNARY_DISALLOW_CASTS);
@@ -1262,11 +3135,11 @@ mkconst:
 	case TPP_KWD_copy:
 		opid = OPERATOR_COPY;
 do_unary_operator_kwd:
-		if (DeeLexer_GetLoc(self, &loc))
+		if (DeeParser_GetLoc(self, &loc))
 			goto err;
-		if (TPP_TOK_ISERR(DeeLexer_Yield(self)))
+		if (TPP_TOK_ISERR(DeeParser_Yield(self)))
 			goto err;
-		if (DeeLexer_GetTok(self) == '(') {
+		if (DeeParser_GetTok(self) == '(') {
 			result = ast_parse_unaryhead(self,
 			                             LOOKUP_SYM_SECONDARY |
 			                             PARSE_UNARY_DISALLOW_CASTS);
@@ -1299,9 +3172,9 @@ do_unary_operator_kwd:
 	case TPP_TOK_MINUS_MINUS:
 		opid = OPERATOR_DEC;
 do_unary_operator:
-		if (DeeLexer_GetLoc(self, &loc))
+		if (DeeParser_GetLoc(self, &loc))
 			goto err;
-		if (TPP_TOK_ISERR(DeeLexer_Yield(self)))
+		if (TPP_TOK_ISERR(DeeParser_Yield(self)))
 			goto err;
 		result = ast_parse_unary(self, LOOKUP_SYM_SECONDARY);
 		if unlikely(!result)
@@ -1315,11 +3188,11 @@ do_unary_operator:
 	case TPP_KWD_type:
 		opid = AST_FACTION_TYPEOF;
 do_unary_action_kwd:
-		if (DeeLexer_GetLoc(self, &loc))
+		if (DeeParser_GetLoc(self, &loc))
 			goto err;
-		if (TPP_TOK_ISERR(DeeLexer_Yield(self)))
+		if (TPP_TOK_ISERR(DeeParser_Yield(self)))
 			goto err;
-		if (DeeLexer_GetTok(self) == '(') {
+		if (DeeParser_GetTok(self) == '(') {
 			result = ast_parse_unaryhead(self,
 			                             LOOKUP_SYM_SECONDARY |
 			                             PARSE_UNARY_DISALLOW_CASTS);
@@ -1336,9 +3209,9 @@ do_unary_action_kwd:
 	}	break;
 
 	case '!': /* not */
-		if (DeeLexer_GetLoc(self, &loc))
+		if (DeeParser_GetLoc(self, &loc))
 			goto err;
-		if (TPP_TOK_ISERR(DeeLexer_Yield(self)))
+		if (TPP_TOK_ISERR(DeeParser_Yield(self)))
 			goto err;
 		result = ast_parse_unary(self, LOOKUP_SYM_SECONDARY);
 		if unlikely(!result)
@@ -1363,21 +3236,21 @@ do_unary_action_kwd:
 		 * >> #endif */
 #ifndef CONFIG_EXPERIMENTAL_USE_TPP3
 	case TPP_TOK_LANGLE_RANGLE:
-		if (DeeLexer_GetLoc(self, &loc))
+		if (DeeParser_GetLoc(self, &loc))
 			goto err;
-		if (DeeLexer_Warnf(self, TPP_W_DEPRECATED_CELL_SYNTAX))
+		if (DeeParser_Warnf(self, TPP_W_DEPRECATED_CELL_SYNTAX))
 			goto err;
 		goto do_empty_cell;
 #endif /* !CONFIG_EXPERIMENTAL_USE_TPP3 */
 
 	case '<': /* Cell (deprecated syntax) */
-		if (DeeLexer_GetLoc(self, &loc))
+		if (DeeParser_GetLoc(self, &loc))
 			goto err;
-		if (DeeLexer_Warnf(self, TPP_W_DEPRECATED_CELL_SYNTAX))
+		if (DeeParser_Warnf(self, TPP_W_DEPRECATED_CELL_SYNTAX))
 			goto err;
-		if (TPP_TOK_ISERR(DeeLexer_Yield(self)))
+		if (TPP_TOK_ISERR(DeeParser_Yield(self)))
 			goto err;
-		if (DeeLexer_GetTok(self) == '>') {
+		if (DeeParser_GetTok(self) == '>') {
 			/* empty Cell. */
 #ifndef CONFIG_EXPERIMENTAL_USE_TPP3
 do_empty_cell:
@@ -1385,13 +3258,13 @@ do_empty_cell:
 			result = ast_action0(AST_FACTION_CELL0);
 			if unlikely(!result)
 				goto err;
-			if (TPP_TOK_ISERR(DeeLexer_Yield(self)))
+			if (TPP_TOK_ISERR(DeeParser_Yield(self)))
 				goto err_r;
 		} else {
 			result = ast_parse_unary(self, LOOKUP_SYM_SECONDARY);
 			if unlikely(!result)
 				goto err;
-			if (DeeLexer_Skip2(self, TPP_TOK_OFCHAR('>'), TPP_W_EXPECTED_RANGLE_AFTER_LANGLE))
+			if (DeeParser_Skip2(self, TPP_TOK_OFCHAR('>'), TPP_W_EXPECTED_RANGLE_AFTER_LANGLE))
 				goto err_r;
 			merge = ast_action1(AST_FACTION_CELL1, result);
 			ast_decref(result);
@@ -1406,35 +3279,35 @@ do_empty_cell:
 		uint16_t expect;
 		bool has_paren;
 		expect = current_tags.at_expect;
-		if (DeeLexer_GetLoc(self, &loc))
+		if (DeeParser_GetLoc(self, &loc))
 			goto err;
-		DeeLexer_NoLf_Push(self);
-		if (TPP_TOK_ISERR(DeeLexer_Yield(self))) {
+		DeeParser_NoLf_Push(self);
+		if (TPP_TOK_ISERR(DeeParser_Yield(self))) {
 err_if_flags:
-			DeeLexer_NoLf_Break(self);
+			DeeParser_NoLf_Break(self);
 			goto err;
 		}
-		if (DeeLexer_ParenBegin2(self, &has_paren, W_EXPECTED_LPAREN_AFTER_IF))
+		if (DeeParser_ParenBegin2(self, &has_paren, W_EXPECTED_LPAREN_AFTER_IF))
 			goto err_if_flags;
 		result = ast_parse_expr(self, LOOKUP_SYM_SECONDARY);
-		DeeLexer_NoLf_Pop(self);
+		DeeParser_NoLf_Pop(self);
 		if unlikely(!result)
 			goto err;
-		if (DeeLexer_ParenEnd2(self, has_paren, W_EXPECTED_RPAREN_AFTER_IF))
+		if (DeeParser_ParenEnd2(self, has_paren, W_EXPECTED_RPAREN_AFTER_IF))
 			goto err;
 		tt_branch = NULL;
-		if (DeeLexer_GetTok(self) != TPP_KWD_else && DeeLexer_GetTok(self) != TPP_KWD_elif) {
+		if (DeeParser_GetTok(self) != TPP_KWD_else && DeeParser_GetTok(self) != TPP_KWD_elif) {
 			tt_branch = ast_parse_expr(self, LOOKUP_SYM_SECONDARY);
 			if unlikely(!tt_branch)
 				goto err_r;
 		}
 		ff_branch = NULL;
-		if (DeeLexer_GetTok(self) == TPP_KWD_elif) {
-			DeeLexer_SetTokenId(self, TPP_KWD_if); /* Cheat a bit... */
+		if (DeeParser_GetTok(self) == TPP_KWD_elif) {
+			DeeParser_SetTokenId(self, TPP_KWD_if); /* Cheat a bit... */
 			goto do_else_branch;
 		}
-		if (DeeLexer_GetTok(self) == TPP_KWD_else) {
-			if (TPP_TOK_ISERR(DeeLexer_Yield(self))) {
+		if (DeeParser_GetTok(self) == TPP_KWD_else) {
+			if (TPP_TOK_ISERR(DeeParser_Yield(self))) {
 err_tt:
 				ast_xdecref(tt_branch);
 				goto err_r;
@@ -1456,17 +3329,17 @@ do_else_branch:
 
 	case TPP_KWD_function: {
 		tpp_keyword const *function_name;
-		if (DeeLexer_Warnf(self, TPP_W_DEPRECATED_FUNCTION_IN_EXPRESSION))
+		if (DeeParser_Warnf(self, TPP_W_DEPRECATED_FUNCTION_IN_EXPRESSION))
 			goto err;
 		/* Create a new function */
-		if (DeeLexer_GetLoc(self, &loc))
+		if (DeeParser_GetLoc(self, &loc))
 			goto err;
 		function_name = NULL;
-		if (TPP_TOK_ISERR(DeeLexer_Yield(self)))
+		if (TPP_TOK_ISERR(DeeParser_Yield(self)))
 			goto err;
-		if (DeeLexer_HasTokenKwd(self)) {
-			function_name = DeeLexer_GetTokenKwd(self);
-			if (TPP_TOK_ISERR(DeeLexer_Yield(self)))
+		if (DeeParser_HasTokenKwd(self)) {
+			function_name = DeeParser_GetTokenKwd(self);
+			if (TPP_TOK_ISERR(DeeParser_Yield(self)))
 				goto err;
 		}
 		return ast_parse_function(self, function_name, NULL, false, &loc, NULL, NULL);
@@ -1476,14 +3349,14 @@ do_else_branch:
 		tpp_keyword const *class_name;
 		uint16_t class_flags;
 		class_flags = TP_FFINAL;
-		if (TPP_TOK_ISERR(DeeLexer_Yield(self)))
+		if (TPP_TOK_ISERR(DeeParser_Yield(self)))
 			goto err;
 #ifdef CONFIG_EXPERIMENTAL_USE_TPP3
-		if (TPP_TOK_ISERR(DeeLexer_Require(self, TPP_KWD_class)))
+		if (TPP_TOK_ISERR(DeeParser_Require(self, TPP_KWD_class)))
 			goto err;
 #else /* CONFIG_EXPERIMENTAL_USE_TPP3 */
-		if (unlikely(DeeLexer_GetTok(self) != TPP_KWD_class)) {
-			if (DeeLexer_Warnf(self, TPP_W_EXPECTED_CLASS_AFTER_FINAL))
+		if (unlikely(DeeParser_GetTok(self) != TPP_KWD_class)) {
+			if (DeeParser_Warnf(self, TPP_W_EXPECTED_CLASS_AFTER_FINAL))
 				goto err;
 		}
 #endif /* !CONFIG_EXPERIMENTAL_USE_TPP3 */
@@ -1492,21 +3365,21 @@ do_else_branch:
 		class_flags = TP_FNORMAL;
 do_create_class:
 		/* Create a new function */
-		if (DeeLexer_GetLoc(self, &loc))
+		if (DeeParser_GetLoc(self, &loc))
 			goto err;
 		class_name = NULL;
-		if (TPP_TOK_ISERR(DeeLexer_Yield(self)))
+		if (TPP_TOK_ISERR(DeeParser_Yield(self)))
 			goto err;
-		if (DeeLexer_HasTokenKwd(self)) {
-			if (DeeLexer_GetTok(self) == TPP_KWD_final && !(class_flags & TP_FFINAL)) {
+		if (DeeParser_HasTokenKwd(self)) {
+			if (DeeParser_GetTok(self) == TPP_KWD_final && !(class_flags & TP_FFINAL)) {
 				/* allow `class final` as an alias for `final class` */
-				if (TPP_TOK_ISERR(DeeLexer_Yield(self)))
+				if (TPP_TOK_ISERR(DeeParser_Yield(self)))
 					goto err;
 				class_flags |= TP_FFINAL;
 			}
-			if (DeeLexer_HasTokenKwd(self)) {
-				class_name = DeeLexer_GetTokenKwd(self);
-				if (TPP_TOK_ISERR(DeeLexer_Yield(self)))
+			if (DeeParser_HasTokenKwd(self)) {
+				class_name = DeeParser_GetTokenKwd(self);
+				if (TPP_TOK_ISERR(DeeParser_Yield(self)))
 					goto err;
 			}
 		}
@@ -1518,25 +3391,25 @@ do_create_class:
 
 	case TPP_KWD_pack: {
 		int has_paren;
-		bool inside_macro = tpp_file_ismacro(DeeLexer_GetFile(self));
-		if (DeeLexer_GetLoc(self, &loc))
+		bool inside_macro = tpp_file_ismacro(DeeParser_GetFile(self));
+		if (DeeParser_GetLoc(self, &loc))
 			goto err;
-		if (TPP_TOK_ISERR(DeeLexer_Yield(self)))
+		if (TPP_TOK_ISERR(DeeParser_Yield(self)))
 			goto err;
 		has_paren = 0;
-		DeeLexer_NoLf_Push(self);
-		if (DeeLexer_GetTok(self) == '(') {
-			if (TPP_TOK_ISERR(DeeLexer_Yield(self))) {
+		DeeParser_NoLf_Push(self);
+		if (DeeParser_GetTok(self) == '(') {
+			if (TPP_TOK_ISERR(DeeParser_Yield(self))) {
 err_pack_flags:
-				DeeLexer_NoLf_Break(self);
+				DeeParser_NoLf_Break(self);
 				goto err;
 			}
-			has_paren = DeeLexer_GetTok(self) == '(' ? 2 : 1;
+			has_paren = DeeParser_GetTok(self) == '(' ? 2 : 1;
 		} else if (!inside_macro) {
-			if (DeeLexer_WarnfLoc(self, &loc, TPP_W_PACK_USED_OUTSIDE_OF_MACRO))
+			if (DeeParser_WarnfLoc(self, &loc, TPP_W_PACK_USED_OUTSIDE_OF_MACRO))
 				goto err_pack_flags;
 		}
-		if (DeeLexer_GetTok(self) == '{') {
+		if (DeeParser_GetTok(self) == '{') {
 			/* Statements in expressions. */
 			result = ast_parse_statement_or_braces(self, NULL);
 		} else {
@@ -1578,11 +3451,11 @@ err_pack_flags_r:
 			}
 		}
 		ast_setddi(result, &loc);
-		DeeLexer_NoLf_Pop(self);
+		DeeParser_NoLf_Pop(self);
 		if unlikely(!result)
 			goto err;
 		if (has_paren) {
-			if (DeeLexer_Skip2(self, TPP_TOK_OFCHAR(')'), W_EXPECTED_RPAREN_AFTER_PACK))
+			if (DeeParser_Skip2(self, TPP_TOK_OFCHAR(')'), W_EXPECTED_RPAREN_AFTER_PACK))
 				goto err_r;
 #if 0 /* The `result->a_type != AST_MULTIPLE` would never \
        * fly, because of the `AST_COMMA_FORCEMULTIPLE` */
@@ -1613,28 +3486,28 @@ err_pack_flags_r:
 		unsigned int was_expression;
 
 		/* Parenthesis. */
-		if (DeeLexer_GetLoc(self, &loc))
+		if (DeeParser_GetLoc(self, &loc))
 			goto err;
-		DeeLexer_NoLf_Push(self);
-		if (TPP_TOK_ISERR(DeeLexer_Yield(self))) {
+		DeeParser_NoLf_Push(self);
+		if (TPP_TOK_ISERR(DeeParser_Yield(self))) {
 err_lparen_flags:
-			DeeLexer_NoLf_Break(self);
+			DeeParser_NoLf_Break(self);
 			goto err;
 		}
-		allow_cast = DeeLexer_GetTok(self) != '(' && !(lookup_mode & PARSE_UNARY_DISALLOW_CASTS);
-		if (DeeLexer_GetTok(self) != '{') {
-			if (DeeLexer_GetTok(self) == ')') {
-				DeeLexer_NoLf_Break(self);
-				if (DeeLexer_Skip2(self, TPP_TOK_OFCHAR(')'), W_EXPECTED_RPAREN_AFTER_LPAREN))
+		allow_cast = DeeParser_GetTok(self) != '(' && !(lookup_mode & PARSE_UNARY_DISALLOW_CASTS);
+		if (DeeParser_GetTok(self) != '{') {
+			if (DeeParser_GetTok(self) == ')') {
+				DeeParser_NoLf_Break(self);
+				if (DeeParser_Skip2(self, TPP_TOK_OFCHAR(')'), W_EXPECTED_RPAREN_AFTER_LPAREN))
 					goto err;
 
 				/* Support for java-style lambda with empty argument list. */
-				if (DeeLexer_GetTok(self) == TPP_TOK_MINUS_RANGLE) {
+				if (DeeParser_GetTok(self) == TPP_TOK_MINUS_RANGLE) {
 					result = ast_parse_function_java_lambda(self, NULL, NULL);
 					result = ast_setddi(result, &loc);
 					return result;
 				}
-				if (DeeLexer_GetTok(self) == ':') {
+				if (DeeParser_GetTok(self) == ':') {
 					tpp_token_id tok_after_decl;
 					tok_after_decl = peek_token_after_decl_ast_skip(self);
 					if (TPP_TOK_ISERR(tok_after_decl))
@@ -1655,7 +3528,7 @@ err_lparen_flags:
 				/* Lambda function. */
 				int error = ast_is_after_lparen_of_java_lambda(self);
 				if (error != 0) {
-					DeeLexer_NoLf_Break(self);
+					DeeParser_NoLf_Break(self);
 					if unlikely(error < 0)
 						goto err;
 					result = ast_parse_function_java_lambda(self, NULL, NULL);
@@ -1692,12 +3565,12 @@ err_lparen_flags_r:
 				}
 				if (result->a_type == AST_MULTIPLE)
 					allow_cast = false; /* Don't allow comma-lists for cast expressions. */
-				DeeLexer_NoLf_Break(self);
-				if (DeeLexer_Skip2(self, TPP_TOK_OFCHAR(')'), W_EXPECTED_RPAREN_AFTER_LPAREN))
+				DeeParser_NoLf_Break(self);
+				if (DeeParser_Skip2(self, TPP_TOK_OFCHAR(')'), W_EXPECTED_RPAREN_AFTER_LPAREN))
 					goto err_r;
 			}
-			if (DeeLexer_GetTok(self) == '{' && !allow_cast) {
-				if (DeeLexer_Warnf(self, TPP_W_PROBABLY_MISSING_ARROW))
+			if (DeeParser_GetTok(self) == '{' && !allow_cast) {
+				if (DeeParser_Warnf(self, TPP_W_PROBABLY_MISSING_ARROW))
 					goto err_r;
 			}
 			goto set_lparen_ddi;
@@ -1708,11 +3581,11 @@ err_lparen_flags_r:
 		if unlikely(!result)
 			goto err_lparen_flags;
 		allow_cast = false; /* Don't allow braces, or statements as cast expressions. */
-		if (DeeLexer_GetTok(self) == ',' && was_expression != AST_PARSE_WASEXPR_NO) {
+		if (DeeParser_GetTok(self) == ',' && was_expression != AST_PARSE_WASEXPR_NO) {
 			DREF struct ast **tuple_branchv;
-			if (TPP_TOK_ISERR(DeeLexer_Yield(self)))
+			if (TPP_TOK_ISERR(DeeParser_Yield(self)))
 				goto err_lparen_flags_r;
-			if (DeeLexer_GetTok(self) == ')') {
+			if (DeeParser_GetTok(self) == ')') {
 				/* single-element tuple expression, where the single element is a sequence. */
 				tuple_branchv = (struct ast **)Dee_Mallocc(1, sizeof(DREF struct ast *));
 				if unlikely(!tuple_branchv)
@@ -1763,14 +3636,14 @@ err_lparen_flags_r_merge:
 				result                   = merge; /* Inherit reference. */
 			}
 		}
-		if (DeeLexer_GetTok(self) != ')' && was_expression != AST_PARSE_WASEXPR_NO) {
+		if (DeeParser_GetTok(self) != ')' && was_expression != AST_PARSE_WASEXPR_NO) {
 			result = ast_parse_postexpr(self, result);
 			if unlikely(!result)
 				goto err_lparen_flags;
 			/*was_expression = AST_PARSE_WASEXPR_YES;*/
 		}
-		DeeLexer_NoLf_Pop(self);
-		if (DeeLexer_Skip2(self, TPP_TOK_OFCHAR(')'), W_EXPECTED_RPAREN_AFTER_LPAREN))
+		DeeParser_NoLf_Pop(self);
+		if (DeeParser_Skip2(self, TPP_TOK_OFCHAR(')'), W_EXPECTED_RPAREN_AFTER_LPAREN))
 			goto err_r;
 
 set_lparen_ddi:
@@ -1786,19 +3659,19 @@ set_lparen_ddi:
 
 	case '{':
 		/* Brace-style sequence or mapping expression. */
-		if (DeeLexer_GetLoc(self, &loc))
+		if (DeeParser_GetLoc(self, &loc))
 			goto err;
-		DeeLexer_NoLf_Push(self);
-		if (TPP_TOK_ISERR(DeeLexer_Yield(self))) {
+		DeeParser_NoLf_Push(self);
+		if (TPP_TOK_ISERR(DeeParser_Yield(self))) {
 /*err_lbrace_flags:*/
-			DeeLexer_NoLf_Break(self);
+			DeeParser_NoLf_Break(self);
 			goto err;
 		}
 		result = ast_setddi(ast_parse_brace_items(self), &loc);
-		DeeLexer_NoLf_Pop(self);
+		DeeParser_NoLf_Pop(self);
 		if unlikely(!result)
 			goto err;
-		if (DeeLexer_Skip2(self, TPP_TOK_OFCHAR('}'), W_EXPECTED_RBRACE_AFTER_BRACEINIT))
+		if (DeeParser_Skip2(self, TPP_TOK_OFCHAR('}'), W_EXPECTED_RBRACE_AFTER_BRACEINIT))
 			goto err_r;
 		return result;
 
@@ -1806,21 +3679,21 @@ set_lparen_ddi:
 		bool has_paren;
 
 		/* Delete expression. */
-		if (DeeLexer_GetLoc(self, &loc))
+		if (DeeParser_GetLoc(self, &loc))
 			goto err;
-		DeeLexer_NoLf_Push(self);
-		if (TPP_TOK_ISERR(DeeLexer_Yield(self))) {
+		DeeParser_NoLf_Push(self);
+		if (TPP_TOK_ISERR(DeeParser_Yield(self))) {
 err_del_flags:
-			DeeLexer_NoLf_Break(self);
+			DeeParser_NoLf_Break(self);
 			goto err;
 		}
-		if (DeeLexer_ParenBegin2(self, &has_paren, W_EXPECTED_LPAREN_AFTER_DEL))
+		if (DeeParser_ParenBegin2(self, &has_paren, W_EXPECTED_LPAREN_AFTER_DEL))
 			goto err_del_flags;
 		result = ast_putddi(ast_parse_del(self, lookup_mode & ~PARSE_UNARY_DISALLOW_CASTS), &loc);
-		DeeLexer_NoLf_Pop(self);
+		DeeParser_NoLf_Pop(self);
 		if unlikely(!result)
 			goto err;
-		if (DeeLexer_ParenEnd2(self, has_paren, W_EXPECTED_RPAREN_AFTER_DEL))
+		if (DeeParser_ParenEnd2(self, has_paren, W_EXPECTED_RPAREN_AFTER_DEL))
 			goto err_r;
 		return result;
 	}	break;
@@ -1834,24 +3707,24 @@ err_del_flags:
 	case TPP_KWD_operator: {
 		int32_t name;
 		/* Named, but unbound operator invocation. */
-		if (TPP_TOK_ISERR(DeeLexer_Yield(self)))
+		if (TPP_TOK_ISERR(DeeParser_Yield(self)))
 			goto err;
-		if (DeeLexer_GetLoc(self, &loc))
+		if (DeeParser_GetLoc(self, &loc))
 			goto err;
 		name = ast_parse_operator_name(self, P_OPERATOR_FNORMAL);
 		if unlikely(name < 0)
 			goto err;
-		if (DeeLexer_GetTok(self) != '(') {
+		if (DeeParser_GetTok(self) != '(') {
 			/* Bound-operator expression. */
 			merge = ast_operator_func((Dee_operator_t)name, NULL);
 		} else {
-			DeeLexer_NoLf_Push(self);
-			if (TPP_TOK_ISERR(DeeLexer_Yield(self))) {
+			DeeParser_NoLf_Push(self);
+			if (TPP_TOK_ISERR(DeeParser_Yield(self))) {
 /*err_operator_flags:*/
-				DeeLexer_NoLf_Break(self);
+				DeeParser_NoLf_Break(self);
 				goto err;
 			}
-			if (DeeLexer_GetTok(self) == ')') {
+			if (DeeParser_GetTok(self) == ')') {
 				result = ast_constexpr(Dee_EmptyTuple);
 			} else {
 				result = ast_parse_comma(self,
@@ -1859,10 +3732,10 @@ err_del_flags:
 				                        AST_FMULTIPLE_TUPLE,
 				                        NULL);
 			}
-			DeeLexer_NoLf_Pop(self);
+			DeeParser_NoLf_Pop(self);
 			if unlikely(!result)
 				goto err;
-			if (DeeLexer_Skip2(self, TPP_TOK_OFCHAR(')'), W_EXPECTED_RPAREN))
+			if (DeeParser_Skip2(self, TPP_TOK_OFCHAR(')'), W_EXPECTED_RPAREN))
 				goto err_r;
 			merge = ast_build_operator((Dee_operator_t)name,
 			                           /* Set the MAYBEPFX flag to suppress errors that
@@ -1879,32 +3752,32 @@ err_del_flags:
 	}	break;
 
 	case '[': /* List */
-		if (DeeLexer_GetLoc(self, &loc))
+		if (DeeParser_GetLoc(self, &loc))
 			goto err;
-		DeeLexer_NoLf_Push(self);
-		if (TPP_TOK_ISERR(DeeLexer_Yield(self))) {
+		DeeParser_NoLf_Push(self);
+		if (TPP_TOK_ISERR(DeeParser_Yield(self))) {
 err_lbracket_flags:
-			DeeLexer_NoLf_Break(self);
+			DeeParser_NoLf_Break(self);
 			goto err;
 		}
-		if (DeeLexer_GetTok(self) == '&' ||
-		    DeeLexer_GetTok(self) == '=') {
-			if (DeeLexer_Warnf(self, TPP_W_DEPRECATED_LAMBDA_MODE))
+		if (DeeParser_GetTok(self) == '&' ||
+		    DeeParser_GetTok(self) == '=') {
+			if (DeeParser_Warnf(self, TPP_W_DEPRECATED_LAMBDA_MODE))
 				goto err_lbracket_flags;
-			if (DeeLexer_GetLoc(self, &loc))
+			if (DeeParser_GetLoc(self, &loc))
 				goto err_lbracket_flags;
-			if (TPP_TOK_ISERR(DeeLexer_Yield(self)))
+			if (TPP_TOK_ISERR(DeeParser_Yield(self)))
 				goto err_lbracket_flags;
-			DeeLexer_NoLf_Break(self);
-			if (DeeLexer_Skip2(self, TPP_TOK_OFCHAR(']'), W_EXPECTED_RBRACKET_AFTER_LAMBDA))
+			DeeParser_NoLf_Break(self);
+			if (DeeParser_Skip2(self, TPP_TOK_OFCHAR(']'), W_EXPECTED_RBRACKET_AFTER_LAMBDA))
 				goto err;
 			goto do_lambda;
 		}
-		if (DeeLexer_GetTok(self) == ']') {
-			DeeLexer_NoLf_Break(self);
-			if (TPP_TOK_ISERR(DeeLexer_Yield(self)))
+		if (DeeParser_GetTok(self) == ']') {
+			DeeParser_NoLf_Break(self);
+			if (TPP_TOK_ISERR(DeeParser_Yield(self)))
 				goto err;
-			if (DeeLexer_GetTok(self) == ':') {
+			if (DeeParser_GetTok(self) == ':') {
 				/* If the current token is ':', try to skip over the return type
 				 * annotation and check if the next token thereafter is '->' or '{'. */
 				tpp_token_id tok_after_decl;
@@ -1914,14 +3787,14 @@ err_lbracket_flags:
 				if (tok_after_decl == '{' || tok_after_decl == TPP_TOK_MINUS_RANGLE)
 					goto do_lambda; /* Yup: it's a lambda! */
 			}
-			if (DeeLexer_GetTok(self) == '(' ||
-			    DeeLexer_GetTok(self) == '{' ||
-			    DeeLexer_GetTok(self) == TPP_TOK_MINUS_RANGLE)
+			if (DeeParser_GetTok(self) == '(' ||
+			    DeeParser_GetTok(self) == '{' ||
+			    DeeParser_GetTok(self) == TPP_TOK_MINUS_RANGLE)
 				goto do_lambda;
 			result = ast_multiple(AST_FMULTIPLE_LIST, 0, NULL);
 			goto set_list_loc;
 		}
-		if (DeeLexer_GetTok(self) == ':') {
+		if (DeeParser_GetTok(self) == ':') {
 			DREF struct ast *start_expression;
 			DREF struct ast *step_expression;
 			result = ast_constexpr(Dee_None);
@@ -1929,14 +3802,14 @@ err_lbracket_flags:
 				goto err_lbracket_flags;
 			/* Range without begin index. */
 do_range_expression:
-			if (TPP_TOK_ISERR(DeeLexer_Yield(self))) {
+			if (TPP_TOK_ISERR(DeeParser_Yield(self))) {
 err_lbracket_flags_r:
 				ast_decref(result);
 				goto err_lbracket_flags;
 			}
 			start_expression = result; /* Inherit reference. */
 			/* Parse the end index. */
-			if (DeeLexer_GetTok(self) == ',') {
+			if (DeeParser_GetTok(self) == ',') {
 				/* No end index given. */
 				result = ast_constexpr(Dee_None);
 			} else {
@@ -1946,8 +3819,8 @@ err_lbracket_flags_r:
 				ast_decref(start_expression);
 				goto err_lbracket_flags;
 			}
-			if (DeeLexer_GetTok(self) == ',') {
-				if (TPP_TOK_ISERR(DeeLexer_Yield(self))) {
+			if (DeeParser_GetTok(self) == ',') {
+				if (TPP_TOK_ISERR(DeeParser_Yield(self))) {
 err_lbracket_flags_r_start:
 					ast_decref(start_expression);
 					goto err_lbracket_flags_r;
@@ -1973,7 +3846,7 @@ err_lbracket_flags_r_start:
 			                         NULL);
 			if unlikely(!result)
 				goto err_lbracket_flags;
-			if (DeeLexer_GetTok(self) == ':' &&
+			if (DeeParser_GetTok(self) == ':' &&
 			    result->a_type == AST_MULTIPLE &&
 			    result->a_multiple.m_astc == 1) {
 				merge = result->a_multiple.m_astv[0];
@@ -1984,20 +3857,20 @@ err_lbracket_flags_r_start:
 				goto do_range_expression;
 			}
 		}
-		DeeLexer_NoLf_Pop(self);
-		if (DeeLexer_Skip2(self, TPP_TOK_OFCHAR(']'), W_EXPECTED_RBRACKET_AFTER_LIST))
+		DeeParser_NoLf_Pop(self);
+		if (DeeParser_Skip2(self, TPP_TOK_OFCHAR(']'), W_EXPECTED_RBRACKET_AFTER_LIST))
 			goto err_r;
 set_list_loc:
 		return ast_setddi(result, &loc);
 do_lambda:
-		DeeLexer_NoLf_Push(self);
+		DeeParser_NoLf_Push(self);
 		if unlikely(parse_tags_block(self)) {
 /*err_lambda_flags:*/
-			DeeLexer_NoLf_Break(self);
+			DeeParser_NoLf_Break(self);
 			goto err;
 		}
 		result = ast_parse_function(self, NULL, NULL, true, &loc, NULL, NULL);
-		DeeLexer_NoLf_Pop(self);
+		DeeParser_NoLf_Pop(self);
 		return result;
 
 	case TPP_KWD_this: {
@@ -2006,7 +3879,7 @@ do_lambda:
 		if (!this_sym)
 			goto default_case;
 		result = ast_sethere(self, ast_sym(this_sym));
-		if (TPP_TOK_ISERR(DeeLexer_Yield(self)))
+		if (TPP_TOK_ISERR(DeeParser_Yield(self)))
 			goto err_r;
 		return result;
 	}	break;
@@ -2033,23 +3906,23 @@ do_lambda:
 		ast_decref(this_ast);
 		if unlikely(!result)
 			goto err;
-		if (TPP_TOK_ISERR(DeeLexer_Yield(self)))
+		if (TPP_TOK_ISERR(DeeParser_Yield(self)))
 			goto err_r;
 		return result;
 	}	break;
 
 	case TPP_KWD___nth: {
 		bool has_paren;
-		DeeLexer_NoLf_Push(self);
-		if (TPP_TOK_ISERR(DeeLexer_Yield(self))) {
+		DeeParser_NoLf_Push(self);
+		if (TPP_TOK_ISERR(DeeParser_Yield(self))) {
 err_nth_flags:
-			DeeLexer_NoLf_Break(self);
+			DeeParser_NoLf_Break(self);
 			goto err;
 		}
-		if (DeeLexer_ParenBegin2(self, &has_paren, W_EXPECTED_LPAREN_AFTER_NTH))
+		if (DeeParser_ParenBegin2(self, &has_paren, W_EXPECTED_LPAREN_AFTER_NTH))
 			goto err_nth_flags;
 		result = ast_parse_expr(self, LOOKUP_SYM_SECONDARY);
-		DeeLexer_NoLf_Pop(self);
+		DeeParser_NoLf_Pop(self);
 		if unlikely(!result)
 			goto err;
 		/* Optimize the ast-expression to propagate constant, thus
@@ -2058,43 +3931,43 @@ err_nth_flags:
 		if (ast_optimize_all(result, true))
 			goto err_r;
 		if (result->a_type != AST_CONSTEXPR) {
-			if (DeeLexer_Warnf(self, TPP_W_EXPECTED_CONSTANT_AFTER_NTH))
+			if (DeeParser_Warnf(self, TPP_W_EXPECTED_CONSTANT_AFTER_NTH))
 				goto err_r;
 		}
-		if (DeeLexer_ParenEnd2(self, has_paren, W_EXPECTED_RPAREN_AFTER_NTH))
+		if (DeeParser_ParenEnd2(self, has_paren, W_EXPECTED_RPAREN_AFTER_NTH))
 			goto err_r;
-		if (DeeLexer_HasTokenKwd(self)) {
+		if (DeeParser_HasTokenKwd(self)) {
 			unsigned int nth_symbol = 0;
 			struct symbol *sym;
 			if (result->a_type == AST_CONSTEXPR &&
 			    DeeObject_AsUInt(result->a_constexpr, &nth_symbol)) {
 				DeeError_Handled(ERROR_HANDLED_RESTORE);
-				if (DeeLexer_Warnf(self, TPP_W_EXPECTED_CONSTANT_AFTER_NTH))
+				if (DeeParser_Warnf(self, TPP_W_EXPECTED_CONSTANT_AFTER_NTH))
 					goto err_r;
 			}
 			ast_decref(result);
-			sym = lookup_nth(self, nth_symbol, DeeLexer_GetTokenKwd(self));
+			sym = lookup_nth(self, nth_symbol, DeeParser_GetTokenKwd(self));
 			if likely(sym) {
 				result = ast_sym(sym);
 			} else {
-				if (DeeLexer_Warnf(self, TPP_W_UNKNOWN_NTH_SYMBOL, nth_symbol))
+				if (DeeParser_Warnf(self, TPP_W_UNKNOWN_NTH_SYMBOL, nth_symbol))
 					goto err;
 				result = ast_constexpr(Dee_None);
 			}
 			if unlikely(!result)
 				goto err;
 			result = ast_sethere(self, result);
-			if (TPP_TOK_ISERR(DeeLexer_Yield(self)))
+			if (TPP_TOK_ISERR(DeeParser_Yield(self)))
 				goto err_r;
 		} else {
-			if (DeeLexer_Warnf(self, TPP_W_EXPECTED_KEYWORD_AFTER_NTH))
+			if (DeeParser_Warnf(self, TPP_W_EXPECTED_KEYWORD_AFTER_NTH))
 				goto err_r;
 		}
 		return result;
 	}	break;
 
 	case TPP_TOK_COLON_COLON:
-		if (DeeLexer_Warnf(self, TPP_W_DEPRECATED_GLOBAL_PREFIX))
+		if (DeeParser_Warnf(self, TPP_W_DEPRECATED_GLOBAL_PREFIX))
 			goto err;
 		ATTR_FALLTHROUGH
 	case TPP_KWD_global:
@@ -2103,9 +3976,9 @@ err_nth_flags:
 	case TPP_KWD_local:
 		lookup_mode |= LOOKUP_SYM_VLOCAL;
 do_warn_deprecated_modifier:
-		if (DeeLexer_Warnf(self, TPP_W_DEPRECATED_PREFIX_IN_EXPRESSION))
+		if (DeeParser_Warnf(self, TPP_W_DEPRECATED_PREFIX_IN_EXPRESSION))
 			goto err;
-		if (TPP_TOK_ISERR(DeeLexer_Yield(self)))
+		if (TPP_TOK_ISERR(DeeParser_Yield(self)))
 			goto err;
 		goto default_case;
 
@@ -2132,42 +4005,42 @@ do_warn_deprecated_modifier:
 			if unlikely(!new_result)
 				goto err;
 			result = new_result;
-			if (TPP_TOK_ISERR(DeeLexer_Yield(self)))
+			if (TPP_TOK_ISERR(DeeParser_Yield(self)))
 				goto err_r;
 			return result;
 		}
 		ATTR_FALLTHROUGH
 	default:
 default_case:
-		if (DeeLexer_HasTokenKwd(self)) {
+		if (DeeParser_HasTokenKwd(self)) {
 			/* Perform a regular symbol lookup. */
 			tpp_keyword const *name;
 #ifndef CONFIG_EXPERIMENTAL_USE_TPP3
 do_keyword:
 #endif /* !CONFIG_EXPERIMENTAL_USE_TPP3 */
-			name = DeeLexer_GetTokenKwd(self);
-			if (DeeLexer_GetLoc(self, &loc))
+			name = DeeParser_GetTokenKwd(self);
+			if (DeeParser_GetLoc(self, &loc))
 				goto err;
-			if (TPP_TOK_ISERR(DeeLexer_Yield(self)))
+			if (TPP_TOK_ISERR(DeeParser_Yield(self)))
 				goto err;
-			if (DeeLexer_GetTok(self) == TPP_KWD_from) {
+			if (DeeParser_GetTok(self) == TPP_KWD_from) {
 				/* `Error from deemon` - Short form of `import Error from deemon` */
-				if (DeeLexer_GetLoc(self, &loc))
+				if (DeeParser_GetLoc(self, &loc))
 					goto err;
-				if (TPP_TOK_ISERR(DeeLexer_Yield(self)))
+				if (TPP_TOK_ISERR(DeeParser_Yield(self)))
 					goto err;
 				result = ast_parse_import_single(self, name);
-				if (result && (DeeLexer_GetTok(self) != ';' &&
-				               DeeLexer_GetTok(self) != ',' &&
-				               DeeLexer_GetTok(self) != ')' &&
-				               DeeLexer_GetTok(self) != '}' &&
-				               DeeLexer_GetTok(self) != ']' &&
-				               DeeLexer_GetTok(self) != '\n' &&
+				if (result && (DeeParser_GetTok(self) != ';' &&
+				               DeeParser_GetTok(self) != ',' &&
+				               DeeParser_GetTok(self) != ')' &&
+				               DeeParser_GetTok(self) != '}' &&
+				               DeeParser_GetTok(self) != ']' &&
+				               DeeParser_GetTok(self) != '\n' &&
 #ifndef CONFIG_EXPERIMENTAL_USE_TPP3
 				               TPPLexer_Current->l_token.t_id != TOK_ERR &&
 #endif /* !CONFIG_EXPERIMENTAL_USE_TPP3 */
 				               /* Don't emit this warning from macros! */
-				               !tpp_file_ismacro(DeeLexer_GetFile(self)))) {
+				               !tpp_file_ismacro(DeeParser_GetFile(self)))) {
 					/* Warn about bad readability in code like:
 					 * >> int from deemon(42)
 					 * Which should really be written as:
@@ -2181,11 +4054,11 @@ do_keyword:
 							modname = DeeModule_GetShortName(sym->s_extern.e_module);
 						}
 					}
-					if (DeeLexer_WarnfLoc(self, &loc, TPP_W_UNCLEAR_SYMBOL_FROM_MODULE,
+					if (DeeParser_WarnfLoc(self, &loc, TPP_W_UNCLEAR_SYMBOL_FROM_MODULE,
 					                      symname, modname))
 						goto err;
 				}
-			} else if (DeeLexer_GetTok(self) == TPP_TOK_MINUS_RANGLE) {
+			} else if (DeeParser_GetTok(self) == TPP_TOK_MINUS_RANGLE) {
 				/* Support for java-style lambda with singular argument. */
 				result = ast_parse_function_java_lambda(self, name, &loc);
 			} else {
@@ -2196,7 +4069,7 @@ do_keyword:
 				result = ast_sym(sym);
 			}
 		} else {
-			if (DeeLexer_Warnf(self, TPP_W_UNEXPECTED_TOKEN_IN_EXPRESSION))
+			if (DeeParser_Warnf(self, TPP_W_UNEXPECTED_TOKEN_IN_EXPRESSION))
 				goto err;
 			result = ast_constexpr(Dee_None);
 		}
@@ -2215,49 +4088,49 @@ ast_parse_unary_operand(DeeLexer *self, /*inherit(always)*/ DREF struct ast *__r
 	DREF struct ast *other;
 	struct ast_loc loc;
 	do {
-		switch (DeeLexer_GetTok(self)) {
+		switch (DeeParser_GetTok(self)) {
 
 		case TPP_TOK_COLON_COLON:
 			/* Backwards compatibility with deemon 100+ */
-			if (DeeLexer_Warnf(self, TPP_W_DEPRECATED_ATTRIBUTE_SYNTAX))
+			if (DeeParser_Warnf(self, TPP_W_DEPRECATED_ATTRIBUTE_SYNTAX))
 				goto err_r;
 			ATTR_FALLTHROUGH
 		case '.': /* Attribute lookup */
-			if (DeeLexer_GetLoc(self, &loc))
+			if (DeeParser_GetLoc(self, &loc))
 				goto err_r;
-			if (TPP_TOK_ISERR(DeeLexer_Yield(self)))
+			if (TPP_TOK_ISERR(DeeParser_Yield(self)))
 				goto err_r;
-			if (DeeLexer_HasTokenKwd(self)) {
+			if (DeeParser_HasTokenKwd(self)) {
 				DREF DeeObject *attr_name;
-				if (DeeLexer_GetTok(self) == TPP_KWD_this)
+				if (DeeParser_GetTok(self) == TPP_KWD_this)
 					goto got_attr; /* This is really just a no-op. */
-				if (DeeLexer_GetTok(self) == TPP_KWD_class) {
+				if (DeeParser_GetTok(self) == TPP_KWD_class) {
 					/* Return the real class of a type, properly unwinding super. */
 					merge = ast_sethere(self, ast_action1(AST_FACTION_CLASSOF, result));
-				} else if (DeeLexer_GetTok(self) == TPP_KWD_super) {
+				} else if (DeeParser_GetTok(self) == TPP_KWD_super) {
 					/* Return the real class of a type, properly unwinding super. */
 					merge = ast_sethere(self, ast_action1(AST_FACTION_SUPEROF, result));
-				} else if (DeeLexer_GetTok(self) == TPP_KWD_operator) {
+				} else if (DeeParser_GetTok(self) == TPP_KWD_operator) {
 					/* Named & bound operator invocation. */
 					int32_t name;
-					if (TPP_TOK_ISERR(DeeLexer_Yield(self)))
+					if (TPP_TOK_ISERR(DeeParser_Yield(self)))
 						goto err_r;
-					if (DeeLexer_GetLoc(self, &loc))
+					if (DeeParser_GetLoc(self, &loc))
 						goto err_r;
 					name = ast_parse_operator_name(self, P_OPERATOR_FNORMAL);
 					if unlikely(name < 0)
 						goto err_r;
-					if (DeeLexer_GetTok(self) != '(') {
+					if (DeeParser_GetTok(self) != '(') {
 						/* Bound-operator expression. */
 						merge = ast_operator_func((Dee_operator_t)name, result);
 					} else {
-						DeeLexer_NoLf_Push(self);
-						if (TPP_TOK_ISERR(DeeLexer_Yield(self))) {
+						DeeParser_NoLf_Push(self);
+						if (TPP_TOK_ISERR(DeeParser_Yield(self))) {
 /*err_r_operator_lparen_flags:*/
-							DeeLexer_NoLf_Break(self);
+							DeeParser_NoLf_Break(self);
 							goto err_r;
 						}
-						if (DeeLexer_GetTok(self) == ')') {
+						if (DeeParser_GetTok(self) == ')') {
 							other = ast_constexpr(Dee_EmptyTuple);
 						} else {
 							other = ast_parse_comma(self,
@@ -2265,10 +4138,10 @@ ast_parse_unary_operand(DeeLexer *self, /*inherit(always)*/ DREF struct ast *__r
 							                        AST_FMULTIPLE_TUPLE,
 							                        NULL);
 						}
-						DeeLexer_NoLf_Pop(self);
+						DeeParser_NoLf_Pop(self);
 						if unlikely(!other)
 							goto err_r;
-						if (DeeLexer_Skip2(self, TPP_TOK_OFCHAR(')'), W_EXPECTED_RPAREN))
+						if (DeeParser_Skip2(self, TPP_TOK_OFCHAR(')'), W_EXPECTED_RPAREN))
 							goto err_r_other;
 						merge = ast_build_bound_operator((Dee_operator_t)name,
 						                                 /* Set the MAYBEPFX flag to suppress errors that
@@ -2285,13 +4158,13 @@ ast_parse_unary_operand(DeeLexer *self, /*inherit(always)*/ DREF struct ast *__r
 					result = ast_setddi(merge, &loc);
 					goto got_attr2;
 				} else {
-					if (DeeLexer_IsIdentifier(self, DeeLexer_GetTokenKwd(self))) {
-						if (DeeLexer_Warnf(self, TPP_W_RESERVED_ATTRIBUTE_NAME,
-						                   DeeLexer_GetTokenKwdCStr(self)))
+					if (DeeParser_IsIdentifier(self, DeeParser_GetTokenKwd(self))) {
+						if (DeeParser_Warnf(self, TPP_W_RESERVED_ATTRIBUTE_NAME,
+						                   DeeParser_GetTokenKwdCStr(self)))
 							goto err;
 					}
-					attr_name = DeeString_NewSized(DeeLexer_GetTokenKwdCStr(self),
-					                               DeeLexer_GetTokenKwdLen(self));
+					attr_name = DeeString_NewSized(DeeParser_GetTokenKwdCStr(self),
+					                               DeeParser_GetTokenKwdLen(self));
 					if unlikely(!attr_name)
 						goto err_r;
 					other = ast_sethere(self, ast_constexpr(attr_name));
@@ -2304,7 +4177,7 @@ ast_parse_unary_operand(DeeLexer *self, /*inherit(always)*/ DREF struct ast *__r
 					if unlikely(!merge)
 						goto err;
 					result = merge;
-					if (TPP_TOK_ISERR(DeeLexer_Yield(self)))
+					if (TPP_TOK_ISERR(DeeParser_Yield(self)))
 						goto err_r;
 					goto got_attr2;
 				}
@@ -2313,26 +4186,26 @@ ast_parse_unary_operand(DeeLexer *self, /*inherit(always)*/ DREF struct ast *__r
 					goto err;
 				result = merge;
 got_attr:
-				if (TPP_TOK_ISERR(DeeLexer_Yield(self)))
+				if (TPP_TOK_ISERR(DeeParser_Yield(self)))
 					goto err_r;
 got_attr2:;
 			} else {
-				if (DeeLexer_Warnf(self, TPP_W_EXPECTED_KEYWORD_AFTER_DOT))
+				if (DeeParser_Warnf(self, TPP_W_EXPECTED_KEYWORD_AFTER_DOT))
 					goto err_r;
 			}
 			break;
 
 		case '[': {
 			/* sequence operator */
-			if (DeeLexer_GetLoc(self, &loc))
+			if (DeeParser_GetLoc(self, &loc))
 				goto err_r;
-			DeeLexer_NoLf_Push(self);
-			if (TPP_TOK_ISERR(DeeLexer_Yield(self))) {
+			DeeParser_NoLf_Push(self);
+			if (TPP_TOK_ISERR(DeeParser_Yield(self))) {
 err_r_lbracket_flags:
-				DeeLexer_NoLf_Break(self);
+				DeeParser_NoLf_Break(self);
 				goto err_r;
 			}
-			if (DeeLexer_GetTok(self) == ':') {
+			if (DeeParser_GetTok(self) == ':') {
 				other = ast_constexpr(Dee_None);
 				if unlikely(!other)
 					goto err_r_lbracket_flags;
@@ -2341,16 +4214,16 @@ err_r_lbracket_flags:
 			other = ast_parse_expr(self, LOOKUP_SYM_SECONDARY);
 			if unlikely(!other)
 				goto err_r_lbracket_flags;
-			if (DeeLexer_GetTok(self) == ':') {
+			if (DeeParser_GetTok(self) == ':') {
 				DREF struct ast *third;
 do_range:
 				/* range operator. */
-				if (TPP_TOK_ISERR(DeeLexer_Yield(self))) {
+				if (TPP_TOK_ISERR(DeeParser_Yield(self))) {
 err_r_lbracket_flags_other:
 					ast_decref(other);
 					goto err_r_lbracket_flags;
 				}
-				if (DeeLexer_GetTok(self) == ']') {
+				if (DeeParser_GetTok(self) == ']') {
 					third = ast_constexpr(Dee_None);
 				} else {
 					third = ast_parse_expr(self, LOOKUP_SYM_SECONDARY);
@@ -2362,19 +4235,19 @@ err_r_lbracket_flags_other:
 			} else {
 				merge = ast_operator2(OPERATOR_GETITEM, 0, result, other);
 			}
-			DeeLexer_NoLf_Pop(self);
+			DeeParser_NoLf_Pop(self);
 			ast_decref(other);
 			ast_decref(result);
 			if unlikely(!merge)
 				goto err;
 			result = merge;
-			if (DeeLexer_Skip2(self, TPP_TOK_OFCHAR(']'), W_EXPECTED_RBRACKET_AFTER_GETITEM))
+			if (DeeParser_Skip2(self, TPP_TOK_OFCHAR(']'), W_EXPECTED_RBRACKET_AFTER_GETITEM))
 				goto err_r;
 			ast_setddi(result, &loc);
 		}	break;
 
 		case '{': /* Brace initializers. */
-			if (DeeLexer_GetLoc(self, &loc))
+			if (DeeParser_GetLoc(self, &loc))
 				goto err_r;
 			other = ast_parse_unaryhead(self, LOOKUP_SYM_SECONDARY);
 			if unlikely(!other)
@@ -2403,16 +4276,16 @@ err_other:
 		case TPP_KWD_pack: {
 			int temp;
 			DREF struct ast *kw_labels;
-			bool inside_macro = tpp_file_ismacro(DeeLexer_GetFile(self));
+			bool inside_macro = tpp_file_ismacro(DeeParser_GetFile(self));
 			/* Call expression without parenthesis. */
-			if (DeeLexer_GetLoc(self, &loc))
+			if (DeeParser_GetLoc(self, &loc))
 				goto err_r;
-			if (TPP_TOK_ISERR(DeeLexer_Yield(self)))
+			if (TPP_TOK_ISERR(DeeParser_Yield(self)))
 				goto err_r;
-			if (DeeLexer_GetTok(self) == '(')
+			if (DeeParser_GetTok(self) == '(')
 				goto do_normal_call_with_loc;
 			if (!inside_macro) {
-				if (DeeLexer_WarnfLoc(self, &loc, TPP_W_PACK_USED_OUTSIDE_OF_MACRO))
+				if (DeeParser_WarnfLoc(self, &loc, TPP_W_PACK_USED_OUTSIDE_OF_MACRO))
 					goto err_r;
 			}
 			temp = maybe_expression_begin(self);
@@ -2449,16 +4322,16 @@ err_other:
 		case '(': {
 			DREF struct ast *kw_labels;
 			/* Call expression. */
-			if (DeeLexer_GetLoc(self, &loc))
+			if (DeeParser_GetLoc(self, &loc))
 				goto err_r;
 do_normal_call_with_loc:
-			DeeLexer_NoLf_Push(self);
-			if (TPP_TOK_ISERR(DeeLexer_Yield(self))) {
+			DeeParser_NoLf_Push(self);
+			if (TPP_TOK_ISERR(DeeParser_Yield(self))) {
 err_r_lparen_flags:
-				DeeLexer_NoLf_Break(self);
+				DeeParser_NoLf_Break(self);
 				goto err_r;
 			}
-			if (DeeLexer_GetTok(self) == ')') {
+			if (DeeParser_GetTok(self) == ')') {
 				other     = ast_setddi(ast_constexpr(Dee_EmptyTuple), &loc);
 				kw_labels = NULL;
 			} else {
@@ -2478,11 +4351,11 @@ err_r_lparen_flags:
 			merge = ast_setddi(merge, &loc);
 			ast_decref(other);
 			ast_decref(result);
-			DeeLexer_NoLf_Pop(self);
+			DeeParser_NoLf_Pop(self);
 			if unlikely(!merge)
 				goto err;
 			result = merge;
-			if (DeeLexer_Skip2(self, TPP_TOK_OFCHAR(')'), W_EXPECTED_RPAREN_AFTER_CALL))
+			if (DeeParser_Skip2(self, TPP_TOK_OFCHAR(')'), W_EXPECTED_RPAREN_AFTER_CALL))
 				goto err_r;
 		}	break;
 
@@ -2499,7 +4372,7 @@ do_inplace_op:
 			if unlikely(!merge)
 				goto err;
 			result = merge;
-			if (TPP_TOK_ISERR(DeeLexer_Yield(self)))
+			if (TPP_TOK_ISERR(DeeParser_Yield(self)))
 				goto err_r;
 		}	break;
 
@@ -2509,7 +4382,7 @@ do_inplace_op:
 			if unlikely(!merge)
 				goto err;
 			result = merge;
-			if (TPP_TOK_ISERR(DeeLexer_Yield(self)))
+			if (TPP_TOK_ISERR(DeeParser_Yield(self)))
 				goto err_r;
 			break;
 
@@ -2541,12 +4414,12 @@ INTERN WUNUSED NONNULL((1, 2)) DREF struct ast *DFCALL
 ast_parse_prod_operand(DeeLexer *self, /*inherit(always)*/ DREF struct ast *__restrict lhs) {
 	DREF struct ast *rhs, *merge;
 	struct ast_loc loc;
-	tpp_token_id cmd = DeeLexer_GetTok(self);
+	tpp_token_id cmd = DeeParser_GetTok(self);
 	ASSERT(TOKEN_IS_PROD(cmd));
 	for (;;) {
-		if (DeeLexer_GetLoc(self, &loc))
+		if (DeeParser_GetLoc(self, &loc))
 			goto err_r;
-		if (TPP_TOK_ISERR(DeeLexer_Yield(self)))
+		if (TPP_TOK_ISERR(DeeParser_Yield(self)))
 			goto err_r;
 		rhs = ast_parse_unary(self, LOOKUP_SYM_SECONDARY);
 		if unlikely(!rhs)
@@ -2558,7 +4431,7 @@ ast_parse_prod_operand(DeeLexer *self, /*inherit(always)*/ DREF struct ast *__re
 		lhs = merge;
 		if unlikely(!lhs)
 			break;
-		cmd = DeeLexer_GetTok(self);
+		cmd = DeeParser_GetTok(self);
 		if (!TOKEN_IS_PROD(cmd))
 			break;
 	}
@@ -2572,15 +4445,15 @@ INTERN WUNUSED NONNULL((1, 2)) DREF struct ast *DFCALL
 ast_parse_sum_operand(DeeLexer *self, /*inherit(always)*/ DREF struct ast *__restrict lhs) {
 	DREF struct ast *rhs, *merge;
 	struct ast_loc loc;
-	tpp_token_id cmd = DeeLexer_GetTok(self);
+	tpp_token_id cmd = DeeParser_GetTok(self);
 	ASSERT(TOKEN_IS_SUM(cmd));
 	for (;;) {
-		if (DeeLexer_GetLoc(self, &loc))
+		if (DeeParser_GetLoc(self, &loc))
 			goto err_r;
-		if (TPP_TOK_ISERR(DeeLexer_Yield(self)))
+		if (TPP_TOK_ISERR(DeeParser_Yield(self)))
 			goto err_r;
-		if (DeeLexer_GetTok(self) == TPP_TOK_DOT_DOT_DOT && cmd == '+') { /* sum */
-			if (TPP_TOK_ISERR(DeeLexer_Yield(self)))
+		if (DeeParser_GetTok(self) == TPP_TOK_DOT_DOT_DOT && cmd == '+') { /* sum */
+			if (TPP_TOK_ISERR(DeeParser_Yield(self)))
 				goto err_r;
 			merge = ast_action1(AST_FACTION_SUM, lhs);
 		} else {
@@ -2594,7 +4467,7 @@ ast_parse_sum_operand(DeeLexer *self, /*inherit(always)*/ DREF struct ast *__res
 		lhs = ast_setddi(merge, &loc);
 		if unlikely(!lhs)
 			break;
-		cmd = DeeLexer_GetTok(self);
+		cmd = DeeParser_GetTok(self);
 		if (!TOKEN_IS_SUM(cmd))
 			break;
 	}
@@ -2608,12 +4481,12 @@ INTERN WUNUSED NONNULL((1, 2)) DREF struct ast *DFCALL
 ast_parse_shift_operand(DeeLexer *self, /*inherit(always)*/ DREF struct ast *__restrict lhs) {
 	DREF struct ast *rhs, *merge;
 	struct ast_loc loc;
-	tpp_token_id cmd = DeeLexer_GetTok(self);
+	tpp_token_id cmd = DeeParser_GetTok(self);
 	ASSERT(TOKEN_IS_SHIFT(cmd));
 	for (;;) {
-		if (DeeLexer_GetLoc(self, &loc))
+		if (DeeParser_GetLoc(self, &loc))
 			goto err_r;
-		if (TPP_TOK_ISERR(DeeLexer_Yield(self)))
+		if (TPP_TOK_ISERR(DeeParser_Yield(self)))
 			goto err_r;
 		rhs = ast_parse_sum(self, LOOKUP_SYM_SECONDARY);
 		if unlikely(!rhs)
@@ -2625,7 +4498,7 @@ ast_parse_shift_operand(DeeLexer *self, /*inherit(always)*/ DREF struct ast *__r
 		lhs = merge;
 		if unlikely(!lhs)
 			break;
-		cmd = DeeLexer_GetTok(self);
+		cmd = DeeParser_GetTok(self);
 		if (!TOKEN_IS_SHIFT(cmd))
 			break;
 	}
@@ -2639,15 +4512,15 @@ INTERN WUNUSED NONNULL((1, 2)) DREF struct ast *DFCALL
 ast_parse_cmp_operand(DeeLexer *self, /*inherit(always)*/ DREF struct ast *__restrict lhs) {
 	DREF struct ast *rhs, *merge;
 	struct ast_loc loc;
-	tpp_token_id cmd = DeeLexer_GetTok(self);
+	tpp_token_id cmd = DeeParser_GetTok(self);
 	ASSERT(TOKEN_IS_CMP(cmd));
 	for (;;) {
-		if (DeeLexer_GetLoc(self, &loc))
+		if (DeeParser_GetLoc(self, &loc))
 			goto err_r;
-		if (TPP_TOK_ISERR(DeeLexer_Yield(self)))
+		if (TPP_TOK_ISERR(DeeParser_Yield(self)))
 			goto err_r;
-		if (DeeLexer_GetTok(self) == TPP_TOK_DOT_DOT_DOT && (cmd == '<' || cmd == '>')) {
-			if (TPP_TOK_ISERR(DeeLexer_Yield(self)))
+		if (DeeParser_GetTok(self) == TPP_TOK_DOT_DOT_DOT && (cmd == '<' || cmd == '>')) {
+			if (TPP_TOK_ISERR(DeeParser_Yield(self)))
 				goto err_r;
 			merge = ast_action1(cmd == '<'
 			                    ? AST_FACTION_MIN
@@ -2669,7 +4542,7 @@ ast_parse_cmp_operand(DeeLexer *self, /*inherit(always)*/ DREF struct ast *__res
 		lhs = ast_setddi(merge, &loc);
 		if unlikely(!lhs)
 			break;
-		cmd = DeeLexer_GetTok(self);
+		cmd = DeeParser_GetTok(self);
 		if (!TOKEN_IS_SHIFT(cmd))
 			break;
 	}
@@ -2708,13 +4581,13 @@ INTERN WUNUSED NONNULL((1, 2)) DREF struct ast *DFCALL
 ast_parse_cmpeq_operand(DeeLexer *self, /*inherit(always)*/ DREF struct ast *__restrict lhs) {
 	DREF struct ast *rhs, *merge;
 	struct ast_loc loc;
-	tpp_token_id cmd = DeeLexer_GetTok(self);
+	tpp_token_id cmd = DeeParser_GetTok(self);
 	ASSERT(TOKEN_IS_CMPEQ(cmd));
 	for (;;) {
-		if (DeeLexer_GetLoc(self, &loc))
+		if (DeeParser_GetLoc(self, &loc))
 			goto err_r;
 		if (cmd == TPP_TOK_QMARK_QMARK) {
-			if (TPP_TOK_ISERR(DeeLexer_Yield(self)))
+			if (TPP_TOK_ISERR(DeeParser_Yield(self)))
 				goto err_r;
 			/* Code like "a ?? b" gets compiled as "a !is none ? REUSE(a) : b",
 			 * where REUSE() means that the branch isn't evaluated a second time. */
@@ -2731,16 +4604,16 @@ ast_parse_cmpeq_operand(DeeLexer *self, /*inherit(always)*/ DREF struct ast *__r
 			bool invert;
 			invert = cmd == '!';
 yield_again:
-			if (TPP_TOK_ISERR(DeeLexer_Yield(self)))
+			if (TPP_TOK_ISERR(DeeParser_Yield(self)))
 				goto err_r;
-			if (DeeLexer_GetTok(self) == '!') {
+			if (DeeParser_GetTok(self) == '!') {
 				invert ^= 1;
 				goto yield_again;
 			}
 			if (cmd == '!') {
-				if (DeeLexer_GetTok(self) == TPP_KWD_is || DeeLexer_GetTok(self) == TPP_KWD_in) {
-					cmd = DeeLexer_GetTok(self);
-					if (TPP_TOK_ISERR(DeeLexer_Yield(self)))
+				if (DeeParser_GetTok(self) == TPP_KWD_is || DeeParser_GetTok(self) == TPP_KWD_in) {
+					cmd = DeeParser_GetTok(self);
+					if (TPP_TOK_ISERR(DeeParser_Yield(self)))
 						goto err_r;
 				} else {
 					/* TODO: Must rewind to start of '!'-sequence in this case and
@@ -2750,14 +4623,14 @@ yield_again:
 					 *
 					 * iow: the `W_EXPECTED_IS_OR_IN_AFTER_EXCLAIM` warning needs to go away
 					 */
-					if (DeeLexer_Warnf(self, TPP_W_EXPECTED_IS_OR_IN_AFTER_EXCLAIM))
+					if (DeeParser_Warnf(self, TPP_W_EXPECTED_IS_OR_IN_AFTER_EXCLAIM))
 						goto err_r;
 					cmd = TPP_KWD_is;
 				}
 			}
-			if (DeeLexer_GetTok(self) == TPP_KWD_bound && cmd == TPP_KWD_is) {
+			if (DeeParser_GetTok(self) == TPP_KWD_bound && cmd == TPP_KWD_is) {
 				/* Special cast: `foo is bound` --> `bound(foo)` */
-				if (TPP_TOK_ISERR(DeeLexer_Yield(self)))
+				if (TPP_TOK_ISERR(DeeParser_Yield(self)))
 					goto err_r;
 				merge = make_bound_expression(self, lhs, &loc);
 			} else {
@@ -2797,7 +4670,7 @@ yield_again:
 					break;
 			}
 		}
-		cmd = DeeLexer_GetTok(self);
+		cmd = DeeParser_GetTok(self);
 		if (!TOKEN_IS_CMPEQ(cmd))
 			break;
 	}
@@ -2812,11 +4685,11 @@ INTERN WUNUSED NONNULL((1, 2)) DREF struct ast *DFCALL
 ast_parse_and_operand(DeeLexer *self, /*inherit(always)*/ DREF struct ast *__restrict lhs) {
 	DREF struct ast *rhs, *merge;
 	struct ast_loc loc;
-	ASSERT(TOKEN_IS_AND(DeeLexer_GetTok(self)));
+	ASSERT(TOKEN_IS_AND(DeeParser_GetTok(self)));
 	for (;;) {
-		if (DeeLexer_GetLoc(self, &loc))
+		if (DeeParser_GetLoc(self, &loc))
 			goto err_r;
-		if (TPP_TOK_ISERR(DeeLexer_Yield(self)))
+		if (TPP_TOK_ISERR(DeeParser_Yield(self)))
 			goto err_r;
 		rhs = ast_parse_cmpeq(self, LOOKUP_SYM_SECONDARY);
 		if unlikely(!rhs)
@@ -2828,7 +4701,7 @@ ast_parse_and_operand(DeeLexer *self, /*inherit(always)*/ DREF struct ast *__res
 		lhs = merge;
 		if unlikely(!lhs)
 			break;
-		if (!TOKEN_IS_AND(DeeLexer_GetTok(self)))
+		if (!TOKEN_IS_AND(DeeParser_GetTok(self)))
 			break;
 	}
 	return lhs;
@@ -2842,11 +4715,11 @@ INTERN WUNUSED NONNULL((1, 2)) DREF struct ast *DFCALL
 ast_parse_xor_operand(DeeLexer *self, /*inherit(always)*/ DREF struct ast *__restrict lhs) {
 	DREF struct ast *rhs, *merge;
 	struct ast_loc loc;
-	ASSERT(TOKEN_IS_XOR(DeeLexer_GetTok(self)));
+	ASSERT(TOKEN_IS_XOR(DeeParser_GetTok(self)));
 	for (;;) {
-		if (DeeLexer_GetLoc(self, &loc))
+		if (DeeParser_GetLoc(self, &loc))
 			goto err_r;
-		if (TPP_TOK_ISERR(DeeLexer_Yield(self)))
+		if (TPP_TOK_ISERR(DeeParser_Yield(self)))
 			goto err_r;
 		rhs = ast_parse_and(self, LOOKUP_SYM_SECONDARY);
 		if unlikely(!rhs)
@@ -2858,7 +4731,7 @@ ast_parse_xor_operand(DeeLexer *self, /*inherit(always)*/ DREF struct ast *__res
 		lhs = merge;
 		if unlikely(!lhs)
 			break;
-		if (!TOKEN_IS_XOR(DeeLexer_GetTok(self)))
+		if (!TOKEN_IS_XOR(DeeParser_GetTok(self)))
 			break;
 	}
 	return lhs;
@@ -2872,11 +4745,11 @@ INTERN WUNUSED NONNULL((1, 2)) DREF struct ast *DFCALL
 ast_parse_or_operand(DeeLexer *self, /*inherit(always)*/ DREF struct ast *__restrict lhs) {
 	DREF struct ast *rhs, *merge;
 	struct ast_loc loc;
-	ASSERT(TOKEN_IS_OR(DeeLexer_GetTok(self)));
+	ASSERT(TOKEN_IS_OR(DeeParser_GetTok(self)));
 	for (;;) {
-		if (DeeLexer_GetLoc(self, &loc))
+		if (DeeParser_GetLoc(self, &loc))
 			goto err_r;
-		if (TPP_TOK_ISERR(DeeLexer_Yield(self)))
+		if (TPP_TOK_ISERR(DeeParser_Yield(self)))
 			goto err_r;
 		rhs = ast_parse_xor(self, LOOKUP_SYM_SECONDARY);
 		if unlikely(!rhs)
@@ -2888,7 +4761,7 @@ ast_parse_or_operand(DeeLexer *self, /*inherit(always)*/ DREF struct ast *__rest
 		lhs = merge;
 		if unlikely(!lhs)
 			break;
-		if (!TOKEN_IS_OR(DeeLexer_GetTok(self)))
+		if (!TOKEN_IS_OR(DeeParser_GetTok(self)))
 			break;
 	}
 	return lhs;
@@ -2902,11 +4775,11 @@ INTERN WUNUSED NONNULL((1, 2)) DREF struct ast *DFCALL
 ast_parse_as_operand(DeeLexer *self, /*inherit(always)*/ DREF struct ast *__restrict lhs) {
 	DREF struct ast *rhs, *merge;
 	struct ast_loc loc;
-	ASSERT(TOKEN_IS_AS(DeeLexer_GetTok(self)));
+	ASSERT(TOKEN_IS_AS(DeeParser_GetTok(self)));
 	for (;;) {
-		if (DeeLexer_GetLoc(self, &loc))
+		if (DeeParser_GetLoc(self, &loc))
 			goto err_r;
-		if (TPP_TOK_ISERR(DeeLexer_Yield(self)))
+		if (TPP_TOK_ISERR(DeeParser_Yield(self)))
 			goto err_r;
 		rhs = ast_parse_or(self, LOOKUP_SYM_SECONDARY);
 		if unlikely(!rhs)
@@ -2918,7 +4791,7 @@ ast_parse_as_operand(DeeLexer *self, /*inherit(always)*/ DREF struct ast *__rest
 		lhs = merge;
 		if unlikely(!lhs)
 			break;
-		if (!TOKEN_IS_AS(DeeLexer_GetTok(self)))
+		if (!TOKEN_IS_AS(DeeParser_GetTok(self)))
 			break;
 	}
 	return lhs;
@@ -2932,14 +4805,14 @@ INTERN WUNUSED NONNULL((1, 2)) DREF struct ast *DFCALL
 ast_parse_land_operand(DeeLexer *self, /*inherit(always)*/ DREF struct ast *__restrict lhs) {
 	DREF struct ast *rhs, *merge;
 	struct ast_loc loc;
-	ASSERT(TOKEN_IS_LAND(DeeLexer_GetTok(self)));
+	ASSERT(TOKEN_IS_LAND(DeeParser_GetTok(self)));
 	for (;;) {
-		if (DeeLexer_GetLoc(self, &loc))
+		if (DeeParser_GetLoc(self, &loc))
 			goto err_r;
-		if (TPP_TOK_ISERR(DeeLexer_Yield(self)))
+		if (TPP_TOK_ISERR(DeeParser_Yield(self)))
 			goto err_r;
-		if (DeeLexer_GetTok(self) == TPP_TOK_DOT_DOT_DOT) {
-			if (TPP_TOK_ISERR(DeeLexer_Yield(self)))
+		if (DeeParser_GetTok(self) == TPP_TOK_DOT_DOT_DOT) {
+			if (TPP_TOK_ISERR(DeeParser_Yield(self)))
 				goto err_r;
 			merge = ast_action1(AST_FACTION_ALL, lhs);
 		} else {
@@ -2953,11 +4826,11 @@ ast_parse_land_operand(DeeLexer *self, /*inherit(always)*/ DREF struct ast *__re
 		lhs = ast_setddi(merge, &loc);
 		if unlikely(!lhs)
 			goto err;
-		if (!TOKEN_IS_LAND(DeeLexer_GetTok(self)))
+		if (!TOKEN_IS_LAND(DeeParser_GetTok(self)))
 			break;
 	}
-	if (TOKEN_IS_LOR(DeeLexer_GetTok(self))) {
-		if (DeeLexer_Warnf(self, TPP_W_PAREN_AROUND_LAND))
+	if (TOKEN_IS_LOR(DeeParser_GetTok(self))) {
+		if (DeeParser_Warnf(self, TPP_W_PAREN_AROUND_LAND))
 			goto err_r;
 	}
 	return lhs;
@@ -2972,23 +4845,23 @@ INTERN WUNUSED NONNULL((1, 2)) DREF struct ast *DFCALL
 ast_parse_lor_operand(DeeLexer *self, /*inherit(always)*/ DREF struct ast *__restrict lhs) {
 	DREF struct ast *rhs, *merge;
 	struct ast_loc loc;
-	ASSERT(TOKEN_IS_LOR(DeeLexer_GetTok(self)));
+	ASSERT(TOKEN_IS_LOR(DeeParser_GetTok(self)));
 	for (;;) {
-		if (DeeLexer_GetLoc(self, &loc))
+		if (DeeParser_GetLoc(self, &loc))
 			goto err_r;
-		if (TPP_TOK_ISERR(DeeLexer_Yield(self)))
+		if (TPP_TOK_ISERR(DeeParser_Yield(self)))
 			goto err_r;
-		if (DeeLexer_GetTok(self) == TPP_TOK_DOT_DOT_DOT) {
-			if (TPP_TOK_ISERR(DeeLexer_Yield(self)))
+		if (DeeParser_GetTok(self) == TPP_TOK_DOT_DOT_DOT) {
+			if (TPP_TOK_ISERR(DeeParser_Yield(self)))
 				goto err_r;
 			merge = ast_action1(AST_FACTION_ANY, lhs);
 		} else {
 			rhs = ast_parse_lor(self, LOOKUP_SYM_SECONDARY);
 			if unlikely(!rhs)
 				goto err_r;
-			if (TOKEN_IS_LAND(DeeLexer_GetTok(self))) {
+			if (TOKEN_IS_LAND(DeeParser_GetTok(self))) {
 				/* Suggest parenthesis around logical-and. */
-				if (DeeLexer_Warnf(self, TPP_W_PAREN_AROUND_LAND))
+				if (DeeParser_Warnf(self, TPP_W_PAREN_AROUND_LAND))
 					goto err_r_rhs;
 				rhs = ast_parse_land_operand(self, rhs);
 				if unlikely(!rhs)
@@ -3002,7 +4875,7 @@ ast_parse_lor_operand(DeeLexer *self, /*inherit(always)*/ DREF struct ast *__res
 		lhs = ast_setddi(merge, &loc);
 		if unlikely(!lhs)
 			goto err;
-		if (!TOKEN_IS_LOR(DeeLexer_GetTok(self)))
+		if (!TOKEN_IS_LOR(DeeParser_GetTok(self)))
 			break;
 	}
 	return lhs;
@@ -3023,15 +4896,15 @@ ast_parse_cond_operand(DeeLexer *self, /*inherit(always)*/ DREF struct ast *__re
 	 * >> (x ? y : ) // >> x ? y : x
 	 * >> (x ? y)    // >> x ? y : none
 	 */
-	ASSERT(TOKEN_IS_COND(DeeLexer_GetTok(self)));
+	ASSERT(TOKEN_IS_COND(DeeParser_GetTok(self)));
 	for (;;) {
 		uint16_t expect;
 		expect = current_tags.at_expect;
-		if (DeeLexer_GetLoc(self, &loc))
+		if (DeeParser_GetLoc(self, &loc))
 			goto err_r;
-		if (TPP_TOK_ISERR(DeeLexer_Yield(self)))
+		if (TPP_TOK_ISERR(DeeParser_Yield(self)))
 			goto err_r;
-		if (DeeLexer_GetTok(self) == ':') {
+		if (DeeParser_GetTok(self) == ':') {
 			/* Missing true-branch. (Reuse the condition branch!) */
 			tt = lhs;
 			ast_incref(lhs);
@@ -3040,9 +4913,9 @@ ast_parse_cond_operand(DeeLexer *self, /*inherit(always)*/ DREF struct ast *__re
 			if unlikely(!tt)
 				goto err_r;
 		}
-		if (DeeLexer_GetTok(self) == ':') {
+		if (DeeParser_GetTok(self) == ':') {
 			/* Parse the false-branch. */
-			if (TPP_TOK_ISERR(DeeLexer_Yield(self)))
+			if (TPP_TOK_ISERR(DeeParser_Yield(self)))
 				goto err_tt;
 			if (tt != lhs) {
 				int temp;
@@ -3073,7 +4946,7 @@ do_parse_ff_branch:
 		ast_decref(tt);
 		ast_decref(lhs);
 		lhs = merge;
-		if (!TOKEN_IS_COND(DeeLexer_GetTok(self)))
+		if (!TOKEN_IS_COND(DeeParser_GetTok(self)))
 			break;
 	}
 	return lhs;
@@ -3119,13 +4992,13 @@ INTERN WUNUSED NONNULL((1, 2)) DREF struct ast *DFCALL
 ast_parse_assign_operand(DeeLexer *self, /*inherit(always)*/ DREF struct ast *__restrict lhs) {
 	DREF struct ast *rhs, *merge;
 	struct ast_loc loc;
-	tpp_token_id cmd = DeeLexer_GetTok(self);
+	tpp_token_id cmd = DeeParser_GetTok(self);
 	ASSERT(TOKEN_IS_ASSIGN(cmd));
 	for (;;) {
 		Dee_operator_t operator_name;
-		if (DeeLexer_GetLoc(self, &loc))
+		if (DeeParser_GetLoc(self, &loc))
 			goto err_r;
-		if (TPP_TOK_ISERR(DeeLexer_Yield(self)))
+		if (TPP_TOK_ISERR(DeeParser_Yield(self)))
 			goto err_r;
 		rhs = ast_parse_cond(self, LOOKUP_SYM_SECONDARY);
 		if unlikely(!rhs)
@@ -3167,7 +5040,7 @@ ast_parse_assign_operand(DeeLexer *self, /*inherit(always)*/ DREF struct ast *__
 		lhs = ast_setddi(merge, &loc);
 		if unlikely(!lhs)
 			break;
-		cmd = DeeLexer_GetTok(self);
+		cmd = DeeParser_GetTok(self);
 		if (!TOKEN_IS_ASSIGN(cmd))
 			break;
 	}
@@ -3182,7 +5055,7 @@ INTERN WUNUSED NONNULL((1)) DREF struct ast *DFCALL
 ast_parse_prod(DeeLexer *self, unsigned int lookup_mode) {
 	DREF struct ast *result;
 	result = ast_parse_unary(self, lookup_mode);
-	if (likely(result) && TOKEN_IS_PROD(DeeLexer_GetTok(self)))
+	if (likely(result) && TOKEN_IS_PROD(DeeParser_GetTok(self)))
 		result = ast_parse_prod_operand(self, result);
 	return result;
 }
@@ -3191,7 +5064,7 @@ INTERN WUNUSED NONNULL((1)) DREF struct ast *DFCALL
 ast_parse_sum(DeeLexer *self, unsigned int lookup_mode) {
 	DREF struct ast *result;
 	result = ast_parse_prod(self, lookup_mode);
-	if (likely(result) && TOKEN_IS_SUM(DeeLexer_GetTok(self)))
+	if (likely(result) && TOKEN_IS_SUM(DeeParser_GetTok(self)))
 		result = ast_parse_sum_operand(self, result);
 	return result;
 }
@@ -3200,7 +5073,7 @@ INTERN WUNUSED NONNULL((1)) DREF struct ast *DFCALL
 ast_parse_shift(DeeLexer *self, unsigned int lookup_mode) {
 	DREF struct ast *result;
 	result = ast_parse_sum(self, lookup_mode);
-	if (likely(result) && TOKEN_IS_SHIFT(DeeLexer_GetTok(self)))
+	if (likely(result) && TOKEN_IS_SHIFT(DeeParser_GetTok(self)))
 		result = ast_parse_shift_operand(self, result);
 	return result;
 }
@@ -3209,7 +5082,7 @@ INTERN WUNUSED NONNULL((1)) DREF struct ast *DFCALL
 ast_parse_cmp(DeeLexer *self, unsigned int lookup_mode) {
 	DREF struct ast *result;
 	result = ast_parse_shift(self, lookup_mode);
-	if (likely(result) && TOKEN_IS_CMP(DeeLexer_GetTok(self)))
+	if (likely(result) && TOKEN_IS_CMP(DeeParser_GetTok(self)))
 		result = ast_parse_cmp_operand(self, result);
 	return result;
 }
@@ -3218,7 +5091,7 @@ INTERN WUNUSED NONNULL((1)) DREF struct ast *DFCALL
 ast_parse_cmpeq(DeeLexer *self, unsigned int lookup_mode) {
 	DREF struct ast *result;
 	result = ast_parse_cmp(self, lookup_mode);
-	if (likely(result) && TOKEN_IS_CMPEQ(DeeLexer_GetTok(self)))
+	if (likely(result) && TOKEN_IS_CMPEQ(DeeParser_GetTok(self)))
 		result = ast_parse_cmpeq_operand(self, result);
 	return result;
 }
@@ -3227,7 +5100,7 @@ INTERN WUNUSED NONNULL((1)) DREF struct ast *DFCALL
 ast_parse_and(DeeLexer *self, unsigned int lookup_mode) {
 	DREF struct ast *result;
 	result = ast_parse_cmpeq(self, lookup_mode);
-	if (likely(result) && TOKEN_IS_AND(DeeLexer_GetTok(self)))
+	if (likely(result) && TOKEN_IS_AND(DeeParser_GetTok(self)))
 		result = ast_parse_and_operand(self, result);
 	return result;
 }
@@ -3236,7 +5109,7 @@ INTERN WUNUSED NONNULL((1)) DREF struct ast *DFCALL
 ast_parse_xor(DeeLexer *self, unsigned int lookup_mode) {
 	DREF struct ast *result;
 	result = ast_parse_and(self, lookup_mode);
-	if (likely(result) && TOKEN_IS_XOR(DeeLexer_GetTok(self)))
+	if (likely(result) && TOKEN_IS_XOR(DeeParser_GetTok(self)))
 		result = ast_parse_xor_operand(self, result);
 	return result;
 }
@@ -3245,7 +5118,7 @@ INTERN WUNUSED NONNULL((1)) DREF struct ast *DFCALL
 ast_parse_or(DeeLexer *self, unsigned int lookup_mode) {
 	DREF struct ast *result;
 	result = ast_parse_xor(self, lookup_mode);
-	if (likely(result) && TOKEN_IS_OR(DeeLexer_GetTok(self)))
+	if (likely(result) && TOKEN_IS_OR(DeeParser_GetTok(self)))
 		result = ast_parse_or_operand(self, result);
 	return result;
 }
@@ -3254,7 +5127,7 @@ INTERN WUNUSED NONNULL((1)) DREF struct ast *DFCALL
 ast_parse_as(DeeLexer *self, unsigned int lookup_mode) {
 	DREF struct ast *result;
 	result = ast_parse_or(self, lookup_mode);
-	if (likely(result) && TOKEN_IS_AS(DeeLexer_GetTok(self)))
+	if (likely(result) && TOKEN_IS_AS(DeeParser_GetTok(self)))
 		result = ast_parse_as_operand(self, result);
 	return result;
 }
@@ -3263,7 +5136,7 @@ INTERN WUNUSED NONNULL((1)) DREF struct ast *DFCALL
 ast_parse_land(DeeLexer *self, unsigned int lookup_mode) {
 	DREF struct ast *result;
 	result = ast_parse_as(self, lookup_mode);
-	if (likely(result) && TOKEN_IS_LAND(DeeLexer_GetTok(self)))
+	if (likely(result) && TOKEN_IS_LAND(DeeParser_GetTok(self)))
 		result = ast_parse_land_operand(self, result);
 	return result;
 }
@@ -3272,7 +5145,7 @@ INTERN WUNUSED NONNULL((1)) DREF struct ast *DFCALL
 ast_parse_lor(DeeLexer *self, unsigned int lookup_mode) {
 	DREF struct ast *result;
 	result = ast_parse_land(self, lookup_mode);
-	if (likely(result) && TOKEN_IS_LOR(DeeLexer_GetTok(self)))
+	if (likely(result) && TOKEN_IS_LOR(DeeParser_GetTok(self)))
 		result = ast_parse_lor_operand(self, result);
 	return result;
 }
@@ -3281,7 +5154,7 @@ INTERN WUNUSED NONNULL((1)) DREF struct ast *DFCALL
 ast_parse_cond(DeeLexer *self, unsigned int lookup_mode) {
 	DREF struct ast *result;
 	result = ast_parse_lor(self, lookup_mode);
-	if (likely(result) && TOKEN_IS_COND(DeeLexer_GetTok(self)))
+	if (likely(result) && TOKEN_IS_COND(DeeParser_GetTok(self)))
 		result = ast_parse_cond_operand(self, result);
 	return result;
 }
@@ -3292,7 +5165,7 @@ ast_parse_assign(DeeLexer *self, unsigned int lookup_mode) {
 #ifdef __OPTIMIZE_SIZE__
 	DREF struct ast *result;
 	result = ast_parse_cond(self, lookup_mode);
-	if (likely(result) && TOKEN_IS_ASSIGN(DeeLexer_GetTok(self)))
+	if (likely(result) && TOKEN_IS_ASSIGN(DeeParser_GetTok(self)))
 		result = ast_parse_assign_operand(self, result);
 	return result;
 #elif 1
@@ -3300,78 +5173,78 @@ ast_parse_assign(DeeLexer *self, unsigned int lookup_mode) {
 	result = ast_parse_unary(self, lookup_mode);
 	if unlikely(!result)
 		goto done;
-	switch (DeeLexer_GetTok(self)) {
+	switch (DeeParser_GetTok(self)) {
 	CASE_TOKEN_IS_PROD:
 		result = ast_parse_prod_operand(self, result);
 		if unlikely(!result)
 			goto done;
-		if (TOKEN_IS_SUM(DeeLexer_GetTok(self))) {
+		if (TOKEN_IS_SUM(DeeParser_GetTok(self))) {
 	CASE_TOKEN_IS_SUM:
 			result = ast_parse_sum_operand(self, result);
 			if unlikely(!result)
 				goto done;
 		}
-		if (TOKEN_IS_SHIFT(DeeLexer_GetTok(self))) {
+		if (TOKEN_IS_SHIFT(DeeParser_GetTok(self))) {
 	CASE_TOKEN_IS_SHIFT:
 			result = ast_parse_shift_operand(self, result);
 			if unlikely(!result)
 				goto done;
 		}
-		if (TOKEN_IS_CMP(DeeLexer_GetTok(self))) {
+		if (TOKEN_IS_CMP(DeeParser_GetTok(self))) {
 	CASE_TOKEN_IS_CMP:
 			result = ast_parse_cmp_operand(self, result);
 			if unlikely(!result)
 				goto done;
 		}
-		if (TOKEN_IS_CMPEQ(DeeLexer_GetTok(self))) {
+		if (TOKEN_IS_CMPEQ(DeeParser_GetTok(self))) {
 	CASE_TOKEN_IS_CMPEQ:
 			result = ast_parse_cmpeq_operand(self, result);
 			if unlikely(!result)
 				goto done;
 		}
-		if (TOKEN_IS_AND(DeeLexer_GetTok(self))) {
+		if (TOKEN_IS_AND(DeeParser_GetTok(self))) {
 	CASE_TOKEN_IS_AND:
 			result = ast_parse_and_operand(self, result);
 			if unlikely(!result)
 				goto done;
 		}
-		if (TOKEN_IS_XOR(DeeLexer_GetTok(self))) {
+		if (TOKEN_IS_XOR(DeeParser_GetTok(self))) {
 	CASE_TOKEN_IS_XOR:
 			result = ast_parse_xor_operand(self, result);
 			if unlikely(!result)
 				goto done;
 		}
-		if (TOKEN_IS_OR(DeeLexer_GetTok(self))) {
+		if (TOKEN_IS_OR(DeeParser_GetTok(self))) {
 	CASE_TOKEN_IS_OR:
 			result = ast_parse_or_operand(self, result);
 			if unlikely(!result)
 				goto done;
 		}
-		if (TOKEN_IS_AS(DeeLexer_GetTok(self))) {
+		if (TOKEN_IS_AS(DeeParser_GetTok(self))) {
 	CASE_TOKEN_IS_AS:
 			result = ast_parse_as_operand(self, result);
 			if unlikely(!result)
 				goto done;
 		}
-		if (TOKEN_IS_LAND(DeeLexer_GetTok(self))) {
+		if (TOKEN_IS_LAND(DeeParser_GetTok(self))) {
 	CASE_TOKEN_IS_LAND:
 			result = ast_parse_land_operand(self, result);
 			if unlikely(!result)
 				goto done;
 		}
-		if (TOKEN_IS_LOR(DeeLexer_GetTok(self))) {
+		if (TOKEN_IS_LOR(DeeParser_GetTok(self))) {
 	CASE_TOKEN_IS_LOR:
 			result = ast_parse_lor_operand(self, result);
 			if unlikely(!result)
 				goto done;
 		}
-		if (TOKEN_IS_COND(DeeLexer_GetTok(self))) {
+		if (TOKEN_IS_COND(DeeParser_GetTok(self))) {
 	CASE_TOKEN_IS_COND:
 			result = ast_parse_cond_operand(self, result);
 			if unlikely(!result)
 				goto done;
 		}
-		if (TOKEN_IS_ASSIGN(DeeLexer_GetTok(self))) {
+		if (TOKEN_IS_ASSIGN(DeeParser_GetTok(self))) {
 	CASE_TOKEN_IS_ASSIGN:
 			result = ast_parse_assign_operand(self, result);
 			if unlikely(!result)
@@ -3388,67 +5261,67 @@ done:
 	if unlikely(!result)
 		goto done;
 	/* parse binary operators */
-	if (TOKEN_IS_PROD(DeeLexer_GetTok(self))) {
+	if (TOKEN_IS_PROD(DeeParser_GetTok(self))) {
 		result = ast_parse_prod_operand(self, result);
 		if unlikely(!result)
 			goto done;
 	}
-	if (TOKEN_IS_SUM(DeeLexer_GetTok(self))) {
+	if (TOKEN_IS_SUM(DeeParser_GetTok(self))) {
 		result = ast_parse_sum_operand(self, result);
 		if unlikely(!result)
 			goto done;
 	}
-	if (TOKEN_IS_SHIFT(DeeLexer_GetTok(self))) {
+	if (TOKEN_IS_SHIFT(DeeParser_GetTok(self))) {
 		result = ast_parse_shift_operand(self, result);
 		if unlikely(!result)
 			goto done;
 	}
-	if (TOKEN_IS_CMP(DeeLexer_GetTok(self))) {
+	if (TOKEN_IS_CMP(DeeParser_GetTok(self))) {
 		result = ast_parse_cmp_operand(self, result);
 		if unlikely(!result)
 			goto done;
 	}
-	if (TOKEN_IS_CMPEQ(DeeLexer_GetTok(self))) {
+	if (TOKEN_IS_CMPEQ(DeeParser_GetTok(self))) {
 		result = ast_parse_cmpeq_operand(self, result);
 		if unlikely(!result)
 			goto done;
 	}
-	if (TOKEN_IS_AND(DeeLexer_GetTok(self))) {
+	if (TOKEN_IS_AND(DeeParser_GetTok(self))) {
 		result = ast_parse_and_operand(self, result);
 		if unlikely(!result)
 			goto done;
 	}
-	if (TOKEN_IS_XOR(DeeLexer_GetTok(self))) {
+	if (TOKEN_IS_XOR(DeeParser_GetTok(self))) {
 		result = ast_parse_xor_operand(self, result);
 		if unlikely(!result)
 			goto done;
 	}
-	if (TOKEN_IS_OR(DeeLexer_GetTok(self))) {
+	if (TOKEN_IS_OR(DeeParser_GetTok(self))) {
 		result = ast_parse_or_operand(self, result);
 		if unlikely(!result)
 			goto done;
 	}
-	if (TOKEN_IS_AS(DeeLexer_GetTok(self))) {
+	if (TOKEN_IS_AS(DeeParser_GetTok(self))) {
 		result = ast_parse_as_operand(self, result);
 		if unlikely(!result)
 			goto done;
 	}
-	if (TOKEN_IS_LAND(DeeLexer_GetTok(self))) {
+	if (TOKEN_IS_LAND(DeeParser_GetTok(self))) {
 		result = ast_parse_land_operand(self, result);
 		if unlikely(!result)
 			goto done;
 	}
-	if (TOKEN_IS_LOR(DeeLexer_GetTok(self))) {
+	if (TOKEN_IS_LOR(DeeParser_GetTok(self))) {
 		result = ast_parse_lor_operand(self, result);
 		if unlikely(!result)
 			goto done;
 	}
-	if (TOKEN_IS_COND(DeeLexer_GetTok(self))) {
+	if (TOKEN_IS_COND(DeeParser_GetTok(self))) {
 		result = ast_parse_cond_operand(self, result);
 		if unlikely(!result)
 			goto done;
 	}
-	if (TOKEN_IS_ASSIGN(DeeLexer_GetTok(self))) {
+	if (TOKEN_IS_ASSIGN(DeeParser_GetTok(self))) {
 		result = ast_parse_assign_operand(self, result);
 		if unlikely(!result)
 			goto done;
@@ -3458,7 +5331,7 @@ done:
 #else
 	DREF struct ast *result;
 	result = ast_parse_cond(self, lookup_mode);
-	if (likely(result) && TOKEN_IS_ASSIGN(DeeLexer_GetTok(self)))
+	if (likely(result) && TOKEN_IS_ASSIGN(DeeParser_GetTok(self)))
 		result = ast_parse_assign_operand(self, result);
 	return result;
 #endif
@@ -3472,67 +5345,67 @@ ast_parse_postexpr(DeeLexer *self, /*inherit(always)*/ DREF struct ast *__restri
 	if unlikely(!baseexpr)
 		goto done;
 	/* parse binary operators */
-	if (TOKEN_IS_PROD(DeeLexer_GetTok(self))) {
+	if (TOKEN_IS_PROD(DeeParser_GetTok(self))) {
 		baseexpr = ast_parse_prod_operand(self, baseexpr);
 		if unlikely(!baseexpr)
 			goto done;
 	}
-	if (TOKEN_IS_SUM(DeeLexer_GetTok(self))) {
+	if (TOKEN_IS_SUM(DeeParser_GetTok(self))) {
 		baseexpr = ast_parse_sum_operand(self, baseexpr);
 		if unlikely(!baseexpr)
 			goto done;
 	}
-	if (TOKEN_IS_SHIFT(DeeLexer_GetTok(self))) {
+	if (TOKEN_IS_SHIFT(DeeParser_GetTok(self))) {
 		baseexpr = ast_parse_shift_operand(self, baseexpr);
 		if unlikely(!baseexpr)
 			goto done;
 	}
-	if (TOKEN_IS_CMP(DeeLexer_GetTok(self))) {
+	if (TOKEN_IS_CMP(DeeParser_GetTok(self))) {
 		baseexpr = ast_parse_cmp_operand(self, baseexpr);
 		if unlikely(!baseexpr)
 			goto done;
 	}
-	if (TOKEN_IS_CMPEQ(DeeLexer_GetTok(self))) {
+	if (TOKEN_IS_CMPEQ(DeeParser_GetTok(self))) {
 		baseexpr = ast_parse_cmpeq_operand(self, baseexpr);
 		if unlikely(!baseexpr)
 			goto done;
 	}
-	if (TOKEN_IS_AND(DeeLexer_GetTok(self))) {
+	if (TOKEN_IS_AND(DeeParser_GetTok(self))) {
 		baseexpr = ast_parse_and_operand(self, baseexpr);
 		if unlikely(!baseexpr)
 			goto done;
 	}
-	if (TOKEN_IS_XOR(DeeLexer_GetTok(self))) {
+	if (TOKEN_IS_XOR(DeeParser_GetTok(self))) {
 		baseexpr = ast_parse_xor_operand(self, baseexpr);
 		if unlikely(!baseexpr)
 			goto done;
 	}
-	if (TOKEN_IS_OR(DeeLexer_GetTok(self))) {
+	if (TOKEN_IS_OR(DeeParser_GetTok(self))) {
 		baseexpr = ast_parse_or_operand(self, baseexpr);
 		if unlikely(!baseexpr)
 			goto done;
 	}
-	if (TOKEN_IS_AS(DeeLexer_GetTok(self))) {
+	if (TOKEN_IS_AS(DeeParser_GetTok(self))) {
 		baseexpr = ast_parse_as_operand(self, baseexpr);
 		if unlikely(!baseexpr)
 			goto done;
 	}
-	if (TOKEN_IS_LAND(DeeLexer_GetTok(self))) {
+	if (TOKEN_IS_LAND(DeeParser_GetTok(self))) {
 		baseexpr = ast_parse_land_operand(self, baseexpr);
 		if unlikely(!baseexpr)
 			goto done;
 	}
-	if (TOKEN_IS_LOR(DeeLexer_GetTok(self))) {
+	if (TOKEN_IS_LOR(DeeParser_GetTok(self))) {
 		baseexpr = ast_parse_lor_operand(self, baseexpr);
 		if unlikely(!baseexpr)
 			goto done;
 	}
-	if (TOKEN_IS_COND(DeeLexer_GetTok(self))) {
+	if (TOKEN_IS_COND(DeeParser_GetTok(self))) {
 		baseexpr = ast_parse_cond_operand(self, baseexpr);
 		if unlikely(!baseexpr)
 			goto done;
 	}
-	if (TOKEN_IS_ASSIGN(DeeLexer_GetTok(self))) {
+	if (TOKEN_IS_ASSIGN(DeeParser_GetTok(self))) {
 		baseexpr = ast_parse_assign_operand(self, baseexpr);
 		if unlikely(!baseexpr)
 			goto done;
@@ -3540,6 +5413,7 @@ ast_parse_postexpr(DeeLexer *self, /*inherit(always)*/ DREF struct ast *__restri
 done:
 	return baseexpr;
 }
+#endif /* !CONFIG_EXPERIMENTAL_USE_STATELESS_PARSER */
 
 DECL_END
 

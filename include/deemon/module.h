@@ -640,6 +640,15 @@ typedef struct Dee_module_object {
 	Dee_WEAKREF_SUPPORT
 	/* End of common data (the following fields don't exist for DeeModuleDir_Type-type modules) */
 	union Dee_module_moddata                  mo_moddata;  /* Module-type-specific data */
+#if 0
+	/* TODO: Get rid of `mo_importc` + `mo_importv`, as well as `ASM_PUSH_MODULE`, and change
+	 *       `ASM_PUSH_EXTERN` such that "mid" becomes a "cid". Module references should be
+	 *       encoded as regular constants, and "er_offsetof_deps" from the dec header should
+	 *       be used to determine all dependent modules that needs to be initialized. Only
+	 *       problem with that is that dependent modules are part of relocation data that is
+	 *       freed when `DeeDec_Track()` calls `DeeDec_Ehdr_FreeRelocationData()`, which has
+	 *       already happened by the time `DeeModule_InitializeImports()` is called... */
+#endif
 	DREF struct Dee_module_object     *const *mo_importv;  /* [1..1][const][0..mo_importc][const][owned] Vector of other modules imported by this one. */
 	__BYTE_TYPE__ const                      *mo_minaddr;  /* [const] Min address of memory mapped by this module */
 	__BYTE_TYPE__ const                      *mo_maxaddr;  /* [const] Max address of memory mapped by this module */
@@ -731,6 +740,7 @@ DDATDEF struct Dee_static_module_struct DeeModule_Deemon;
 #endif /* !__INTELLISENSE__ */
 /* The module of builtin objects accessible by opening `deemon`. */
 #define DeeModule_GetDeemon() (&DeeModule_Deemon)
+#define DeeModule_NewDeemon() (Dee_Incref(&DeeModule_Deemon), &DeeModule_Deemon)
 #endif /* !GUARD_DEEMON_RUNTIME_BUILTIN_C */
 
 #ifdef CONFIG_BUILDING_DEEMON

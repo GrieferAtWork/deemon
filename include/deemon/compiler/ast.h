@@ -61,6 +61,7 @@ DECL_BEGIN
 #define Dee_AST_FLEXARRAY 1024
 
 typedef struct Dee_ast DeeAst;
+typedef struct Dee_ast_rvalue DeeAstRValue;
 struct Dee_link_symbol; /* Link-time symbol declaration */
 #define Dee_link_symbol_incref(self)   (void)0 /* TODO */
 #define Dee_link_symbol_decref(self)   (void)0 /* TODO */
@@ -69,10 +70,8 @@ struct Dee_link_symbol; /* Link-time symbol declaration */
 #define Dee_link_symbol_rd_dec(self)   (void)0 /* Decrement read-counter */
 #define Dee_link_symbol_wr_inc(self)   (void)0 /* Increment write-counter */
 #define Dee_link_symbol_wr_dec(self)   (void)0 /* Decrement write-counter */
-#define Dee_link_symbol_rdwr_inc(self) (void)0 /* Increment read- and write-counter(s) */
-#define Dee_link_symbol_rdwr_dec(self) (void)0 /* Decrement read- and write-counter(s) */
-#define Dee_link_symbol_del_inc(self)  Dee_link_symbol_wr_inc(self)
-#define Dee_link_symbol_del_dec(self)  Dee_link_symbol_wr_dec(self)
+#define Dee_link_symbol_rdwr_inc(self) (Dee_link_symbol_rd_inc(self), Dee_link_symbol_wr_inc(self))
+#define Dee_link_symbol_rdwr_dec(self) (Dee_link_symbol_wr_dec(self), Dee_link_symbol_rd_dec(self))
 
 /* AST allocators for fixed-size ASTs */
 #define _DeeAst_SizeofFixed(field)                                 COMPILER_OFFSETAFTER(DeeAst, a_data.field)
@@ -118,6 +117,7 @@ struct Dee_ast_operator_id {
 	 *       can be queried using `DeeTypeType_GetOperatorByName()`) */
 };
 #define Dee_ast_operator_id_initid(self, id) (void)((self)->aoi_id = (id))
+#define Dee_ast_operator_id_move(self, from) (void)(*(self) = *(from))
 #define Dee_ast_operator_id_fini(self)       (void)0
 #define Dee_ast_operator_id_hasid(self)      true
 #define Dee_ast_operator_id_getid(self)      ((self)->aoi_id)
@@ -130,14 +130,16 @@ enum Dee_ast_symref_kind {
 	Dee_AST_SYMREF_KIND_NTH,     /* Simple named symbol reference, but link against Nth match */
 	Dee_AST_SYMREF_KIND_EXTERN,  /* Reference to `symbol from module` */
 	Dee_AST_SYMREF_KIND_THIS,    /* Reference to `this` (s.a. `struct Dee_ast_function::af_symbol_this`) */
+#define Dee_AST_SYMREF_KIND_ISSIMPLE(x) ((unsigned int)(x) >= (unsigned int)Dee_AST_SYMREF_KIND_THIS)
 	Dee_AST_SYMREF_KIND_TP_THIS, /* Reference to TYPE in `this as Type.__base__(TYPE)`, as used to implement `super` */
+	Dee_AST_SYMREF_KIND_THISMOD, /* Reference to the current module */
 };
 
 enum Dee_ast_symref_byname_kind {
 	Dee_AST_SYMREF_BYNAME_KIND_AUTO,   /* <no prefix>     (find first matching symbol) */
 	Dee_AST_SYMREF_BYNAME_KIND_LOCAL,  /* `local`         (Create/use local- or stack-variable in current scope) */
 	Dee_AST_SYMREF_BYNAME_KIND_STACK,  /* `__stack local` (Create/use stack-variable in current scope) */
-	Dee_AST_SYMREF_BYNAME_KIND_GLOBAL, /* `global`        (Create/use global variable in current scope (if current scope isn't global scope, emit a warning)) */
+	Dee_AST_SYMREF_BYNAME_KIND_GLOBAL, /* `global`        (Create/use global variable in current scope (if create, and current scope isn't global scope, emit a warning)) */
 	Dee_AST_SYMREF_BYNAME_KIND_STATIC, /* `static local`  (Create/use static variable in current scope) */
 };
 typedef uint_fast8_t Dee_ast_symref_byname_flag;
@@ -155,11 +157,12 @@ struct Dee_ast_symref_nth {
 	tpp_keyword const    *asrnt_name; /* [1..1] Symbol name */
 	Dee_ast_symref_nth_id asrnt_nth;  /* Use the Nth match (where `0` means the same as `Dee_AST_SYMREF_KIND_BYNAME` + `Dee_AST_SYMREF_BYNAME_KIND_AUTO`) */
 };
+
+struct Dee_module_symbol;
+struct Dee_module_object;
 struct Dee_ast_symref_extern {
-	tpp_keyword const  *asrex_name;          /* [1..1] Symbol name */
-	tpp_char const     *asrex_modname_str;   /* [1..1] Module name string base pointer */
-	tpp_size            asrex_modname_len;   /* Module name length (in bytes) */
-	TPP_REF tpp_string *asrex_modname_chunk; /* [0..1] Input chunk containing `asrex_modname_str` */
+	DREF struct Dee_module_object *asrex_mod; /* [1..1] Accessed module */
+	struct Dee_module_symbol      *asrex_sym; /* [1..1] Accessed symbol */
 };
 struct Dee_ast_symref {
 	enum Dee_ast_symref_kind asr_kind; /* Reference kind */
@@ -179,27 +182,24 @@ struct Dee_ast_symref {
 	(void)((self)->asr_kind = Dee_AST_SYMREF_KIND_NTH,   \
 	       (self)->asr_data.asr_nth.asrnt_name = (name), \
 	       (self)->asr_data.asr_nth.asrnt_nth  = (nth_id))
-#define Dee_ast_symref_init_extern(self, name, modname_str, modname_len, opt_modname_chunk) \
-	(void)((self)->asr_kind = Dee_AST_SYMREF_KIND_EXTERN,                                   \
-	       (self)->asr_data.asr_extern.asrex_name          = (name),                        \
-	       (self)->asr_data.asr_extern.asrex_modname_str   = (modname_str),                 \
-	       (self)->asr_data.asr_extern.asrex_modname_len   = (modname_len),                 \
-	       (self)->asr_data.asr_extern.asrex_modname_chunk = (opt_modname_chunk),           \
-	       (void)((opt_modname_chunk) && (tpp_string_incref(opt_modname_chunk), 1)))
-#define Dee_ast_symref_init_this(self)    (void)((self)->asr_kind = Dee_AST_SYMREF_KIND_THIS)
-#define Dee_ast_symref_init_tp_this(self) (void)((self)->asr_kind = Dee_AST_SYMREF_KIND_TP_THIS)
-#define Dee_ast_symref_fini(self)                                                   \
-	do {                                                                            \
-		switch ((self)->asr_kind) {                                                 \
-		case Dee_AST_SYMREF_KIND_BYNAME:                                            \
-			Dee_ast_typedef_fini(&(self)->asr_data.asr_byname.asrbn_typedef);       \
-			break;                                                                  \
-		case Dee_AST_SYMREF_KIND_EXTERN:                                            \
-			if ((self)->asr_data.asr_extern.asrex_modname_chunk)                    \
-				tpp_string_decref((self)->asr_data.asr_extern.asrex_modname_chunk); \
-			break;                                                                  \
-		default: break;                                                             \
-		}                                                                           \
+#define Dee_ast_symref_init_extern(self, /*inherit(always)*/ mod, sym) \
+	(void)((self)->asr_kind = Dee_AST_SYMREF_KIND_EXTERN,              \
+	       (self)->asr_data.asr_extern.asrex_mod = (mod),              \
+	       (self)->asr_data.asr_extern.asrex_sym = (sym))
+#define Dee_ast_symref_init_simple(self, kind)             \
+	(void)(Dee_ASSERT(Dee_AST_SYMREF_KIND_ISSIMPLE(kind)), \
+	       (self)->asr_kind = (kind))
+#define Dee_ast_symref_fini(self)                                             \
+	do {                                                                      \
+		switch ((self)->asr_kind) {                                           \
+		case Dee_AST_SYMREF_KIND_BYNAME:                                      \
+			Dee_ast_typedef_fini(&(self)->asr_data.asr_byname.asrbn_typedef); \
+			break;                                                            \
+		case Dee_AST_SYMREF_KIND_EXTERN:                                      \
+			Dee_Decref((self)->asr_data.asr_extern.asrex_mod);                \
+			break;                                                            \
+		default: break;                                                       \
+		}                                                                     \
 	}	__WHILE0
 #define Dee_ast_symref_move(self, from) (void)(*(self) = *(from))
 
@@ -259,6 +259,69 @@ struct Dee_ast_labels {
 	}	__WHILE0
 
 
+/* === For `Dee_AST_UNPACK_WR` */
+enum Dee_ast_rvalue_kind {
+	Dee_AST_RVALUE_KIND_NONE,     /* <Dee_AST_CONST+Dee_None> Discard */
+	Dee_AST_RVALUE_KIND_SYMBOL,   /* <Dee_AST_SYMBOL_RD> Store into a linked symbol */
+	Dee_AST_RVALUE_KIND_SYMREF,   /* <Dee_AST_SYMREF_RD> Store into a referenced symbol */
+	Dee_AST_RVALUE_KIND_SETATTR,  /* <Dee_AST_[I]OPERATOR + OPERATOR_GETATTR> Store into a `obj.attr` expression */
+	Dee_AST_RVALUE_KIND_SETITEM,  /* <Dee_AST_[I]OPERATOR + OPERATOR_GETITEM> Store into a `obj[item]` expression */
+	Dee_AST_RVALUE_KIND_SETRANGE, /* <Dee_AST_[I]OPERATOR + OPERATOR_GETRANGE> Store into a `obj[start:end]` expression */
+	Dee_AST_RVALUE_KIND_SETTER,   /* Call a setter-function */
+	Dee_AST_RVALUE_KIND_ASSIGN,   /* <*> Store into a `obj := ...` expression (only produced when necessary) */
+};
+struct Dee_ast_rvalue_setattr {
+	/* `<obj>.operator .= (<attr>, VALUE)` */
+	DeeAst *arvsa_obj;  /* [1..1][owned] `obj` */
+	DeeAst *arvsa_attr; /* [1..1][owned] `attr` */
+};
+
+struct Dee_ast_rvalue_setitem {
+	/* `<obj>[<item>] = VALUE` */
+	DeeAst *arvsi_obj;  /* [1..1][owned] `obj` */
+	DeeAst *arvsi_item; /* [1..1][owned] `item` */
+};
+
+struct Dee_ast_rvalue_setrange {
+	/* `<obj>[<start>:<end>] = VALUE` */
+	DeeAst *arvsr_obj;   /* [1..1][owned] `obj` */
+	DeeAst *arvsr_start; /* [1..1][owned] `start` */
+	DeeAst *arvsr_end;   /* [1..1][owned] `end` */
+};
+
+struct Dee_ast_rvalue_assign {
+	/* `<obj> := VALUE` */
+	DeeAst *arva_obj; /* [1..1][owned] `obj` */
+};
+
+struct Dee_ast_rvalue_setter {
+	/* `<setter>(VALUE)` */
+	DeeAst *arvs_setter; /* [1..1][owned] `setter` */
+};
+
+struct Dee_ast_rvalue {
+	enum Dee_ast_rvalue_kind           arv_kind;      /* Target kind */
+	struct Dee_ast_labels             *arv_labels;    /* [0..n][owned] AST labels */
+	DeeAstLoc                          arv_loc;       /* Location info */
+	union {
+		DREF struct Dee_link_symbol   *arvd_symbol;   /* [1..1][valid_if(arv_kind == Dee_AST_RVALUE_KIND_SYMBOL)] Linked symbol */
+		struct Dee_ast_symref          arvd_symref;   /* [valid_if(arv_kind == Dee_AST_RVALUE_KIND_SYMREF)] Referenced symbol */
+		struct Dee_ast_rvalue_setattr  arvd_setattr;  /* [valid_if(arv_kind == Dee_AST_RVALUE_KIND_SETATTR)] */
+		struct Dee_ast_rvalue_setitem  arvd_setitem;  /* [valid_if(arv_kind == Dee_AST_RVALUE_KIND_SETITEM)] */
+		struct Dee_ast_rvalue_setrange arvd_setrange; /* [valid_if(arv_kind == Dee_AST_RVALUE_KIND_SETRANGE)] */
+		struct Dee_ast_rvalue_assign   arvd_assign;   /* [valid_if(arv_kind == Dee_AST_RVALUE_KIND_ASSIGN)] */
+		struct Dee_ast_rvalue_setter   arvd_setter;   /* [valid_if(arv_kind == Dee_AST_RVALUE_KIND_SETTER)] */
+	} arv_data;
+};
+
+enum Dee_ast_rvalue_mode {
+	Dee_AST_RVALUE_MODE_RD   = 1, /* Read from symbol (should never be used on its own) */
+	Dee_AST_RVALUE_MODE_WR   = 2, /* Write to symbol */
+	Dee_AST_RVALUE_MODE_RDWR = 3, /* Read+write symbol */
+};
+
+
+
 
 
 
@@ -279,7 +342,8 @@ enum Dee_ast_kind {
 	Dee_AST_UNPACK_WR,   /* Unpack-and-store */
 	Dee_AST_IASM,        /* Undefined-defined inline assembly */
 	Dee_AST_OPERATOR,    /* Invoke operator */
-	/* NOTE: AST_OPERATOR_FUNC is emulated as:
+	Dee_AST_IOPERATOR,   /* Invoke inplace operator */
+	/* HINT: AST_OPERATOR_FUNC is emulated as:
 	 * - `operator <name>`         ->  `(<name> from operators)`
 	 * - `<base>.operator <name>`  ->  `(InstanceMethod from deemon)(<name> from operators, <base>)` */
 
@@ -305,7 +369,7 @@ enum Dee_ast_kind {
 	Dee_AST_ACT1_PRINTLN,    /* `print <act0>...;`          - Print the elements of a sequence in `<act0>` */
 	Dee_AST_ACT1_ASSERT,     /* `assert <act0>`             - Assert that <act0> evaluates to true at runtime. */
 	Dee_AST_ACT1_DEEPCOPY,   /* `deepcopy <act0>`           - Create a deep copy of `act0` */
-	Dee_AST_ACT1_UNPACK,     /* `<act0>...`                 - Unpack `act0` into a context-sensitive # of objects */
+	Dee_AST_ACT1_UNPACK,     /* `<act0>...`                 - Unpack `act0` into a context-sensitive # of objects (without special handling: unpack to 1 object) */
 #define Dee_AST_ISACT2(id)                                      \
 	((unsigned int)(id) >= (unsigned int)Dee_AST_ACT2_FPRINT && \
 	 (unsigned int)(id) <= (unsigned int)Dee_AST_ACT2_DIFFOBJ)
@@ -343,6 +407,7 @@ enum Dee_ast_kind {
 	((unsigned int)(x) >= (unsigned int)Dee_AST_SYMBOL_RD && \
 	 (unsigned int)(x) <= (unsigned int)Dee_AST_SYMREF_XCH)
 	Dee_AST_SYMBOL_RD,     /* Read from symbol */
+	Dee_AST_SYMBOL_BND,    /* Check if symbol is bound */
 	Dee_AST_SYMBOL_DEL,    /* Unbind symbol */
 	Dee_AST_SYMBOL_WR,     /* Write to symbol */
 	Dee_AST_SYMBOL_XCH,    /* Exchange value of symbol */
@@ -351,10 +416,12 @@ enum Dee_ast_kind {
 	                        * init-once semantics) */
 
 	/* The following AST kinds only exist before linking */
-	Dee_AST_SYMREF_RD,     /* reference: Read from symbol (replaced with `Dee_AST_SYMBOL_RD` during linking) */
-	Dee_AST_SYMREF_DEL,    /* reference: Unbind symbol (replaced with `Dee_AST_SYMBOL_DEL` during linking) */
-	Dee_AST_SYMREF_WR,     /* reference: Write to symbol (replaced with `Dee_AST_SYMBOL_WR` or `Dee_AST_SYMBOL_INIT` during linking) */
-	Dee_AST_SYMREF_XCH,    /* reference: Exchange value of symbol (replaced with `Dee_AST_SYMBOL_XCH` during linking) */
+	Dee_AST_SYMREF_RD,       /* reference: Read from symbol (replaced with `Dee_AST_SYMBOL_RD` during linking) */
+	Dee_AST_SYMREF_BND,      /* reference: Check if symbol is bound (replaced with `Dee_AST_SYMBOL_BND` during linking) */
+	Dee_AST_SYMREF_DEL,      /* reference: Unbind symbol (replaced with `Dee_AST_SYMBOL_DEL` during linking) */
+	Dee_AST_SYMREF_WR,       /* reference: Write to symbol (replaced with `Dee_AST_SYMBOL_WR` or `Dee_AST_SYMBOL_INIT` during linking) */
+	Dee_AST_SYMREF_XCH,      /* reference: Exchange value of symbol (replaced with `Dee_AST_SYMBOL_XCH` during linking) */
+//TODO:	Dee_AST_SYMREF_RD_ALIAS, /* Like `Dee_AST_SYMREF_RD`, but also declare the symbol as an alias within the current scope (for `import`-statements) */
 	/* TODO: Declaration of getset-like symbols (I finally want modules to have `global property`) */
 	/* TODO: AST for `import module` */
 	/* TODO: AST for `import * from module` */
@@ -738,89 +805,10 @@ struct Dee_ast_class {
 
 
 /* === For `Dee_AST_UNPACK_WR` */
-enum Dee_ast_unpack_wr_target_kind {
-	Dee_AST_UNPACK_WR_TARGET_KIND_NONE,     /* Discard */
-	Dee_AST_UNPACK_WR_TARGET_KIND_SYMBOL,   /* Store into a linked symbol */
-	Dee_AST_UNPACK_WR_TARGET_KIND_SYMREF,   /* Store into a referenced symbol */
-	Dee_AST_UNPACK_WR_TARGET_KIND_SETATTR,  /* Store into a `obj.attr` expression */
-	Dee_AST_UNPACK_WR_TARGET_KIND_SETITEM,  /* Store into a `obj[item]` expression */
-	Dee_AST_UNPACK_WR_TARGET_KIND_SETRANGE, /* Store into a `obj[start:end]` expression */
-	Dee_AST_UNPACK_WR_TARGET_KIND_ASSIGN,   /* Store into a `obj := ...` expression */
-};
-struct Dee_ast_unpack_wr_target_setattr {
-	/* `<obj>.operator . (<attr>)` */
-	DeeAst *aupwrtsa_obj;  /* [1..1][owned] `obj` */
-	DeeAst *aupwrtsa_attr; /* [1..1][owned] `attr` */
-};
-
-struct Dee_ast_unpack_wr_target_setitem {
-	/* `<obj>[<item>]` */
-	DeeAst *aupwrtsi_obj;  /* [1..1][owned] `obj` */
-	DeeAst *aupwrtsi_item; /* [1..1][owned] `item` */
-};
-
-struct Dee_ast_unpack_wr_target_setrange {
-	/* `<obj>[<start>:<end>]` */
-	DeeAst *aupwrtsr_obj;   /* [1..1][owned] `obj` */
-	DeeAst *aupwrtsr_start; /* [1..1][owned] `start` */
-	DeeAst *aupwrtsr_end;   /* [1..1][owned] `end` */
-};
-
-struct Dee_ast_unpack_wr_target_assign {
-	/* `<obj> := ...` */
-	DeeAst *aupwrtas_obj; /* [1..1][owned] `obj` */
-};
-
-/* TODO: Rename to `Dee_ast_store_target` */
-/* TODO: Expose function `int Dee_ast_store_target_init_fromast(struct Dee_ast_unpack_wr_target *self, / *inherit(always)* /DeeAst *ast)`
- *       that is just the same as currently internal function `Dee_ast_unpack_wr_target_init_from_ast` */
-struct Dee_ast_unpack_wr_target {
-	enum Dee_ast_unpack_wr_target_kind aupwrt_kind;   /* Target kind */
-	struct Dee_ast_labels             *aupwrt_labels; /* [0..n][owned] AST labels */
-	struct Dee_ast_loc                 aupwrt_loc;    /* Location info */
-	union {
-		DREF struct Dee_link_symbol             *aupwrtd_symbol;   /* [1..1][valid_if(aupwrt_kind == Dee_AST_UNPACK_WR_TARGET_KIND_SYMBOL)] Linked symbol */
-		struct Dee_ast_symref                    aupwrtd_symref;   /* [valid_if(aupwrt_kind == Dee_AST_UNPACK_WR_TARGET_KIND_SYMREF)] Referenced symbol */
-		struct Dee_ast_unpack_wr_target_setattr  aupwrtd_setattr;  /* [valid_if(aupwrt_kind == Dee_AST_UNPACK_WR_TARGET_KIND_SETATTR)] */
-		struct Dee_ast_unpack_wr_target_setitem  aupwrtd_setitem;  /* [valid_if(aupwrt_kind == Dee_AST_UNPACK_WR_TARGET_KIND_SETITEM)] */
-		struct Dee_ast_unpack_wr_target_setrange aupwrtd_setrange; /* [valid_if(aupwrt_kind == Dee_AST_UNPACK_WR_TARGET_KIND_SETRANGE)] */
-		struct Dee_ast_unpack_wr_target_assign   aupwrtd_assign;   /* [valid_if(aupwrt_kind == Dee_AST_UNPACK_WR_TARGET_KIND_ASSIGN)] */
-	} aupwrt_data;
-};
-
-#define Dee_ast_unpack_wr_target_fini(self)                                    \
-	do {                                                                       \
-		struct Dee_ast_labels *const _a_labels = (self)->aupwrt_labels;        \
-		if (_a_labels)                                                         \
-			Dee_ast_labels_destroy(_a_labels);                                 \
-		switch ((self)->aupwrt_kind) {                                         \
-		case Dee_AST_UNPACK_WR_TARGET_KIND_NONE:                               \
-			break;                                                             \
-		case Dee_AST_UNPACK_WR_TARGET_KIND_SYMBOL:                             \
-			Dee_link_symbol_wr_dec((self)->aupwrt_data.aupwrtd_symbol);        \
-			Dee_link_symbol_decref((self)->aupwrt_data.aupwrtd_symbol);        \
-			break;                                                             \
-		case Dee_AST_UNPACK_WR_TARGET_KIND_SYMREF:                             \
-			Dee_ast_symref_fini(&(self)->aupwrt_data.aupwrtd_symref);          \
-			break;                                                             \
-		case Dee_AST_UNPACK_WR_TARGET_KIND_SETRANGE:                           \
-			DeeAst_Destroy((self)->aupwrt_data.aupwrtd_setrange.aupwrtsr_end); \
-			ATTR_FALLTHROUGH                                                   \
-		case Dee_AST_UNPACK_WR_TARGET_KIND_SETATTR:                            \
-		case Dee_AST_UNPACK_WR_TARGET_KIND_SETITEM:                            \
-			DeeAst_Destroy((self)->aupwrt_data.aupwrtd_setattr.aupwrtsa_attr); \
-			ATTR_FALLTHROUGH                                                   \
-		case Dee_AST_UNPACK_WR_TARGET_KIND_ASSIGN:                             \
-			DeeAst_Destroy((self)->aupwrt_data.aupwrtd_assign.aupwrtas_obj);   \
-			break;                                                             \
-		default: __builtin_unreachable();                                      \
-		}                                                                      \
-	}	__WHILE0
-
 struct Dee_ast_unpack_wr {
-	DeeAst                         *aupwr_expr;    /* Expression that should be unpacked */
-	size_t                          aupwr_targetc; /* # of unpack targets */
-	struct Dee_ast_unpack_wr_target aupwr_targetv[Dee_AST_FLEXARRAY]; /* [aupwr_targetc] Unpack targets */
+	DeeAst      *aupwr_expr;    /* Expression that should be unpacked */
+	size_t       aupwr_targetc; /* # of unpack targets */
+	DeeAstRValue aupwr_targetv[Dee_AST_FLEXARRAY]; /* [MODE(Dee_AST_RVALUE_MODE_WR)][aupwr_targetc] Unpack targets */
 };
 /* HINT: Use `DeeAst_PackUnpackWr()` to package. */
 #define DeeAst_MallocUninitializedUnpackWr(targetc)                        _DeeAst_MallocUninitializedVar(ad_unpack_wr.aupwr_targetv, targetc)
@@ -840,6 +828,7 @@ struct Dee_ast_unpack_wr {
 /* === For `Dee_AST_IASM` */
 enum Dee_ast_iasm_operand_kind {
 	Dee_AST_IASM_OPERAND_KIND_AST,    /* AST */
+	Dee_AST_IASM_OPERAND_KIND_RVALUE, /* R-Value */
 	Dee_AST_IASM_OPERAND_KIND_LABEL,  /* Unlinked label name */
 	Dee_AST_IASM_OPERAND_KIND_SYMBOL, /* Linked assembly symbol */
 };
@@ -850,18 +839,31 @@ struct Dee_ast_iasm_operand {
 	TPP_REF tpp_string       *aio_type_chunk; /* [0..1] Operand type descriptor string buffer */
 	Dee_ast_iasm_operand_kind aio_kind;       /* Operand kind */
 	union {
-		/* TODO: Out / Inout operands need to use `struct Dee_ast_unpack_wr_target` */
 		DeeAst                *aiod_ast;    /* [1..1][owned][valid_if(aio_kind == Dee_AST_IASM_OPERAND_KIND_AST)] */
+		DeeAstRValue           aiod_rvalue; /* [MODE(Dee_ast_iasm_operand_getrvaluemode(self))][valid_if(aio_kind == Dee_AST_IASM_OPERAND_KIND_RVALUE)] */
 		tpp_keyword const     *aiod_label;  /* [1..1][valid_if(aio_kind == Dee_AST_IASM_OPERAND_KIND_LABEL)] */
 		struct Dee_asm_symbol *aiod_symbol; /* [1..1][valid_if(aio_kind == Dee_AST_IASM_OPERAND_KIND_SYMBOL)] */
 	} aio_data;
 };
-#define Dee_ast_iasm_operand_isinout(x) ((x)->aio_type_size >= 1 && (x)->aio_type_start[0] == '+')
-#define Dee_ast_iasm_operand_fini(self)                                                      \
-	(void)((void)((self)->aio_type_chunk && (tpp_string_decref((self)->aio_type_chunk), 1)), \
-	       (self)->aio_kind == Dee_AST_IASM_OPERAND_KIND_AST                                 \
-	       ? DeeAst_Destroy((self)->aio_data.aiod_ast)                                       \
-	       : (void)0)
+#define Dee_ast_iasm_operand_isinout(x) ((x)->aio_type_size >= 1 && (x)->aio_type[0] == '+')
+#define Dee_ast_iasm_operand_getrvaluemode(x) \
+	(Dee_ast_iasm_operand_isinout(x) ? Dee_AST_RVALUE_MODE_RDWR : Dee_AST_RVALUE_MODE_WR)
+#define Dee_ast_iasm_operand_fini(self)                                  \
+	do {                                                                 \
+		if ((self)->aio_type_chunk)                                      \
+			tpp_string_decref((self)->aio_type_chunk);                   \
+		switch ((self)->aio_kind) {                                      \
+		case Dee_AST_IASM_OPERAND_KIND_AST:                              \
+			DeeAst_Destroy((self)->aio_data.aiod_ast);                   \
+			break;                                                       \
+		case Dee_AST_IASM_OPERAND_KIND_RVALUE:                           \
+			DeeAstRValue_Fini(&(self)->aio_data.aiod_rvalue,             \
+			                  Dee_ast_iasm_operand_getrvaluemode(self)); \
+			break;                                                       \
+		default:                                                         \
+			break;                                                       \
+		}                                                                \
+	}	__WHILE0
 
 typedef uint_fast8_t Dee_ast_iasm_flag;
 #define Dee_AST_IASM_FLAG_NORMAL     0x00
@@ -941,6 +943,23 @@ struct Dee_ast_operator {
 /* === */
 
 
+/* === For `Dee_AST_IOPERATOR` */
+struct Dee_ast_ioperator {
+	struct Dee_ast_operator_id aio_id;   /* Operator ID */
+	Dee_ast_operator_flag      aio_flag; /* Operator flags */
+	uint_fast8_t               aio_argc; /* [>= 1 && <= Dee_AST_OPERATOR_ARGC_MAX] Argument count (including `aio_self`) */
+	DeeAstRValue               aio_self; /* [MODE(Dee_AST_RVALUE_MODE_RDWR)] Self-argument */
+	DeeAst                    *aio_xargv[Dee_AST_OPERATOR_ARGC_MAX - 1]; /* [1..1][owned][ao_argc-1] Extra operator arguments (unused arguments are initialized to `NULL`) */
+};
+#define DeeAst_MallocUninitializedIOperator()                  _DeeAst_MallocUninitializedFixed(ad_ioperator)
+#define DeeAst_TryMallocUninitializedIOperator()               _DeeAst_TryMallocUninitializedFixed(ad_ioperator)
+#define DeeAst_FreeUninitializedIOperator(p)                   _DeeAst_FreeUninitializedFixed(ad_ioperator, p)
+#define DeeAst_Dbg_MallocUninitializedIOperator(file, line)    _DeeAst_Dbg_MallocUninitializedFixed(ad_ioperator, file, line)
+#define DeeAst_Dbg_TryMallocUninitializedIOperator(file, line) _DeeAst_Dbg_TryMallocUninitializedFixed(ad_ioperator, file, line)
+#define DeeAst_Dbg_FreeUninitializedIOperator(p, file, line)   _DeeAst_Dbg_FreeUninitializedFixed(ad_ioperator, p, file, line)
+/* === */
+
+
 /* === For `Dee_AST_ACT1_*` */
 struct Dee_ast_act1 {
 	DeeAst *aa_act0; /* [1..1][owned] Operand #0 for action */
@@ -985,21 +1004,28 @@ struct Dee_ast_act3 {
 
 /* === For `Dee_AST_SYMBOL_RD` */
 struct Dee_ast_symbol_rd {
-	DREF struct Dee_link_symbol *asrd_symbol; /* [1..1] Symbol to read from */
+	DREF struct Dee_link_symbol *asrd_symbol; /* [REFERENCE(Dee_link_symbol_rd_inc)][1..1] Symbol to read from */
+};
+/* === */
+
+
+/* === For `Dee_AST_SYMBOL_BND` */
+struct Dee_ast_symbol_bnd {
+	DREF struct Dee_link_symbol *asbn_symbol; /* [REFERENCE(Dee_link_symbol_rd_inc)][1..1] Symbol to check binding of */
 };
 /* === */
 
 
 /* === For `Dee_AST_SYMBOL_DEL` */
 struct Dee_ast_symbol_del {
-	DREF struct Dee_link_symbol *asub_symbol; /* [1..1] Symbol to unbind */
+	DREF struct Dee_link_symbol *asub_symbol; /* [REFERENCE(Dee_link_symbol_wr_inc)][1..1] Symbol to unbind */
 };
 /* === */
 
 
 /* === For `Dee_AST_SYMBOL_WR` */
 struct Dee_ast_symbol_wr {
-	DREF struct Dee_link_symbol *aswr_symbol; /* [1..1] Symbol to write to */
+	DREF struct Dee_link_symbol *aswr_symbol; /* [REFERENCE(Dee_link_symbol_wr_inc)][1..1] Symbol to write to */
 	DeeAst                      *aswr_value;  /* [1..1][owned] Value to write (also result value of AST) */
 };
 /* === */
@@ -1007,7 +1033,7 @@ struct Dee_ast_symbol_wr {
 
 /* === For `Dee_AST_SYMBOL_XCH` */
 struct Dee_ast_symbol_xch {
-	DREF struct Dee_link_symbol *asxc_symbol; /* [1..1] Symbol whose value to exchange */
+	DREF struct Dee_link_symbol *asxc_symbol; /* [REFERENCE(Dee_link_symbol_rdwr_inc)][1..1] Symbol whose value to exchange */
 	DeeAst                      *asxc_value;  /* [1..1][owned] Value to write */
 };
 /* === */
@@ -1015,7 +1041,7 @@ struct Dee_ast_symbol_xch {
 
 /* === For `Dee_AST_SYMBOL_INIT` */
 struct Dee_ast_symbol_init {
-	DREF struct Dee_link_symbol *asin_symbol; /* [1..1] Symbol to initialize */
+	DREF struct Dee_link_symbol *asin_symbol; /* [REFERENCE(Dee_link_symbol_wr_inc)][1..1] Symbol to initialize */
 	DeeAst                      *asin_value;  /* [1..1][owned] Initializer value */
 };
 /* === */
@@ -1024,6 +1050,13 @@ struct Dee_ast_symbol_init {
 /* === For `Dee_AST_SYMREF_RD` */
 struct Dee_ast_symref_rd {
 	struct Dee_ast_symref asrrd_sym; /* Symbol to read from */
+};
+/* === */
+
+
+/* === For `Dee_AST_SYMREF_BND` */
+struct Dee_ast_symref_bnd {
+	struct Dee_ast_symref asrbn_sym; /* Symbol to whose is-bound status to check */
 };
 /* === */
 
@@ -1094,9 +1127,10 @@ struct Dee_ast_continue {
 struct Dee_ast {
 	enum Dee_ast_kind      a_kind;   /* AST kind */
 	struct Dee_ast_labels *a_labels; /* [0..n][owned] AST labels */
-	struct Dee_ast_loc     a_loc;    /* Location info */
-#define DeeAst_SetLoc(self, aloc)    (void)((self)->a_loc = *(aloc))
-#define DeeAst_UpdateLoc(self, aloc) (ast_loc_isempty(aloc) ? (void)0 : DeeAst_SetLoc(self, aloc))
+	DeeAstLoc              a_loc;    /* Location info */
+#define DeeAst_SetLoc(self, aloc)      (void)((self)->a_loc = *(aloc))
+#define DeeAst_UpdateLoc(self, aloc)   (ast_loc_isempty(aloc) ? (void)0 : DeeAst_SetLoc(self, aloc))
+#define DeeAst_SetLocHere(self, lexer) DeeLexer_GetLoc(lexer, &(self)->a_loc)
 
 #define _DeeAst_InitCommon(self, kind) \
 	(void)((self)->a_kind   = (kind),  \
@@ -1130,10 +1164,12 @@ struct Dee_ast {
 		struct Dee_ast_unpack_wr   ad_unpack_wr;   /* [valid_if(a_kind == Dee_AST_UNPACK_WR)] */
 		struct Dee_ast_iasm        ad_iasm;        /* [valid_if(a_kind == Dee_AST_IASM)] */
 		struct Dee_ast_operator    ad_operator;    /* [valid_if(a_kind == Dee_AST_OPERATOR)] */
+		struct Dee_ast_ioperator   ad_ioperator;   /* [valid_if(a_kind == Dee_AST_IOPERATOR)] */
 		struct Dee_ast_act1        ad_act1;        /* [valid_if(Dee_AST_ISACT1(a_kind))] */
 		struct Dee_ast_act2        ad_act2;        /* [valid_if(Dee_AST_ISACT2(a_kind))] */
 		struct Dee_ast_act3        ad_act3;        /* [valid_if(Dee_AST_ISACT3(a_kind))] */
 		struct Dee_ast_symbol_rd   ad_symbol_rd;   /* [valid_if(a_kind == Dee_AST_SYMBOL_RD)] */
+		struct Dee_ast_symbol_bnd  ad_symbol_bnd;  /* [valid_if(a_kind == Dee_AST_SYMBOL_BND)] */
 		struct Dee_ast_symbol_wr   ad_symbol_wr;   /* [valid_if(a_kind == Dee_AST_SYMBOL_WR)] */
 		struct Dee_ast_symbol_del  ad_symbol_del;  /* [valid_if(a_kind == Dee_AST_SYMBOL_DEL)] */
 		struct Dee_ast_symbol_xch  ad_symbol_xch;  /* [valid_if(a_kind == Dee_AST_SYMBOL_XCH)] */
@@ -1141,6 +1177,7 @@ struct Dee_ast {
 
 		/* The following AST kinds only exist before linking */
 		struct Dee_ast_symref_rd   ad_symref_rd;   /* [valid_if(a_kind == Dee_AST_SYMREF_RD)] */
+		struct Dee_ast_symref_bnd  ad_symref_bnd;  /* [valid_if(a_kind == Dee_AST_SYMREF_BND)] */
 		struct Dee_ast_symref_wr   ad_symref_wr;   /* [valid_if(a_kind == Dee_AST_SYMREF_WR)] */
 		struct Dee_ast_symref_del  ad_symref_del;  /* [valid_if(a_kind == Dee_AST_SYMREF_DEL)] */
 		struct Dee_ast_symref_xch  ad_symref_xch;  /* [valid_if(a_kind == Dee_AST_SYMREF_XCH)] */
@@ -1151,14 +1188,14 @@ struct Dee_ast {
 };
 
 LOCAL NONNULL((2)) DeeAst *DCALL
-DeeAst_TrySetLoc(/*0..1*/DeeAst *self, struct Dee_ast_loc const *__restrict aloc) {
+DeeAst_TrySetLoc(/*0..1*/DeeAst *self, DeeAstLoc const *__restrict aloc) {
 	if (self)
 		DeeAst_SetLoc(self, aloc);
 	return self;
 }
 
 LOCAL NONNULL((2)) DeeAst *DCALL
-DeeAst_TryUpdateLoc(/*0..1*/DeeAst *self, struct Dee_ast_loc const *__restrict aloc) {
+DeeAst_TryUpdateLoc(/*0..1*/DeeAst *self, DeeAstLoc const *__restrict aloc) {
 	if (self)
 		DeeAst_UpdateLoc(self, aloc);
 	return self;
@@ -1181,19 +1218,22 @@ enum { _DeeAst_SIZEOF_GOTO_LIKE = _DeeAst_SIZEOF_GOTO_LIKE_IMPL };
 
 /* Allocator for:
  * - `Dee_AST_SYMBOL_RD`, `Dee_AST_SYMREF_RD`,
+ * - `Dee_AST_SYMBOL_BND`, `Dee_AST_SYMREF_BND`,
  * - `Dee_AST_SYMBOL_WR`, `Dee_AST_SYMBOL_INIT`, `Dee_AST_SYMREF_WR`
  * - `Dee_AST_SYMBOL_DEL`, `Dee_AST_SYMREF_DEL`
  * - `Dee_AST_SYMBOL_XCH`, `Dee_AST_SYMREF_XCH` */
-#define _DeeAst_SIZEOF_SYMBOL_LIKE_IMPL                                  \
-	__hybrid_max_c9(COMPILER_OFFSETAFTER(DeeAst, a_data.ad_symbol_rd),   \
-	                COMPILER_OFFSETAFTER(DeeAst, a_data.ad_symref_rd),   \
-	                COMPILER_OFFSETAFTER(DeeAst, a_data.ad_symbol_wr),   \
-	                COMPILER_OFFSETAFTER(DeeAst, a_data.ad_symbol_init), \
-	                COMPILER_OFFSETAFTER(DeeAst, a_data.ad_symref_wr),   \
-	                COMPILER_OFFSETAFTER(DeeAst, a_data.ad_symbol_del),  \
-	                COMPILER_OFFSETAFTER(DeeAst, a_data.ad_symref_del),  \
-	                COMPILER_OFFSETAFTER(DeeAst, a_data.ad_symbol_xch),  \
-	                COMPILER_OFFSETAFTER(DeeAst, a_data.ad_symref_xch))
+#define _DeeAst_SIZEOF_SYMBOL_LIKE_IMPL                                   \
+	__hybrid_max_c11(COMPILER_OFFSETAFTER(DeeAst, a_data.ad_symbol_rd),   \
+	                 COMPILER_OFFSETAFTER(DeeAst, a_data.ad_symref_rd),   \
+	                 COMPILER_OFFSETAFTER(DeeAst, a_data.ad_symbol_bnd),  \
+	                 COMPILER_OFFSETAFTER(DeeAst, a_data.ad_symref_bnd),  \
+	                 COMPILER_OFFSETAFTER(DeeAst, a_data.ad_symbol_wr),   \
+	                 COMPILER_OFFSETAFTER(DeeAst, a_data.ad_symbol_init), \
+	                 COMPILER_OFFSETAFTER(DeeAst, a_data.ad_symref_wr),   \
+	                 COMPILER_OFFSETAFTER(DeeAst, a_data.ad_symbol_del),  \
+	                 COMPILER_OFFSETAFTER(DeeAst, a_data.ad_symref_del),  \
+	                 COMPILER_OFFSETAFTER(DeeAst, a_data.ad_symbol_xch),  \
+	                 COMPILER_OFFSETAFTER(DeeAst, a_data.ad_symref_xch))
 enum { _DeeAst_SIZEOF_SYMBOL_LIKE = _DeeAst_SIZEOF_SYMBOL_LIKE_IMPL };
 #undef _DeeAst_SIZEOF_SYMBOL_LIKE_IMPL
 #define _DeeAst_MallocUninitializedSymbolLike()                  ((DeeAst *)DeeObject_FMalloc(_DeeAst_SIZEOF_SYMBOL_LIKE))
@@ -1218,11 +1258,39 @@ enum { _DeeAst_SIZEOF_SYMBOL_LIKE = _DeeAst_SIZEOF_SYMBOL_LIKE_IMPL };
 #define DeeAst__DBG_ARGS   , DeeAst_DBG_ARGS
 #endif /* !NDEBUG && !NDEBUG_AST */
 
+/* Initialize "self" from "value", and emit a warning `TPP_W_ASM_STORE_TO_RVALUE`
+ * if `Dee_AST_RVALUE_KIND_ASSIGN` needs to be used and `lexer != NULL`. */
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL
+DeeAstRValue_FromAst(DeeAstRValue *__restrict self,
+                     /*inherit(always)*/ DeeAst *__restrict value,
+                     DeeLexer *lexer, enum Dee_ast_rvalue_mode mode);
+INTDEF NONNULL((1)) void DCALL
+DeeAstRValue_Fini(DeeAstRValue *__restrict self,
+                  enum Dee_ast_rvalue_mode mode);
+
+
+/* Check if `self` can be used in `DeeAstRValue_FromAst()`
+ * without triggering a `TPP_W_ASM_STORE_TO_RVALUE` warning. */
+INTDEF ATTR_PURE WUNUSED NONNULL((1)) bool DCALL
+DeeAst_IsRValue(DeeAst const *__restrict self);
+
 
 /* Destroy any type of (fully initialized) AST */
 INTDEF NONNULL((1)) void DCALL DeeAst_Destroy_(DeeAst *__restrict self DeeAst__DBG_PARAMS);
+INTDEF void DCALL DeeAst_Destroyv(DeeAst *const *vector, size_t count);
 #define DeeAst_Destroy(self)  DeeAst_Destroy_(self DeeAst__DBG_ARGS)
 #define DeeAst_XDestroy(self) (void)((self) && (DeeAst_Destroy(self), 1))
+
+
+
+LOCAL WUNUSED NONNULL((2)) DeeAst *DCALL
+DeeAst_TrySetLocHere(/*0..1*/DeeAst *self, DeeLexer *__restrict lexer) {
+	if (likely(self) && unlikely(DeeAst_SetLocHere(self, lexer))) {
+		DeeAst_Destroy(self);
+		self = NULL;
+	}
+	return self;
+}
 
 
 #undef DeeAst_HAVE_PRINT_REPR
@@ -1248,8 +1316,10 @@ DeeAst_PrintRepr(DeeAst const *__restrict self,
 #endif /* DeeAst_HAVE_PRINT_REPR */
 
 /* AST API */
-INTDEF WUNUSED NONNULL((1)) DeeAst *DCALL DeeAst_NewConst_(DeeObject *__restrict value DeeAst__DBG_PARAMS);
-#define DeeAst_NewConst(value) DeeAst_NewConst_(value DeeAst__DBG_ARGS)
+INTDEF WUNUSED NONNULL((1)) DeeAst *DCALL DeeAst_NewConst_(DREF /*inherit(always)*/ DeeObject *__restrict value DeeAst__DBG_PARAMS);
+#define DeeAst_NewConst(/*inherit(always)*/ value) DeeAst_NewConst_(value DeeAst__DBG_ARGS)
+INTDEF WUNUSED NONNULL((1)) DeeAst *DCALL DeeAst_NewConstString_(/*utf-8*/ char const *__restrict value, size_t value_len DeeAst__DBG_PARAMS);
+#define DeeAst_NewConstString(value, value_len) DeeAst_NewConstString_(value, value_len DeeAst__DBG_ARGS)
 INTDEF WUNUSED DeeAst *DCALL DeeAst_NewMulti_(enum Dee_ast_multi_kind kind, size_t count, /*inherit(always)*/ DeeAst *const *asts DeeAst__DBG_PARAMS);
 #define DeeAst_NewMulti(kind, count, asts) DeeAst_NewMulti_(kind, count, asts DeeAst__DBG_ARGS)
 INTDEF ATTR_RETNONNULL WUNUSED NONNULL((1)) DeeAst *DCALL DeeAst_PackMulti_(DeeAst *__restrict self, enum Dee_ast_multi_kind kind, size_t count DeeAst__DBG_PARAMS);
@@ -1293,14 +1363,22 @@ DeeAst_PackIAsm_(/*inherit(always)*/ DeeAst *__restrict self, Dee_ast_iasm_flag 
                  tpp_lcinfo text_chunk_lc, size_t opc_o, size_t opc_i, size_t opc_l DeeAst__DBG_PARAMS);
 #define DeeAst_PackIAsm(/*inherit(always)*/ self, flag, text, text_size, opt_text_chunk, text_chunk_lc, opc_o, opc_i, opc_l) \
 	DeeAst_PackIAsm_(self, flag, text, text_size, opt_text_chunk, text_chunk_lc, opc_o, opc_i, opc_l DeeAst__DBG_ARGS)
+INTDEF WUNUSED NONNULL((1, 3)) DeeAst *DCALL DeeAst_NewOperatorEx1_(/*inherit(always)*/ struct Dee_ast_operator_id const *__restrict opid, Dee_ast_operator_flag flag, /*inherit(always)*/ DeeAst *__restrict arg0 DeeAst__DBG_PARAMS);
+#define DeeAst_NewOperatorEx1(/*inherit(always)*/ opid, flag, /*inherit(always)*/ arg0) DeeAst_NewOperatorEx1_(opid, flag, arg0 DeeAst__DBG_ARGS)
+INTDEF WUNUSED NONNULL((1, 3, 4)) DeeAst *DCALL DeeAst_NewOperatorEx2_(/*inherit(always)*/ struct Dee_ast_operator_id const *__restrict opid, Dee_ast_operator_flag flag, /*inherit(always)*/ DeeAst *__restrict arg0, /*inherit(always)*/ DeeAst *__restrict arg1 DeeAst__DBG_PARAMS);
+#define DeeAst_NewOperatorEx2(/*inherit(always)*/ opid, flag, /*inherit(always)*/ arg0, /*inherit(always)*/ arg1) DeeAst_NewOperatorEx2_(opid, flag, arg0, arg1 DeeAst__DBG_ARGS)
+INTDEF WUNUSED NONNULL((1, 3, 4, 5)) DeeAst *DCALL DeeAst_NewOperatorEx3_(/*inherit(always)*/ struct Dee_ast_operator_id const *__restrict opid, Dee_ast_operator_flag flag, /*inherit(always)*/ DeeAst *__restrict arg0, /*inherit(always)*/ DeeAst *__restrict arg1, /*inherit(always)*/ DeeAst *__restrict arg2 DeeAst__DBG_PARAMS);
+#define DeeAst_NewOperatorEx3(/*inherit(always)*/ opid, flag, /*inherit(always)*/ arg0, /*inherit(always)*/ arg1, /*inherit(always)*/ arg2) DeeAst_NewOperatorEx3_(opid, flag, arg0, arg1, arg2 DeeAst__DBG_ARGS)
+INTDEF WUNUSED NONNULL((1, 3, 4, 5, 6)) DeeAst *DCALL DeeAst_NewOperatorEx4_(/*inherit(always)*/ struct Dee_ast_operator_id const *__restrict opid, Dee_ast_operator_flag flag, /*inherit(always)*/ DeeAst *__restrict arg0, /*inherit(always)*/ DeeAst *__restrict arg1, /*inherit(always)*/ DeeAst *__restrict arg2, /*inherit(always)*/ DeeAst *__restrict arg3 DeeAst__DBG_PARAMS);
+#define DeeAst_NewOperatorEx4(/*inherit(always)*/ opid, flag, /*inherit(always)*/ arg0, /*inherit(always)*/ arg1, /*inherit(always)*/ arg2, /*inherit(always)*/ arg3) DeeAst_NewOperatorEx4_(opid, flag, arg0, arg1, arg2, arg3 DeeAst__DBG_ARGS)
 INTDEF WUNUSED NONNULL((2)) DeeAst *DCALL DeeAst_NewOperator1_(Dee_operator_t op, /*inherit(always)*/ DeeAst *__restrict arg0 DeeAst__DBG_PARAMS);
 #define DeeAst_NewOperator1(op, /*inherit(always)*/ arg0) DeeAst_NewOperator1_(op, arg0 DeeAst__DBG_ARGS)
 INTDEF WUNUSED NONNULL((2, 3)) DeeAst *DCALL DeeAst_NewOperator2_(Dee_operator_t op, /*inherit(always)*/ DeeAst *__restrict arg0, /*inherit(always)*/ DeeAst *__restrict arg1 DeeAst__DBG_PARAMS);
-#define DeeAst_NewOperator2(op, /*inherit(always)*/ arg0, /*inherit(always)*/ arg1) DeeAst_NewOperator1_(op, arg0, arg1 DeeAst__DBG_ARGS)
+#define DeeAst_NewOperator2(op, /*inherit(always)*/ arg0, /*inherit(always)*/ arg1) DeeAst_NewOperator2_(op, arg0, arg1 DeeAst__DBG_ARGS)
 INTDEF WUNUSED NONNULL((2, 3, 4)) DeeAst *DCALL DeeAst_NewOperator3_(Dee_operator_t op, /*inherit(always)*/ DeeAst *__restrict arg0, /*inherit(always)*/ DeeAst *__restrict arg1, /*inherit(always)*/ DeeAst *__restrict arg2 DeeAst__DBG_PARAMS);
-#define DeeAst_NewOperator3(op, /*inherit(always)*/ arg0, /*inherit(always)*/ arg1, /*inherit(always)*/ arg2) DeeAst_NewOperator1_(op, arg0, arg1, arg2 DeeAst__DBG_ARGS)
+#define DeeAst_NewOperator3(op, /*inherit(always)*/ arg0, /*inherit(always)*/ arg1, /*inherit(always)*/ arg2) DeeAst_NewOperator3_(op, arg0, arg1, arg2 DeeAst__DBG_ARGS)
 INTDEF WUNUSED NONNULL((2, 3, 4, 5)) DeeAst *DCALL DeeAst_NewOperator4_(Dee_operator_t op, /*inherit(always)*/ DeeAst *__restrict arg0, /*inherit(always)*/ DeeAst *__restrict arg1, /*inherit(always)*/ DeeAst *__restrict arg2, /*inherit(always)*/ DeeAst *__restrict arg3 DeeAst__DBG_PARAMS);
-#define DeeAst_NewOperator4(op, /*inherit(always)*/ arg0, /*inherit(always)*/ arg1, /*inherit(always)*/ arg2, /*inherit(always)*/ arg3) DeeAst_NewOperator1_(op, arg0, arg1, arg2, arg3 DeeAst__DBG_ARGS)
+#define DeeAst_NewOperator4(op, /*inherit(always)*/ arg0, /*inherit(always)*/ arg1, /*inherit(always)*/ arg2, /*inherit(always)*/ arg3) DeeAst_NewOperator4_(op, arg0, arg1, arg2, arg3 DeeAst__DBG_ARGS)
 INTDEF WUNUSED NONNULL((2)) DeeAst *DCALL DeeAst_NewAct1_(enum Dee_ast_kind act, /*inherit(always)*/ DeeAst *__restrict arg0 DeeAst__DBG_PARAMS);
 #define DeeAst_NewAct1(act, /*inherit(always)*/ arg0) DeeAst_NewAct1_(act, arg0 DeeAst__DBG_ARGS)
 INTDEF WUNUSED NONNULL((2, 3)) DeeAst *DCALL DeeAst_NewAct2_(enum Dee_ast_kind act, /*inherit(always)*/ DeeAst *__restrict arg0, /*inherit(always)*/ DeeAst *__restrict arg1 DeeAst__DBG_PARAMS);
@@ -1319,35 +1397,28 @@ INTDEF WUNUSED NONNULL((1)) DeeAst *DCALL DeeAst_NewSymRefByName_(tpp_keyword co
 #define DeeAst_NewSymRefByName(name, kind, flag) DeeAst_NewSymRefByName_(name, kind, flag DeeAst__DBG_ARGS)
 INTDEF WUNUSED NONNULL((1)) DeeAst *DCALL DeeAst_NewSymRefNth_(tpp_keyword const *__restrict name, Dee_ast_symref_nth_id nth_id DeeAst__DBG_PARAMS);
 #define DeeAst_NewSymRefNth(name, nth_id) DeeAst_NewSymRefNth_(name, nth_id DeeAst__DBG_ARGS)
-INTDEF WUNUSED NONNULL((1)) DeeAst *DCALL DeeAst_NewSymRefExtern_(tpp_keyword const *__restrict name, tpp_char const *modname_str, tpp_size modname_len, tpp_string *opt_modname_chunk DeeAst__DBG_PARAMS);
-#define DeeAst_NewSymRefExtern(name, modname_str, modname_len, opt_modname_chunk) DeeAst_NewSymRefExtern_(name, modname_str, modname_len, opt_modname_chunk DeeAst__DBG_ARGS)
-INTDEF WUNUSED NONNULL((1)) DeeAst *DCALL DeeAst_NewSymRefThis_(DeeAst_DBG_PARAMS);
-#define DeeAst_NewSymRefThis() DeeAst_NewSymRefThis_(DeeAst_DBG_ARGS)
-INTDEF WUNUSED NONNULL((1)) DeeAst *DCALL DeeAst_NewSymRefTpThis_(DeeAst_DBG_PARAMS);
-#define DeeAst_NewSymRefTpThis() DeeAst_NewSymRefTpThis_(DeeAst_DBG_ARGS)
+INTDEF WUNUSED NONNULL((1, 2)) DeeAst *DCALL DeeAst_NewSymRefExtern_(/*inherit(always)*/ DREF struct Dee_module_object *__restrict mod, struct Dee_module_symbol *__restrict sym DeeAst__DBG_PARAMS);
+#define DeeAst_NewSymRefExtern(/*inherit(always)*/ mod, sym) DeeAst_NewSymRefExtern_(mod, sym DeeAst__DBG_ARGS)
+INTDEF WUNUSED DeeAst *DCALL DeeAst_NewSymRefSimple_(enum Dee_ast_symref_kind kind DeeAst__DBG_PARAMS);
+#define DeeAst_NewSymRefThis()       DeeAst_NewSymRefSimple_(Dee_AST_SYMREF_KIND_THIS DeeAst__DBG_ARGS)
+#define DeeAst_NewSymRefTpThis()     DeeAst_NewSymRefSimple_(Dee_AST_SYMREF_KIND_TP_THIS DeeAst__DBG_ARGS)
+#define DeeAst_NewSymRefThisModule() DeeAst_NewSymRefSimple_(Dee_AST_SYMREF_KIND_THISMOD DeeAst__DBG_ARGS)
+
 
 /* Transform the given AST `self` for an expression `del(<self>)`:
- * - Convert `Dee_AST_OPERATOR + OPERATOR_GETATTR` into `Dee_AST_OPERATOR + OPERATOR_DELATTR`
- * - Convert `Dee_AST_OPERATOR + OPERATOR_GETITEM` into `Dee_AST_OPERATOR + OPERATOR_DELITEM`
- * - Convert `Dee_AST_OPERATOR + OPERATOR_GETRANGE` into `Dee_AST_OPERATOR + OPERATOR_DELRANGE`
- * - Convert `Dee_AST_SYMBOL_RD` into `Dee_AST_SYMBOL_DEL`
- * - Convert `Dee_AST_SYMREF_RD` into `Dee_AST_SYMREF_DEL`
- * - Convert `Dee_AST_MULTI + Dee_AST_MULTI_KIND_ISSEQ()` into `Dee_AST_MULTI + Dee_AST_MULTI_KIND_KEEPLAST`,
- *   where each element is the appropriate `Dee_AST_SYMBOL_DEL` / `Dee_AST_SYMREF_DEL` / ...
- * All other types of ASTs are warned about, then packed with `<self> := none` */
-INTDEF WUNUSED NONNULL((1, 3, 4)) DeeAst *DCALL DeeAst_Transform_Del_(/*inherit(always)*/ DeeAst *__restrict self, Dee_ast_symref_del_flag flag, DeeLexer *__restrict lexer, struct Dee_ast_loc *__restrict loc DeeAst__DBG_PARAMS);
+ * A warning is emitted if `!DeeAst_IsRValue(self)` */
+INTDEF WUNUSED NONNULL((1, 3, 4)) DeeAst *DCALL DeeAst_Transform_Del_(/*inherit(always)*/ DeeAst *__restrict self, Dee_ast_symref_del_flag flag, DeeLexer *__restrict lexer, DeeAstLoc const *__restrict loc DeeAst__DBG_PARAMS);
 #define DeeAst_Transform_Del(/*inherit(always)*/ self, flag, lexer, loc) DeeAst_Transform_Del_(self, flag, lexer, loc DeeAst__DBG_ARGS)
 
 /* Transform the given AST `dst` for an expression `<dst> = <value>`:
- * - Convert `Dee_AST_OPERATOR + OPERATOR_GETATTR` into `Dee_AST_OPERATOR + OPERATOR_SETATTR`
- * - Convert `Dee_AST_OPERATOR + OPERATOR_GETITEM` into `Dee_AST_OPERATOR + OPERATOR_SETITEM`
- * - Convert `Dee_AST_OPERATOR + OPERATOR_GETRANGE` into `Dee_AST_OPERATOR + OPERATOR_SETRANGE`
- * - Convert `Dee_AST_SYMBOL_RD` into `Dee_AST_SYMBOL_WR`
- * - Convert `Dee_AST_SYMREF_RD` into `Dee_AST_SYMREF_WR`
- * - Convert `Dee_AST_MULTI + Dee_AST_MULTI_KIND_ISSEQ()` into `Dee_AST_UNPACK_WR`
- * All other types of ASTs are warned about, then packed with `<dst> := <value>` */
-INTDEF WUNUSED NONNULL((1, 2, 3, 4)) DeeAst *DCALL DeeAst_Transform_Store_(/*inherit(always)*/ DeeAst *__restrict dst, /*inherit(always)*/ DeeAst *__restrict value, DeeLexer *__restrict lexer, struct Dee_ast_loc *__restrict loc DeeAst__DBG_PARAMS);
+ * A warning is emitted if `!DeeAst_IsRValue(self)` */
+INTDEF WUNUSED NONNULL((1, 2, 3, 4)) DeeAst *DCALL DeeAst_Transform_Store_(/*inherit(always)*/ DeeAst *__restrict dst, /*inherit(always)*/ DeeAst *__restrict value, DeeLexer *__restrict lexer, DeeAstLoc const *__restrict loc DeeAst__DBG_PARAMS);
 #define DeeAst_Transform_Store(/*inherit(always)*/ dst, /*inherit(always)*/ value, lexer, loc) DeeAst_Transform_Store_(dst, value, lexer, loc DeeAst__DBG_ARGS)
+
+/* Transform the given AST `self` for an expression `bound(<self>):
+ * A warning is emitted if `!DeeAst_IsRValue(self)` */
+INTDEF WUNUSED NONNULL((1, 2, 3)) DeeAst *DCALL DeeAst_Transform_Bound_(/*inherit(always)*/ DeeAst *__restrict self, DeeLexer *__restrict lexer, DeeAstLoc const *__restrict loc DeeAst__DBG_PARAMS);
+#define DeeAst_Transform_Bound(/*inherit(always)*/ self, lexer, loc) DeeAst_Transform_Bound_(self, lexer, loc DeeAst__DBG_ARGS)
 
 /* Label functions */
 INTDEF WUNUSED NONNULL((1, 2)) DeeAst *DCALL DeeAst_AddGotoLabel_(/*inherit(always)*/ DeeAst *__restrict self, tpp_keyword const *__restrict name DeeAst__DBG_PARAMS);
@@ -1356,6 +1427,25 @@ INTDEF WUNUSED NONNULL((1, 2)) DeeAst *DCALL DeeAst_AddCaseLabel_(/*inherit(alwa
 #define DeeAst_AddCaseLabel(/*inherit(always)*/ self, /*inherit(always)*/ expr) DeeAst_AddCaseLabel_(self, expr DeeAst__DBG_ARGS)
 INTDEF WUNUSED NONNULL((1)) DeeAst *DCALL DeeAst_AddDefaultLabel_(/*inherit(always)*/ DeeAst *__restrict self DeeAst__DBG_PARAMS);
 #define DeeAst_AddDefaultLabel(/*inherit(always)*/ self) DeeAst_AddDefaultLabel_(self DeeAst__DBG_ARGS)
+
+
+/* Misc. helpers... */
+INTDEF WUNUSED NONNULL((1)) DeeAst *DCALL DeeAst_NewCall_(/*inherit(always)*/ DeeAst *__restrict func, size_t argc, /*inherit(always)*/ DeeAst *const *argv DeeAst__DBG_PARAMS);
+#define DeeAst_NewCall(/*inherit(always)*/ func, argc, /*inherit(always)*/ argv) DeeAst_NewCall_(func, argc, argv DeeAst__DBG_ARGS)
+INTDEF WUNUSED NONNULL((1, 2)) DeeAst *DCALL DeeAst_NewCallSymRefExtern_(/*inherit(always)*/ DREF struct Dee_module_object *__restrict mod, struct Dee_module_symbol *__restrict sym, size_t argc, /*inherit(always)*/ DeeAst *const *argv DeeAst__DBG_PARAMS);
+#define DeeAst_NewCallSymRefExtern(/*inherit(always)*/ mod, sym, argc, /*inherit(always)*/ argv) DeeAst_NewCallSymRefExtern_(mod, sym, argc, argv DeeAst__DBG_ARGS)
+INTDEF WUNUSED NONNULL((1, 2)) DeeAst *DCALL DeeAst_NewImportModule_(/*inherit(always)*/ DeeAst *__restrict module_name DeeAst__DBG_PARAMS); /* Generate a call to `deemon.import()` using `module_name` as argument */
+#define DeeAst_NewImportModule(module_name) DeeAst_NewImportModule_(module_name DeeAst__DBG_ARGS)
+INTDEF WUNUSED NONNULL((1, 2)) DeeAst *DCALL DeeAst_NewSymRefExternByName_(/*utf-8*/ char const *module_name, /*utf-8*/char const *symbol_name, DeeLexer *__restrict lexer DeeAst__DBG_PARAMS);
+#define DeeAst_NewSymRefExternByName(module_name, symbol_name, lexer) DeeAst_NewSymRefExternByName_(module_name, symbol_name, lexer DeeAst__DBG_ARGS)
+INTDEF WUNUSED NONNULL((1, 2)) DeeAst *DCALL DeeAst_NewInstanceMethod_(/*inherit(always)*/ DeeAst *__restrict method, /*inherit(always)*/ DeeAst *__restrict thisarg DeeAst__DBG_PARAMS); /* import.deemon.InstanceMethod({method}, {thisarg}) */
+#define DeeAst_NewInstanceMethod(/*inherit(always)*/ method, /*inherit(always)*/ thisarg) DeeAst_NewInstanceMethod_(method, thisarg DeeAst__DBG_ARGS)
+INTDEF WUNUSED NONNULL((1, 2)) DeeAst *DCALL DeeAst_NewOperatorFunction_(/*inherit(always)*/ struct Dee_ast_operator_id *__restrict opid, DeeLexer *__restrict lexer DeeAst__DBG_PARAMS);
+#define DeeAst_NewOperatorFunction(/*inherit(always)*/ opid, lexer) DeeAst_NewOperatorFunction_(opid, lexer DeeAst__DBG_ARGS)
+INTDEF WUNUSED NONNULL((1, 2)) DeeAst *DCALL DeeAst_NewCallAttr_(/*inherit(always)*/ DeeAst *__restrict obj, /*inherit(always)*/ DeeAst *__restrict attr, size_t argc, /*inherit(always)*/ DeeAst *const *argv DeeAst__DBG_PARAMS); /* {obj}.operator . ({attr})({argv...}) */
+#define DeeAst_NewCallAttr(/*inherit(always)*/ obj, /*inherit(always)*/ attr, argc, /*inherit(always)*/ argv) DeeAst_NewCallAttr_(obj, attr, argc, argv DeeAst__DBG_ARGS)
+INTDEF WUNUSED NONNULL((1, 2)) DeeAst *DCALL DeeAst_NewCallAttrConst_(/*inherit(always)*/ DeeAst *__restrict obj, /*inherit(always)*/ /*string*/ DREF DeeObject *__restrict attr, size_t argc, /*inherit(always)*/ DeeAst *const *argv DeeAst__DBG_PARAMS); /* {obj}.operator . ({attr})({argv...}) */
+#define DeeAst_NewCallAttrConst(/*inherit(always)*/ obj, /*inherit(always)*/ /*string*/ attr, argc, /*inherit(always)*/ argv) DeeAst_NewCallAttrConst_(obj, attr, argc, argv DeeAst__DBG_ARGS)
 
 #endif /* CONFIG_BUILDING_DEEMON */
 

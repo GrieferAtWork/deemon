@@ -1769,6 +1769,9 @@
 		<ClCompile Include="..\src\deemon\compiler\optimize\traits.c">
 			<Filter>src\compiler\optimize</Filter>
 		</ClCompile>
+		<ClCompile Include="..\src\deemon\compiler\parser.c">
+			<Filter>src\compiler</Filter>
+		</ClCompile>
 		<ClCompile Include="..\src\deemon\compiler\parser\asm.c">
 			<Filter>src\compiler\parser</Filter>
 		</ClCompile>

@@ -45,17 +45,6 @@ enum {
 	_NUM_BUILTINS_SYM
 };
 
-/* Define a second time here since the deemon script below needs it.
- * We internally don't wrap with `#ifndef` since the C standard says
- * that a macro can be re-defined with a duplicate definition without
- * causing a compiler warning.
- *
- * So if someone ends up changing the definition in headers, they'll
- * get a compiler warning here (which they have to fix by adjusting
- * this macro here, then running `deemon -F builtin.c`) */
-#define Dee_MODULE_HASHNX(hs, perturb) \
-	(void)((hs) = ((hs) << 2) + (hs) + (perturb) + 1, (perturb) >>= 5) /* This `5` is tunable. */
-
 
 #ifdef CONFIG_NO_DOC
 #define DOCOF(x) NULL
@@ -96,7 +85,7 @@ print("#define NUM_BUILTINS_SYM  ", NUM_BUILTINS_SYM);
 print("#define NUM_BUILTINS_SPC  ", NUM_BUILTINS_SPC);
 print("#define BUILTINS_HASHMASK ", BUILTINS_HASHMASK.hex());
 print("STATIC_ASSERT_MSG(_NUM_BUILTINS_SYM == ", NUM_BUILTINS_SYM, ", \"You need to re-run `deemon -F src/deemon/runtime/builtin.c`\");");
-print("PRIVATE struct Dee_module_symbol deemon_symbols[", BUILTINS_HASHMASK + 1, "] = {");
+print("INTERN struct Dee_module_symbol deemon_symbols[", BUILTINS_HASHMASK + 1, "] = {");
 
 // Construct the hash-table of builtin deemon objects.
 local isFirst = true;
@@ -157,7 +146,7 @@ print("};");
 #define NUM_BUILTINS_SPC  69
 #define BUILTINS_HASHMASK 0x7f
 STATIC_ASSERT_MSG(_NUM_BUILTINS_SYM == 52, "You need to re-run `deemon -F src/deemon/runtime/builtin.c`");
-PRIVATE struct Dee_module_symbol deemon_symbols[128] = {
+INTERN struct Dee_module_symbol deemon_symbols[128] = {
 #if _Dee_HashSelect(32, 64) == 32
 	MODSYM(DeeString_STR(&str_none), NULL, UINT32_C(0xde6dda00), Dee_MODSYM_FREADONLY | Dee_MODSYM_FCONSTEXPR | Dee_MODSYM_FNAMEOBJ, id_none),
 	MODSYM(NULL, NULL, 0, 0, 0),

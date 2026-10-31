@@ -30,17 +30,33 @@ TPP_KWD(TPP_KWD_, "") /* Special case for *empty* keyword */
 DEE_KWD_IDENTIFIER(TPP_KWD_none, "none")
 DEE_KWD_IDENTIFIER(TPP_KWD_true, "true")
 DEE_KWD_IDENTIFIER(TPP_KWD_false, "false")
+#define TPP_TOK_IS_UNARY_BUILTIN_CONSTANT(tok) \
+	((tok) >= TPP_KWD_none && (tok) <= TPP_KWD_false)
+#define TPP_CASE_TPP_TOK_UNARY_BUILTIN_CONSTANT \
+	case TPP_KWD_none:                          \
+	case TPP_KWD_true:                          \
+	case TPP_KWD_false:
+
+DEE_KWD_IDENTIFIER(TPP_KWD_str, "str")
+DEE_KWD_IDENTIFIER(TPP_KWD_repr, "repr")
+DEE_KWD_IDENTIFIER(TPP_KWD_type, "type")
 DEE_KWD_IDENTIFIER(TPP_KWD_copy, "copy")
 DEE_KWD_IDENTIFIER(TPP_KWD_deepcopy, "deepcopy")
+#define TPP_TOK_IS_UNARY_BUILTIN_FUNCTION(tok) \
+	((tok) >= TPP_KWD_str && (tok) <= TPP_KWD_deepcopy)
+#define TPP_CASE_TPP_TOK_UNARY_BUILTIN_FUNCTION \
+	case TPP_KWD_str:                           \
+	case TPP_KWD_repr:                          \
+	case TPP_KWD_type:                          \
+	case TPP_KWD_copy:                          \
+	case TPP_KWD_deepcopy:
+
 #ifndef TPP_KWD_assert
 DEE_KWD_IDENTIFIER(TPP_KWD_assert, "assert")
 #endif /* !TPP_KWD_assert */
 #ifndef TPP_KWD_import
 DEE_KWD_IDENTIFIER(TPP_KWD_import, "import")
 #endif /* !TPP_KWD_import */
-DEE_KWD_IDENTIFIER(TPP_KWD_str, "str")
-DEE_KWD_IDENTIFIER(TPP_KWD_repr, "repr")
-DEE_KWD_IDENTIFIER(TPP_KWD_type, "type")
 DEE_KWD_IDENTIFIER(TPP_KWD_function, "function")
 DEE_KWD_IDENTIFIER(TPP_KWD_with, "with")
 DEE_KWD_IDENTIFIER(TPP_KWD_pack, "pack")

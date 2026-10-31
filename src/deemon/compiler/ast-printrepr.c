@@ -164,6 +164,8 @@ Dee_ast_symref_printrepr(struct Dee_ast_symref const *__restrict self,
 		return DeeFormat_PRINT(printer, arg, "this");
 	case Dee_AST_SYMREF_KIND_TP_THIS:
 		return DeeFormat_PRINT(printer, arg, "<tp-this>");
+	case Dee_AST_SYMREF_KIND_THISMOD:
+		return DeeFormat_PRINT(printer, arg, "import(\".\")");
 	default: __builtin_unreachable();
 	}
 	__builtin_unreachable();
@@ -215,6 +217,86 @@ Dee_ast_labels_printrepr(struct Dee_ast_labels const *__restrict self, size_t in
 err_temp:
 	return temp;
 }
+
+/* @param: flag: for `Dee_AST_PRINTREPR_FLAG_PAREN` only */
+PRIVATE ATTR_NOINLINE WUNUSED NONNULL((1, 4)) Dee_ssize_t DCALL
+DeeAstRValue_PrintRepr(DeeAstRValue const *__restrict self,
+                       Dee_ast_printrepr_flag flag, size_t indent_level,
+                       Dee_formatprinter_t printer, void *arg) {
+	Dee_ssize_t temp, result = 0;
+	if (self->arv_labels)
+		EDO(err_temp, Dee_ast_labels_printrepr(self->arv_labels, indent_level, printer, arg));
+	switch (self->arv_kind) {
+	case Dee_AST_RVALUE_KIND_NONE:
+		temp = DeeFormat_PRINT(printer, arg, "none");
+		break;
+	case Dee_AST_RVALUE_KIND_SYMBOL:
+		temp = Dee_link_symbol_printrepr(self->arv_data.arvd_symbol,
+		                                 Dee_AST_PRINTREPR_FLAG_ASEXPR,
+		                                 printer, arg);
+		break;
+	case Dee_AST_RVALUE_KIND_SYMREF:
+		temp = Dee_ast_symref_printrepr(&self->arv_data.arvd_symref,
+		                                flag, indent_level, printer, arg);
+		break;
+	case Dee_AST_RVALUE_KIND_SETATTR: {
+		DeeAst const *attr = self->arv_data.arvd_setattr.arvsa_attr;
+		EDO(err_temp, DeeAst_PrintRepr(self->arv_data.arvd_setattr.arvsa_obj,
+		                               Dee_AST_PRINTREPR_FLAG_ASEXPR |
+		                               Dee_AST_PRINTREPR_FLAG_PAREN,
+		                               indent_level, printer, arg));
+		EDO(err_temp, DeeFormat_PRINT(printer, arg, "."));
+		if (attr->a_kind == Dee_AST_CONST && DeeString_Check(attr->a_data.ad_const.ace_value)) {
+			temp = DeeString_PrintUtf8(attr->a_data.ad_const.ace_value, printer, arg);
+		} else {
+			EDO(err_temp, DeeFormat_PRINT(printer, arg, "operator . ("));
+			EDO(err_temp, DeeAst_PrintRepr(attr, Dee_AST_PRINTREPR_FLAG_ASEXPR, indent_level, printer, arg));
+			temp = DeeFormat_PRINT(printer, arg, ")");
+		}
+	}	break;
+	case Dee_AST_RVALUE_KIND_SETITEM:
+		EDO(err_temp, DeeAst_PrintRepr(self->arv_data.arvd_setitem.arvsi_obj,
+		                               Dee_AST_PRINTREPR_FLAG_ASEXPR |
+		                               Dee_AST_PRINTREPR_FLAG_PAREN,
+		                               indent_level, printer, arg));
+		EDO(err_temp, DeeFormat_PRINT(printer, arg, "["));
+		EDO(err_temp, DeeAst_PrintRepr(self->arv_data.arvd_setitem.arvsi_item,
+		                               Dee_AST_PRINTREPR_FLAG_ASEXPR,
+		                               indent_level, printer, arg));
+		temp = DeeFormat_PRINT(printer, arg, "]");
+		break;
+	case Dee_AST_RVALUE_KIND_SETRANGE: {
+		DeeAst const *start = self->arv_data.arvd_setrange.arvsr_start;
+		DeeAst const *end = self->arv_data.arvd_setrange.arvsr_end;
+		EDO(err_temp, DeeAst_PrintRepr(self->arv_data.arvd_setrange.arvsr_obj,
+		                               Dee_AST_PRINTREPR_FLAG_ASEXPR |
+		                               Dee_AST_PRINTREPR_FLAG_PAREN,
+		                               indent_level, printer, arg));
+		EDO(err_temp, DeeFormat_PRINT(printer, arg, "["));
+		if (start->a_kind != Dee_AST_CONST || !DeeNone_Check(start->a_data.ad_const.ace_value))
+			EDO(err_temp, DeeAst_PrintRepr(start, Dee_AST_PRINTREPR_FLAG_ASEXPR, indent_level, printer, arg));
+		EDO(err_temp, DeeFormat_PRINT(printer, arg, ":"));
+		if (end->a_kind != Dee_AST_CONST || !DeeNone_Check(end->a_data.ad_const.ace_value))
+			EDO(err_temp, DeeAst_PrintRepr(end, Dee_AST_PRINTREPR_FLAG_ASEXPR, indent_level, printer, arg));
+		temp = DeeFormat_PRINT(printer, arg, "]");
+	}	break;
+	case Dee_AST_RVALUE_KIND_ASSIGN:
+		EDO(err_temp, DeeFormat_PRINT(printer, arg, "<assign:=<"));
+		EDO(err_temp, DeeAst_PrintRepr(self->arv_data.arvd_assign.arva_obj,
+		                               Dee_AST_PRINTREPR_FLAG_ASEXPR,
+		                               indent_level, printer, arg));
+		temp = DeeFormat_PRINT(printer, arg, ">>");
+		break;
+	default: __builtin_unreachable();
+	}
+	if unlikely(temp < 0)
+		goto err_temp;
+	result += temp;
+	return result;
+err_temp:
+	return temp;
+}
+
 
 
 /* Wrap something that can only be printed as a statement, inside of an expression... */
@@ -1263,85 +1345,6 @@ err_temp:
 
 /* @param: flag: for `Dee_AST_PRINTREPR_FLAG_PAREN` only */
 PRIVATE ATTR_NOINLINE WUNUSED NONNULL((1, 4)) Dee_ssize_t DCALL
-Dee_ast_unpack_wr_target_printrepr(struct Dee_ast_unpack_wr_target const *__restrict self,
-                                   Dee_ast_printrepr_flag flag, size_t indent_level,
-                                   Dee_formatprinter_t printer, void *arg) {
-	Dee_ssize_t temp, result = 0;
-	if (self->aupwrt_labels)
-		EDO(err_temp, Dee_ast_labels_printrepr(self->aupwrt_labels, indent_level, printer, arg));
-	switch (self->aupwrt_kind) {
-	case Dee_AST_UNPACK_WR_TARGET_KIND_NONE:
-		temp = DeeFormat_PRINT(printer, arg, "none");
-		break;
-	case Dee_AST_UNPACK_WR_TARGET_KIND_SYMBOL:
-		temp = Dee_link_symbol_printrepr(self->aupwrt_data.aupwrtd_symbol,
-		                                 Dee_AST_PRINTREPR_FLAG_ASEXPR,
-		                                 printer, arg);
-		break;
-	case Dee_AST_UNPACK_WR_TARGET_KIND_SYMREF:
-		temp = Dee_ast_symref_printrepr(&self->aupwrt_data.aupwrtd_symref,
-		                                flag, indent_level, printer, arg);
-		break;
-	case Dee_AST_UNPACK_WR_TARGET_KIND_SETATTR: {
-		DeeAst const *attr = self->aupwrt_data.aupwrtd_setattr.aupwrtsa_attr;
-		EDO(err_temp, DeeAst_PrintRepr(self->aupwrt_data.aupwrtd_setattr.aupwrtsa_obj,
-		                               Dee_AST_PRINTREPR_FLAG_ASEXPR |
-		                               Dee_AST_PRINTREPR_FLAG_PAREN,
-		                               indent_level, printer, arg));
-		EDO(err_temp, DeeFormat_PRINT(printer, arg, "."));
-		if (attr->a_kind == Dee_AST_CONST && DeeString_Check(attr->a_data.ad_const.ace_value)) {
-			temp = DeeString_PrintUtf8(attr->a_data.ad_const.ace_value, printer, arg);
-		} else {
-			EDO(err_temp, DeeFormat_PRINT(printer, arg, "operator . ("));
-			EDO(err_temp, DeeAst_PrintRepr(attr, Dee_AST_PRINTREPR_FLAG_ASEXPR, indent_level, printer, arg));
-			temp = DeeFormat_PRINT(printer, arg, ")");
-		}
-	}	break;
-	case Dee_AST_UNPACK_WR_TARGET_KIND_SETITEM:
-		EDO(err_temp, DeeAst_PrintRepr(self->aupwrt_data.aupwrtd_setitem.aupwrtsi_obj,
-		                               Dee_AST_PRINTREPR_FLAG_ASEXPR |
-		                               Dee_AST_PRINTREPR_FLAG_PAREN,
-		                               indent_level, printer, arg));
-		EDO(err_temp, DeeFormat_PRINT(printer, arg, "["));
-		EDO(err_temp, DeeAst_PrintRepr(self->aupwrt_data.aupwrtd_setitem.aupwrtsi_item,
-		                               Dee_AST_PRINTREPR_FLAG_ASEXPR,
-		                               indent_level, printer, arg));
-		temp = DeeFormat_PRINT(printer, arg, "]");
-		break;
-	case Dee_AST_UNPACK_WR_TARGET_KIND_SETRANGE: {
-		DeeAst const *start = self->aupwrt_data.aupwrtd_setrange.aupwrtsr_start;
-		DeeAst const *end = self->aupwrt_data.aupwrtd_setrange.aupwrtsr_end;
-		EDO(err_temp, DeeAst_PrintRepr(self->aupwrt_data.aupwrtd_setrange.aupwrtsr_obj,
-		                               Dee_AST_PRINTREPR_FLAG_ASEXPR |
-		                               Dee_AST_PRINTREPR_FLAG_PAREN,
-		                               indent_level, printer, arg));
-		EDO(err_temp, DeeFormat_PRINT(printer, arg, "["));
-		if (start->a_kind != Dee_AST_CONST || !DeeNone_Check(start->a_data.ad_const.ace_value))
-			EDO(err_temp, DeeAst_PrintRepr(start, Dee_AST_PRINTREPR_FLAG_ASEXPR, indent_level, printer, arg));
-		EDO(err_temp, DeeFormat_PRINT(printer, arg, ":"));
-		if (end->a_kind != Dee_AST_CONST || !DeeNone_Check(end->a_data.ad_const.ace_value))
-			EDO(err_temp, DeeAst_PrintRepr(end, Dee_AST_PRINTREPR_FLAG_ASEXPR, indent_level, printer, arg));
-		temp = DeeFormat_PRINT(printer, arg, "]");
-	}	break;
-	case Dee_AST_UNPACK_WR_TARGET_KIND_ASSIGN:
-		EDO(err_temp, DeeFormat_PRINT(printer, arg, "<assign:=<"));
-		EDO(err_temp, DeeAst_PrintRepr(self->aupwrt_data.aupwrtd_assign.aupwrtas_obj,
-		                               Dee_AST_PRINTREPR_FLAG_ASEXPR,
-		                               indent_level, printer, arg));
-		temp = DeeFormat_PRINT(printer, arg, ">>");
-		break;
-	default: __builtin_unreachable();
-	}
-	if unlikely(temp < 0)
-		goto err_temp;
-	result += temp;
-	return result;
-err_temp:
-	return temp;
-}
-
-/* @param: flag: for `Dee_AST_PRINTREPR_FLAG_PAREN` only */
-PRIVATE ATTR_NOINLINE WUNUSED NONNULL((1, 4)) Dee_ssize_t DCALL
 DeeAst_PrintRepr_impl_unpack_wr(struct Dee_ast_unpack_wr const *__restrict self,
                                 Dee_ast_printrepr_flag flag, size_t indent_level,
                                 Dee_formatprinter_t printer, void *arg) {
@@ -1357,9 +1360,9 @@ DeeAst_PrintRepr_impl_unpack_wr(struct Dee_ast_unpack_wr const *__restrict self,
 		for (i = 0; i < self->aupwr_targetc; ++i) {
 			if (i > 0)
 				EDO(err_temp, DeeFormat_PRINT(printer, arg, ", "));
-			EDO(err_temp, Dee_ast_unpack_wr_target_printrepr(&self->aupwr_targetv[i],
-			                                                 Dee_AST_PRINTREPR_FLAG_ASEXPR,
-			                                                 indent_level, printer, arg));
+			EDO(err_temp, DeeAstRValue_PrintRepr(&self->aupwr_targetv[i],
+			                                     Dee_AST_PRINTREPR_FLAG_ASEXPR,
+			                                     indent_level, printer, arg));
 		}
 		EDO(err_temp, DeeFormat_PRINT(printer, arg, " = "));
 		EDO(err_temp, DeeAst_PrintRepr(self->aupwr_expr,
@@ -1397,6 +1400,13 @@ Dee_ast_iasm_operand_printrepr(struct Dee_ast_iasm_operand const *__restrict sel
 		EDO(err_temp, DeeAst_PrintRepr(self->aio_data.aiod_ast,
 		                               Dee_AST_PRINTREPR_FLAG_ASEXPR,
 		                               indent_level, printer, arg));
+		EDO(err_temp, DeeFormat_PRINT(printer, arg, ")"));
+		break;
+	case Dee_AST_IASM_OPERAND_KIND_RVALUE:
+		EDO(err_temp, DeeFormat_PRINT(printer, arg, "("));
+		EDO(err_temp, DeeAstRValue_PrintRepr(&self->aio_data.aiod_rvalue,
+		                                     Dee_AST_PRINTREPR_FLAG_ASEXPR,
+		                                     indent_level, printer, arg));
 		EDO(err_temp, DeeFormat_PRINT(printer, arg, ")"));
 		break;
 	case Dee_AST_IASM_OPERAND_KIND_LABEL:
@@ -1549,7 +1559,7 @@ DeeAst_PrintRepr_impl_operator_nopostop(struct Dee_ast_operator const *__restric
 				if (unpack_args->a_kind == Dee_AST_ACT1_UNPACK) {
 					DeeAst const *args = unpack_args->a_data.ad_act1.aa_act0;
 					if (args->a_kind == Dee_AST_MULTI &&
-					    Dee_AST_MULTI_KIND_ISSEQ(args->a_data.ad_multi.am_kind)) {
+					    args->a_data.ad_multi.am_kind == Dee_AST_MULTI_KIND_TUPLE) {
 						size_t i;
 						for (i = 0; i < args->a_data.ad_multi.am_count; ++i) {
 							DeeAst const *this_arg = args->a_data.ad_multi.am_elem[i];
@@ -2470,6 +2480,8 @@ DeeAst_PrintRepr_impl(DeeAst const *__restrict self,
 
 	case Dee_AST_SYMBOL_RD:
 		return DeeFormat_PRINT(printer, arg, "TODO");
+	case Dee_AST_SYMBOL_BND:
+		return DeeFormat_PRINT(printer, arg, "TODO");
 	case Dee_AST_SYMBOL_DEL:
 		return DeeFormat_PRINT(printer, arg, "TODO");
 	case Dee_AST_SYMBOL_WR:
@@ -2479,6 +2491,8 @@ DeeAst_PrintRepr_impl(DeeAst const *__restrict self,
 	case Dee_AST_SYMBOL_INIT:
 		return DeeFormat_PRINT(printer, arg, "TODO");
 	case Dee_AST_SYMREF_RD:
+		return DeeFormat_PRINT(printer, arg, "TODO");
+	case Dee_AST_SYMREF_BND:
 		return DeeFormat_PRINT(printer, arg, "TODO");
 	case Dee_AST_SYMREF_DEL:
 		return DeeFormat_PRINT(printer, arg, "TODO");

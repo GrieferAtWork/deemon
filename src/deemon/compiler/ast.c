@@ -41,6 +41,9 @@
 #include <stddef.h> /* NULL, size_t */
 #include <stdint.h> /* uint16_t */
 
+#include "../runtime/strings.h"
+#include "../runtime/builtin.h"
+
 DECL_BEGIN
 
 #ifdef CONFIG_EXPERIMENTAL_USE_STATELESS_PARSER
@@ -55,7 +58,194 @@ DECL_BEGIN
 #define DBG__args /* nothing */
 #endif /* !DeeAst_HAVE_DBG */
 
-PRIVATE NONNULL((1)) void DCALL
+
+/* Initialize "self" from "value", and emit a warning `TPP_W_ASM_STORE_TO_RVALUE`
+ * if `Dee_AST_RVALUE_KIND_ASSIGN` needs to be used and `lexer != NULL`. */
+INTERN WUNUSED NONNULL((1, 2)) int DCALL
+DeeAstRValue_FromAst(DeeAstRValue *__restrict self,
+                     /*inherit(always)*/ DeeAst *__restrict value,
+                     DeeLexer *lexer, enum Dee_ast_rvalue_mode mode) {
+	/* Inherit metadata. */
+	self->arv_loc    = value->a_loc;
+	self->arv_labels = value->a_labels;
+	value->a_labels  = NULL; /* Steal */
+
+	/* Convert AST into unpack-write-target */
+	switch (value->a_kind) {
+	case Dee_AST_CONST:
+		/* Check for special case: `none` */
+		if (DeeNone_Check(value->a_data.ad_const.ace_value)) {
+			self->arv_kind = Dee_AST_RVALUE_KIND_NONE;
+			DeeAst_Destroy(value);
+			return 0;
+		}
+		break;
+
+	case Dee_AST_SYMBOL_RD:
+		self->arv_kind = Dee_AST_RVALUE_KIND_SYMBOL;
+		self->arv_data.arvd_symbol = value->a_data.ad_symbol_rd.asrd_symbol;
+		if (mode & Dee_AST_RVALUE_MODE_RD)
+			Dee_link_symbol_rd_inc(self->arv_data.arvd_symbol);
+		if (mode & Dee_AST_RVALUE_MODE_WR)
+			Dee_link_symbol_wr_inc(self->arv_data.arvd_symbol);
+		Dee_link_symbol_incref(self->arv_data.arvd_symbol);
+		DeeAst_Destroy(value);
+		return 0;
+
+	case Dee_AST_SYMREF_RD:
+		self->arv_kind = Dee_AST_RVALUE_KIND_SYMREF;
+		Dee_ast_symref_move(&self->arv_data.arvd_symref,
+		                    &value->a_data.ad_symref_rd.asrrd_sym);
+		_DeeAst_FiniCommon(value);
+		_DeeAst_FreeUninitializedSymbolLike(value);
+		return 0;
+
+	//TODO:case Dee_AST_IOPERATOR:
+
+	case Dee_AST_OPERATOR:
+		if (!Dee_ast_operator_id_hasid(&value->a_data.ad_operator.ao_id))
+			break;
+		switch (Dee_ast_operator_id_getid(&value->a_data.ad_operator.ao_id)) {
+
+		case OPERATOR_GETATTR:
+			if (value->a_data.ad_operator.ao_argc != 2)
+				break;
+			if (value->a_data.ad_operator.ao_flag & (Dee_AST_OPERATOR_FLAG_POSTOP |
+			                                        Dee_AST_OPERATOR_FLAG_VARARG))
+				break; /* Not allowed */
+			self->arv_kind = Dee_AST_RVALUE_KIND_SETATTR;
+			self->arv_data.arvd_setattr.arvsa_obj  = value->a_data.ad_operator.ao_argv[0]; /* Steal */
+			self->arv_data.arvd_setattr.arvsa_attr = value->a_data.ad_operator.ao_argv[1]; /* Steal */
+			ASSERT(self->arv_data.arvd_setattr.arvsa_obj);
+			ASSERT(self->arv_data.arvd_setattr.arvsa_attr);
+			_DeeAst_FiniCommon(value);
+			DeeAst_FreeUninitializedOperator(value);
+			return 0;
+
+		case OPERATOR_GETITEM:
+			if (value->a_data.ad_operator.ao_argc != 2)
+				break;
+			if (value->a_data.ad_operator.ao_flag & (Dee_AST_OPERATOR_FLAG_POSTOP |
+			                                        Dee_AST_OPERATOR_FLAG_VARARG))
+				break; /* Not allowed */
+			self->arv_kind = Dee_AST_RVALUE_KIND_SETITEM;
+			self->arv_data.arvd_setitem.arvsi_obj  = value->a_data.ad_operator.ao_argv[0]; /* Steal */
+			self->arv_data.arvd_setitem.arvsi_item = value->a_data.ad_operator.ao_argv[1]; /* Steal */
+			ASSERT(self->arv_data.arvd_setitem.arvsi_obj);
+			ASSERT(self->arv_data.arvd_setitem.arvsi_item);
+			_DeeAst_FiniCommon(value);
+			DeeAst_FreeUninitializedOperator(value);
+			return 0;
+
+		case OPERATOR_GETRANGE:
+			if (value->a_data.ad_operator.ao_argc != 3)
+				break;
+			if (value->a_data.ad_operator.ao_flag & (Dee_AST_OPERATOR_FLAG_POSTOP |
+			                                        Dee_AST_OPERATOR_FLAG_VARARG))
+				break; /* Not allowed */
+			self->arv_kind = Dee_AST_RVALUE_KIND_SETRANGE;
+			self->arv_data.arvd_setrange.arvsr_obj   = value->a_data.ad_operator.ao_argv[0]; /* Steal */
+			self->arv_data.arvd_setrange.arvsr_start = value->a_data.ad_operator.ao_argv[1]; /* Steal */
+			self->arv_data.arvd_setrange.arvsr_end   = value->a_data.ad_operator.ao_argv[2]; /* Steal */
+			ASSERT(self->arv_data.arvd_setrange.arvsr_obj);
+			ASSERT(self->arv_data.arvd_setrange.arvsr_start);
+			ASSERT(self->arv_data.arvd_setrange.arvsr_end);
+			_DeeAst_FiniCommon(value);
+			DeeAst_FreeUninitializedOperator(value);
+			return 0;
+
+		default: break;
+		}
+		break;
+
+	default: break;
+	}
+
+	/* Fallback: use `Dee_AST_RVALUE_KIND_ASSIGN` */
+	if (lexer) {
+		if (DeeLexer_WarnfAst(lexer, value, TPP_W_ASM_STORE_TO_RVALUE))
+			goto err_from; /* Emit warning (using `from` as location context) */
+	}
+	self->arv_kind = Dee_AST_RVALUE_KIND_ASSIGN;
+	self->arv_data.arvd_assign.arva_obj = value;
+	return 0;
+err_from:
+	DeeAst_Destroy(value);
+	return -1;
+}
+
+INTERN NONNULL((1)) void DCALL
+DeeAstRValue_Fini(DeeAstRValue *__restrict self,
+                  enum Dee_ast_rvalue_mode mode) {
+	struct Dee_ast_labels *labels = self->arv_labels;
+	if (labels)
+		Dee_ast_labels_destroy(labels);
+	switch (self->arv_kind) {
+	case Dee_AST_RVALUE_KIND_NONE:
+		break;
+	case Dee_AST_RVALUE_KIND_SYMBOL:
+		if (mode & Dee_AST_RVALUE_MODE_WR)
+			Dee_link_symbol_wr_dec(self->arv_data.arvd_symbol);
+		if (mode & Dee_AST_RVALUE_MODE_RD)
+			Dee_link_symbol_rd_dec(self->arv_data.arvd_symbol);
+		Dee_link_symbol_decref(self->arv_data.arvd_symbol);
+		break;
+	case Dee_AST_RVALUE_KIND_SYMREF:
+		Dee_ast_symref_fini(&self->arv_data.arvd_symref);
+		break;
+	case Dee_AST_RVALUE_KIND_SETRANGE:
+		DeeAst_Destroy(self->arv_data.arvd_setrange.arvsr_end);
+		ATTR_FALLTHROUGH
+	case Dee_AST_RVALUE_KIND_SETATTR:
+	case Dee_AST_RVALUE_KIND_SETITEM:
+		DeeAst_Destroy(self->arv_data.arvd_setattr.arvsa_attr);
+		ATTR_FALLTHROUGH
+	case Dee_AST_RVALUE_KIND_ASSIGN:
+	case Dee_AST_RVALUE_KIND_SETTER:
+		DeeAst_Destroy(self->arv_data.arvd_assign.arva_obj);
+		break;
+	default: __builtin_unreachable();
+	}
+}
+
+
+/* Check if `self` can be used in `DeeAstRValue_FromAst()`
+ * without triggering a `TPP_W_ASM_STORE_TO_RVALUE` warning. */
+INTERN ATTR_PURE WUNUSED NONNULL((1)) bool DCALL
+DeeAst_IsRValue(DeeAst const *__restrict self) {
+	switch (self->a_kind) {
+	case Dee_AST_CONST: /* Check for special case: `none` */
+		return DeeNone_Check(self->a_data.ad_const.ace_value);
+
+	case Dee_AST_SYMBOL_RD:
+	case Dee_AST_SYMREF_RD:
+		return true;
+
+	case Dee_AST_IOPERATOR:
+	case Dee_AST_OPERATOR:
+		if (!Dee_ast_operator_id_hasid(&self->a_data.ad_operator.ao_id))
+			break;
+		if (self->a_data.ad_operator.ao_flag & (Dee_AST_OPERATOR_FLAG_POSTOP |
+		                                        Dee_AST_OPERATOR_FLAG_VARARG))
+			break; /* Not allowed */
+		switch (Dee_ast_operator_id_getid(&self->a_data.ad_operator.ao_id)) {
+		case OPERATOR_GETATTR:
+		case OPERATOR_GETITEM:
+			return self->a_data.ad_operator.ao_argc == 2;
+		case OPERATOR_GETRANGE:
+			return self->a_data.ad_operator.ao_argc == 3;
+		default: break;
+		}
+		break;
+
+	default: break;
+	}
+	return false;
+}
+
+
+
+INTERN void DCALL
 DeeAst_Destroyv(DeeAst *const *vector, size_t count) {
 	while (count--)
 		DeeAst_Destroy(vector[count]);
@@ -188,9 +378,9 @@ DeeAst_Destroy_(DeeAst *__restrict self DeeAst__DBG_PARAMS) {
 		size_t i;
 		DeeAst_Destroy(self->a_data.ad_unpack_wr.aupwr_expr);
 		for (i = 0; i < self->a_data.ad_unpack_wr.aupwr_targetc; ++i) {
-			struct Dee_ast_unpack_wr_target *this_target;
+			DeeAstRValue *this_target;
 			this_target = &self->a_data.ad_unpack_wr.aupwr_targetv[i];
-			Dee_ast_unpack_wr_target_fini(this_target);
+			DeeAstRValue_Fini(this_target, Dee_AST_RVALUE_MODE_WR);
 		}
 		DeeAst_Dbg_FreeUninitializedUnpackWr(self, DBG_file, DBG_line);
 	}	break;
@@ -229,6 +419,25 @@ DeeAst_Destroy_(DeeAst *__restrict self DeeAst__DBG_PARAMS) {
 		DeeAst_Dbg_FreeUninitializedOperator(self, DBG_file, DBG_line);
 	}	break;
 
+	case Dee_AST_IOPERATOR: {
+#ifndef NDEBUG
+		size_t i;
+		for (i = 1; i < self->a_data.ad_ioperator.aio_argc; ++i) {
+			ASSERTF(self->a_data.ad_ioperator.aio_xargv[i - 1] != NULL,
+			        "Operand %" PRFuSIZ " should be non-`NULL`", i);
+		}
+		for (; i < Dee_AST_OPERATOR_ARGC_MAX; ++i) {
+			ASSERTF(self->a_data.ad_ioperator.aio_xargv[i - 1] == NULL,
+			        "Operand %" PRFuSIZ " should be `NULL`", i);
+		}
+#endif /* !NDEBUG */
+		Dee_ast_operator_id_fini(&self->a_data.ad_ioperator.aio_id);
+		DeeAst_Destroyv(self->a_data.ad_ioperator.aio_xargv,
+		                self->a_data.ad_ioperator.aio_argc);
+		DeeAstRValue_Fini(&self->a_data.ad_ioperator.aio_self, Dee_AST_RVALUE_MODE_RDWR);
+		DeeAst_Dbg_FreeUninitializedOperator(self, DBG_file, DBG_line);
+	}	break;
+
 	Dee_AST_CASE_ACT1
 		DeeAst_Destroy(self->a_data.ad_act1.aa_act0);
 		DeeAst_Dbg_FreeUninitializedAct1(self, DBG_file, DBG_line);
@@ -258,8 +467,10 @@ DeeAst_Destroy_(DeeAst *__restrict self DeeAst__DBG_PARAMS) {
 		DeeAst_Destroy(self->a_data.ad_symbol_wr.aswr_value);
 	}	ATTR_FALLTHROUGH
 	case Dee_AST_SYMBOL_RD:
+	case Dee_AST_SYMBOL_BND:
 	case Dee_AST_SYMBOL_DEL: {
 		DREF struct Dee_link_symbol *symbol;
+		STATIC_ASSERT_BINARY_COMPATIBLE(ad_symbol_rd.asrd_symbol, ad_symbol_bnd.asbn_symbol);
 		STATIC_ASSERT_BINARY_COMPATIBLE(ad_symbol_rd.asrd_symbol, ad_symbol_del.asub_symbol);
 		STATIC_ASSERT_BINARY_COMPATIBLE(ad_symbol_rd.asrd_symbol, ad_symbol_wr.aswr_symbol);
 		STATIC_ASSERT_BINARY_COMPATIBLE(ad_symbol_rd.asrd_symbol, ad_symbol_xch.asxc_symbol);
@@ -267,14 +478,13 @@ DeeAst_Destroy_(DeeAst *__restrict self DeeAst__DBG_PARAMS) {
 		symbol = self->a_data.ad_symbol_rd.asrd_symbol;
 		switch (self->a_kind) {
 		case Dee_AST_SYMBOL_RD:
+		case Dee_AST_SYMBOL_BND:
 			Dee_link_symbol_rd_dec(symbol);
 			break;
 		case Dee_AST_SYMBOL_WR:
+		case Dee_AST_SYMBOL_DEL:
 		case Dee_AST_SYMBOL_INIT:
 			Dee_link_symbol_wr_dec(symbol);
-			break;
-		case Dee_AST_SYMBOL_DEL:
-			Dee_link_symbol_del_dec(symbol);
 			break;
 		case Dee_AST_SYMBOL_XCH:
 			Dee_link_symbol_rdwr_dec(symbol);
@@ -291,8 +501,10 @@ DeeAst_Destroy_(DeeAst *__restrict self DeeAst__DBG_PARAMS) {
 		DeeAst_Destroy(self->a_data.ad_symref_wr.asrwr_value);
 	}	ATTR_FALLTHROUGH
 	case Dee_AST_SYMREF_RD:
+	case Dee_AST_SYMREF_BND:
 	case Dee_AST_SYMREF_DEL: {
 		STATIC_ASSERT_BINARY_COMPATIBLE(ad_symref_rd.asrrd_sym, ad_symref_del.asrub_sym);
+		STATIC_ASSERT_BINARY_COMPATIBLE(ad_symref_rd.asrrd_sym, ad_symref_bnd.asrbn_sym);
 		STATIC_ASSERT_BINARY_COMPATIBLE(ad_symref_rd.asrrd_sym, ad_symref_wr.asrwr_sym);
 		STATIC_ASSERT_BINARY_COMPATIBLE(ad_symref_rd.asrrd_sym, ad_symref_xch.asrxc_sym);
 		Dee_ast_symref_fini(&self->a_data.ad_symref_rd.asrrd_sym);
@@ -312,14 +524,28 @@ DeeAst_Destroy_(DeeAst *__restrict self DeeAst__DBG_PARAMS) {
 
 /* AST API */
 INTERN WUNUSED NONNULL((1)) DeeAst *DCALL
-DeeAst_NewConst_(DeeObject *__restrict value DeeAst__DBG_PARAMS) {
+DeeAst_NewConst_(/*inherit(always)*/ DREF DeeObject *__restrict value DeeAst__DBG_PARAMS) {
 	DeeAst *result = DeeAst_Dbg_MallocUninitializedConst(DBG_file, DBG_line);
 	if unlikely(!result)
 		goto err;
 	_DeeAst_InitCommon(result, Dee_AST_CONST);
 	result->a_data.ad_const.ace_value = value;
-	Dee_Incref(value);
 	return result;
+err:
+	Dee_Decref(value);
+	return NULL;
+}
+
+INTERN WUNUSED NONNULL((1)) DeeAst *DCALL
+DeeAst_NewConstString_(/*utf-8*/ char const *__restrict value,
+                       size_t value_len DeeAst__DBG_PARAMS) {
+	DREF DeeStringObject *string_value;
+	string_value = (DREF DeeStringObject *)DeeDbgString_NewUtf8(value, value_len,
+	                                                            STRING_ERROR_FIGNORE,
+	                                                            DBG_file, DBG_line);
+	if unlikely(!string_value)
+		goto err;
+	return DeeAst_NewConst_(Dee_AsObject(string_value) DBG__args);
 err:
 	return NULL;
 }
@@ -562,46 +788,229 @@ DeeAst_PackIAsm_(/*inherit(always)*/ DeeAst *__restrict self, Dee_ast_iasm_flag 
 	return result;
 }
 
+/* Check if `self_arg.operator <opid>` can + should be compiled
+ * as `Dee_AST_IOPERATOR` (as opposed to `Dee_AST_OPERATOR`) */
+PRIVATE ATTR_PURE WUNUSED NONNULL((1, 2)) bool DCALL
+DeeAst_IsInplaceOperator(DeeAst const *__restrict self_arg,
+                         struct Dee_ast_operator_id const *__restrict opid) {
+	struct Dee_opinfo const *opinfo;
+	if (!DeeAst_IsRValue(self_arg))
+		return false;
+
+	/* Compile as inplace if:
+	 * - The AST allows for it
+	 * - And the operator is either unknown, or is know to require it */
+	if (!Dee_ast_operator_id_hasid(opid))
+		return true;
+	opinfo = DeeTypeType_GetOperatorById(&DeeType_Type, Dee_ast_operator_id_getid(opid));
+	return !opinfo || (opinfo->oi_cc & OPCC_FINPLACE) != 0;
+}
+
+INTERN WUNUSED NONNULL((1, 3)) DeeAst *DCALL
+DeeAst_NewOperatorEx1_(/*inherit(always)*/ struct Dee_ast_operator_id const *__restrict opid,
+                       Dee_ast_operator_flag flag,
+                       /*inherit(always)*/ DeeAst *__restrict arg0 DeeAst__DBG_PARAMS) {
+	DeeAst *result;
+	if (DeeAst_IsInplaceOperator(arg0, opid)) {
+		result = DeeAst_Dbg_MallocUninitializedIOperator(DBG_file, DBG_line);
+		if unlikely(!result)
+			goto err_op_arg0;
+		if (DeeAstRValue_FromAst(&result->a_data.ad_ioperator.aio_self, arg0,
+		                         NULL, Dee_AST_RVALUE_MODE_RDWR)) {
+			DeeAst_Dbg_FreeUninitializedIOperator(result, DBG_file, DBG_line);
+			goto err_op;
+		}
+		_DeeAst_InitCommon(result, Dee_AST_IOPERATOR);
+		result->a_data.ad_ioperator.aio_xargv[1 - 1] = NULL;
+		result->a_data.ad_ioperator.aio_xargv[2 - 1] = NULL;
+		result->a_data.ad_ioperator.aio_xargv[3 - 1] = NULL;
+	} else {
+		result = DeeAst_Dbg_MallocUninitializedOperator(DBG_file, DBG_line);
+		if unlikely(!result)
+			goto err_op_arg0;
+		_DeeAst_InitCommon(result, Dee_AST_OPERATOR);
+		result->a_data.ad_operator.ao_argv[0] = arg0;
+		result->a_data.ad_operator.ao_argv[1] = NULL;
+		result->a_data.ad_operator.ao_argv[2] = NULL;
+		result->a_data.ad_operator.ao_argv[3] = NULL;
+	}
+	STATIC_ASSERT(offsetof(DeeAst, a_data.ad_ioperator.aio_id) == offsetof(DeeAst, a_data.ad_operator.ao_id));
+	STATIC_ASSERT(offsetof(DeeAst, a_data.ad_ioperator.aio_flag) == offsetof(DeeAst, a_data.ad_operator.ao_flag));
+	STATIC_ASSERT(offsetof(DeeAst, a_data.ad_ioperator.aio_argc) == offsetof(DeeAst, a_data.ad_operator.ao_argc));
+	Dee_ast_operator_id_move(&result->a_data.ad_operator.ao_id, opid);
+	result->a_data.ad_operator.ao_flag = flag;
+	result->a_data.ad_operator.ao_argc = 1;
+	return result;
+err_op_arg0:
+	DeeAst_Destroy(arg0);
+err_op:
+	Dee_ast_operator_id_fini(opid);
+/*err:*/
+	return NULL;
+}
+
+INTERN WUNUSED NONNULL((1, 3, 4)) DeeAst *DCALL
+DeeAst_NewOperator2Ex_(/*inherit(always)*/ struct Dee_ast_operator_id const *__restrict opid,
+                       Dee_ast_operator_flag flag,
+                       /*inherit(always)*/ DeeAst *__restrict arg0,
+                       /*inherit(always)*/ DeeAst *__restrict arg1 DeeAst__DBG_PARAMS) {
+	DeeAst *result;
+	if (DeeAst_IsInplaceOperator(arg0, opid)) {
+		result = DeeAst_Dbg_MallocUninitializedIOperator(DBG_file, DBG_line);
+		if unlikely(!result)
+			goto err_op_arg1_arg0;
+		if (DeeAstRValue_FromAst(&result->a_data.ad_ioperator.aio_self, arg0,
+		                         NULL, Dee_AST_RVALUE_MODE_RDWR)) {
+			DeeAst_Dbg_FreeUninitializedIOperator(result, DBG_file, DBG_line);
+			goto err_op_arg1;
+		}
+		_DeeAst_InitCommon(result, Dee_AST_IOPERATOR);
+		result->a_data.ad_ioperator.aio_xargv[1 - 1] = arg1;
+		result->a_data.ad_ioperator.aio_xargv[2 - 1] = NULL;
+		result->a_data.ad_ioperator.aio_xargv[3 - 1] = NULL;
+	} else {
+		result = DeeAst_Dbg_MallocUninitializedOperator(DBG_file, DBG_line);
+		if unlikely(!result)
+			goto err_op_arg1_arg0;
+		_DeeAst_InitCommon(result, Dee_AST_OPERATOR);
+		result->a_data.ad_operator.ao_argv[0] = arg0;
+		result->a_data.ad_operator.ao_argv[1] = arg1;
+		result->a_data.ad_operator.ao_argv[2] = NULL;
+		result->a_data.ad_operator.ao_argv[3] = NULL;
+	}
+	STATIC_ASSERT(offsetof(DeeAst, a_data.ad_ioperator.aio_id) == offsetof(DeeAst, a_data.ad_operator.ao_id));
+	STATIC_ASSERT(offsetof(DeeAst, a_data.ad_ioperator.aio_flag) == offsetof(DeeAst, a_data.ad_operator.ao_flag));
+	STATIC_ASSERT(offsetof(DeeAst, a_data.ad_ioperator.aio_argc) == offsetof(DeeAst, a_data.ad_operator.ao_argc));
+	Dee_ast_operator_id_move(&result->a_data.ad_operator.ao_id, opid);
+	result->a_data.ad_operator.ao_flag = flag;
+	result->a_data.ad_operator.ao_argc = 2;
+	return result;
+err_op_arg1_arg0:
+	DeeAst_Destroy(arg0);
+err_op_arg1:
+	DeeAst_Destroy(arg1);
+/*err_op:*/
+	Dee_ast_operator_id_fini(opid);
+/*err:*/
+	return NULL;
+}
+
+INTERN WUNUSED NONNULL((1, 3, 4, 5)) DeeAst *DCALL
+DeeAst_NewOperatorEx3_(/*inherit(always)*/ struct Dee_ast_operator_id const *__restrict opid,
+                       Dee_ast_operator_flag flag,
+                       /*inherit(always)*/ DeeAst *__restrict arg0,
+                       /*inherit(always)*/ DeeAst *__restrict arg1,
+                       /*inherit(always)*/ DeeAst *__restrict arg2 DeeAst__DBG_PARAMS) {
+	DeeAst *result;
+	if (DeeAst_IsInplaceOperator(arg0, opid)) {
+		result = DeeAst_Dbg_MallocUninitializedIOperator(DBG_file, DBG_line);
+		if unlikely(!result)
+			goto err_op_arg2_arg1_arg0;
+		if (DeeAstRValue_FromAst(&result->a_data.ad_ioperator.aio_self, arg0,
+		                         NULL, Dee_AST_RVALUE_MODE_RDWR)) {
+			DeeAst_Dbg_FreeUninitializedIOperator(result, DBG_file, DBG_line);
+			goto err_op_arg2_arg1;
+		}
+		_DeeAst_InitCommon(result, Dee_AST_IOPERATOR);
+		result->a_data.ad_ioperator.aio_xargv[1 - 1] = arg1;
+		result->a_data.ad_ioperator.aio_xargv[2 - 1] = arg2;
+		result->a_data.ad_ioperator.aio_xargv[3 - 1] = NULL;
+	} else {
+		result = DeeAst_Dbg_MallocUninitializedOperator(DBG_file, DBG_line);
+		if unlikely(!result)
+			goto err_op_arg2_arg1_arg0;
+		_DeeAst_InitCommon(result, Dee_AST_OPERATOR);
+		result->a_data.ad_operator.ao_argv[0] = arg0;
+		result->a_data.ad_operator.ao_argv[1] = arg1;
+		result->a_data.ad_operator.ao_argv[2] = arg2;
+		result->a_data.ad_operator.ao_argv[3] = NULL;
+	}
+	STATIC_ASSERT(offsetof(DeeAst, a_data.ad_ioperator.aio_id) == offsetof(DeeAst, a_data.ad_operator.ao_id));
+	STATIC_ASSERT(offsetof(DeeAst, a_data.ad_ioperator.aio_flag) == offsetof(DeeAst, a_data.ad_operator.ao_flag));
+	STATIC_ASSERT(offsetof(DeeAst, a_data.ad_ioperator.aio_argc) == offsetof(DeeAst, a_data.ad_operator.ao_argc));
+	Dee_ast_operator_id_move(&result->a_data.ad_operator.ao_id, opid);
+	result->a_data.ad_operator.ao_flag = flag;
+	result->a_data.ad_operator.ao_argc = 3;
+	return result;
+err_op_arg2_arg1_arg0:
+	DeeAst_Destroy(arg0);
+err_op_arg2_arg1:
+	DeeAst_Destroy(arg1);
+/*err_op_arg2:*/
+	DeeAst_Destroy(arg2);
+/*err_op:*/
+	Dee_ast_operator_id_fini(opid);
+/*err:*/
+	return NULL;
+}
+
+INTERN WUNUSED NONNULL((3, 4, 5, 6)) DeeAst *DCALL
+DeeAst_NewOperatorEx4_(/*inherit(always)*/ struct Dee_ast_operator_id const *__restrict opid,
+                       Dee_ast_operator_flag flag,
+                       /*inherit(always)*/ DeeAst *__restrict arg0,
+                       /*inherit(always)*/ DeeAst *__restrict arg1,
+                       /*inherit(always)*/ DeeAst *__restrict arg2,
+                       /*inherit(always)*/ DeeAst *__restrict arg3 DeeAst__DBG_PARAMS) {
+	DeeAst *result;
+	if (DeeAst_IsInplaceOperator(arg0, opid)) {
+		result = DeeAst_Dbg_MallocUninitializedIOperator(DBG_file, DBG_line);
+		if unlikely(!result)
+			goto err_op_arg3_arg2_arg1_arg0;
+		if (DeeAstRValue_FromAst(&result->a_data.ad_ioperator.aio_self, arg0,
+		                         NULL, Dee_AST_RVALUE_MODE_RDWR)) {
+			DeeAst_Dbg_FreeUninitializedIOperator(result, DBG_file, DBG_line);
+			goto err_op_arg3_arg2_arg1;
+		}
+		_DeeAst_InitCommon(result, Dee_AST_IOPERATOR);
+		result->a_data.ad_ioperator.aio_xargv[1 - 1] = arg1;
+		result->a_data.ad_ioperator.aio_xargv[2 - 1] = arg2;
+		result->a_data.ad_ioperator.aio_xargv[3 - 1] = arg3;
+	} else {
+		result = DeeAst_Dbg_MallocUninitializedOperator(DBG_file, DBG_line);
+		if unlikely(!result)
+			goto err_op_arg3_arg2_arg1_arg0;
+		_DeeAst_InitCommon(result, Dee_AST_OPERATOR);
+		result->a_data.ad_operator.ao_argv[0] = arg0;
+		result->a_data.ad_operator.ao_argv[1] = arg1;
+		result->a_data.ad_operator.ao_argv[2] = arg2;
+		result->a_data.ad_operator.ao_argv[3] = arg3;
+	}
+	STATIC_ASSERT(offsetof(DeeAst, a_data.ad_ioperator.aio_id) == offsetof(DeeAst, a_data.ad_operator.ao_id));
+	STATIC_ASSERT(offsetof(DeeAst, a_data.ad_ioperator.aio_flag) == offsetof(DeeAst, a_data.ad_operator.ao_flag));
+	STATIC_ASSERT(offsetof(DeeAst, a_data.ad_ioperator.aio_argc) == offsetof(DeeAst, a_data.ad_operator.ao_argc));
+	Dee_ast_operator_id_move(&result->a_data.ad_operator.ao_id, opid);
+	result->a_data.ad_operator.ao_flag = flag;
+	result->a_data.ad_operator.ao_argc = 4;
+	return result;
+err_op_arg3_arg2_arg1_arg0:
+	DeeAst_Destroy(arg0);
+err_op_arg3_arg2_arg1:
+	DeeAst_Destroy(arg1);
+/*err_op_arg3_arg2:*/
+	DeeAst_Destroy(arg2);
+/*err_op_arg3:*/
+	DeeAst_Destroy(arg3);
+/*err_op:*/
+	Dee_ast_operator_id_fini(opid);
+/*err:*/
+	return NULL;
+}
+
 INTERN WUNUSED NONNULL((2)) DeeAst *DCALL
 DeeAst_NewOperator1_(Dee_operator_t op,
                      /*inherit(always)*/ DeeAst *__restrict arg0 DeeAst__DBG_PARAMS) {
-	DeeAst *result = DeeAst_Dbg_MallocUninitializedOperator(DBG_file, DBG_line);
-	if unlikely(!result)
-		goto err;
-	_DeeAst_InitCommon(result, Dee_AST_OPERATOR);
-	Dee_ast_operator_id_initid(&result->a_data.ad_operator.ao_id, op);
-	result->a_data.ad_operator.ao_flag    = Dee_AST_OPERATOR_FLAG_NORMAL;
-	result->a_data.ad_operator.ao_argc    = 1;
-	result->a_data.ad_operator.ao_argv[0] = arg0;
-	result->a_data.ad_operator.ao_argv[1] = NULL;
-	result->a_data.ad_operator.ao_argv[2] = NULL;
-	result->a_data.ad_operator.ao_argv[3] = NULL;
-	return result;
-err:
-	DeeAst_Destroy(arg0);
-	return NULL;
+	struct Dee_ast_operator_id opid;
+	Dee_ast_operator_id_initid(&opid, op);
+	return DeeAst_NewOperatorEx1_(&opid, Dee_AST_OPERATOR_FLAG_NORMAL, arg0 DBG__args);
 }
 
 INTERN WUNUSED NONNULL((2, 3)) DeeAst *DCALL
 DeeAst_NewOperator2_(Dee_operator_t op,
                      /*inherit(always)*/ DeeAst *__restrict arg0,
                      /*inherit(always)*/ DeeAst *__restrict arg1 DeeAst__DBG_PARAMS) {
-	DeeAst *result = DeeAst_Dbg_MallocUninitializedOperator(DBG_file, DBG_line);
-	if unlikely(!result)
-		goto err;
-	_DeeAst_InitCommon(result, Dee_AST_OPERATOR);
-	Dee_ast_operator_id_initid(&result->a_data.ad_operator.ao_id, op);
-	result->a_data.ad_operator.ao_flag    = Dee_AST_OPERATOR_FLAG_NORMAL;
-	result->a_data.ad_operator.ao_argc    = 2;
-	result->a_data.ad_operator.ao_argv[0] = arg0;
-	result->a_data.ad_operator.ao_argv[1] = arg1;
-	result->a_data.ad_operator.ao_argv[2] = NULL;
-	result->a_data.ad_operator.ao_argv[3] = NULL;
-	return result;
-err:
-	DeeAst_Destroy(arg1);
-	DeeAst_Destroy(arg0);
-	return NULL;
+	struct Dee_ast_operator_id opid;
+	Dee_ast_operator_id_initid(&opid, op);
+	return DeeAst_NewOperatorEx2_(&opid, Dee_AST_OPERATOR_FLAG_NORMAL, arg0, arg1 DBG__args);
 }
 
 INTERN WUNUSED NONNULL((2, 3, 4)) DeeAst *DCALL
@@ -609,23 +1018,9 @@ DeeAst_NewOperator3_(Dee_operator_t op,
                      /*inherit(always)*/ DeeAst *__restrict arg0,
                      /*inherit(always)*/ DeeAst *__restrict arg1,
                      /*inherit(always)*/ DeeAst *__restrict arg2 DeeAst__DBG_PARAMS) {
-	DeeAst *result = DeeAst_Dbg_MallocUninitializedOperator(DBG_file, DBG_line);
-	if unlikely(!result)
-		goto err;
-	_DeeAst_InitCommon(result, Dee_AST_OPERATOR);
-	Dee_ast_operator_id_initid(&result->a_data.ad_operator.ao_id, op);
-	result->a_data.ad_operator.ao_flag    = Dee_AST_OPERATOR_FLAG_NORMAL;
-	result->a_data.ad_operator.ao_argc    = 3;
-	result->a_data.ad_operator.ao_argv[0] = arg0;
-	result->a_data.ad_operator.ao_argv[1] = arg1;
-	result->a_data.ad_operator.ao_argv[2] = arg2;
-	result->a_data.ad_operator.ao_argv[3] = NULL;
-	return result;
-err:
-	DeeAst_Destroy(arg2);
-	DeeAst_Destroy(arg1);
-	DeeAst_Destroy(arg0);
-	return NULL;
+	struct Dee_ast_operator_id opid;
+	Dee_ast_operator_id_initid(&opid, op);
+	return DeeAst_NewOperatorEx3_(&opid, Dee_AST_OPERATOR_FLAG_NORMAL, arg0, arg1, arg2 DBG__args);
 }
 
 INTERN WUNUSED NONNULL((2, 3, 4, 5)) DeeAst *DCALL
@@ -634,24 +1029,9 @@ DeeAst_NewOperator4_(Dee_operator_t op,
                      /*inherit(always)*/ DeeAst *__restrict arg1,
                      /*inherit(always)*/ DeeAst *__restrict arg2,
                      /*inherit(always)*/ DeeAst *__restrict arg3 DeeAst__DBG_PARAMS) {
-	DeeAst *result = DeeAst_Dbg_MallocUninitializedOperator(DBG_file, DBG_line);
-	if unlikely(!result)
-		goto err;
-	_DeeAst_InitCommon(result, Dee_AST_OPERATOR);
-	Dee_ast_operator_id_initid(&result->a_data.ad_operator.ao_id, op);
-	result->a_data.ad_operator.ao_flag    = Dee_AST_OPERATOR_FLAG_NORMAL;
-	result->a_data.ad_operator.ao_argc    = 4;
-	result->a_data.ad_operator.ao_argv[0] = arg0;
-	result->a_data.ad_operator.ao_argv[1] = arg1;
-	result->a_data.ad_operator.ao_argv[2] = arg2;
-	result->a_data.ad_operator.ao_argv[3] = arg3;
-	return result;
-err:
-	DeeAst_Destroy(arg3);
-	DeeAst_Destroy(arg2);
-	DeeAst_Destroy(arg1);
-	DeeAst_Destroy(arg0);
-	return NULL;
+	struct Dee_ast_operator_id opid;
+	Dee_ast_operator_id_initid(&opid, op);
+	return DeeAst_NewOperatorEx4_(&opid, Dee_AST_OPERATOR_FLAG_NORMAL, arg0, arg1, arg2, arg3 DBG__args);
 }
 
 INTERN WUNUSED NONNULL((2)) DeeAst *DCALL
@@ -772,40 +1152,27 @@ err:
 	return NULL;
 }
 
-INTERN WUNUSED NONNULL((1)) DeeAst *DCALL
-DeeAst_NewSymRefExtern_(tpp_keyword const *__restrict name,
-                        tpp_char const *modname_str, tpp_size modname_len,
-                        tpp_string *opt_modname_chunk DeeAst__DBG_PARAMS) {
+INTERN WUNUSED NONNULL((1, 2)) DeeAst *DCALL
+DeeAst_NewSymRefExtern_(/*inherit(always)*/ DREF struct Dee_module_object *__restrict mod,
+                        struct Dee_module_symbol *__restrict sym DeeAst__DBG_PARAMS) {
 	DeeAst *result = _DeeAst_Dbg_MallocUninitializedSymbolLike(DBG_file, DBG_line);
 	if unlikely(!result)
 		goto err;
 	_DeeAst_InitCommon(result, Dee_AST_SYMREF_RD);
-	Dee_ast_symref_init_extern(&result->a_data.ad_symref_rd.asrrd_sym, name,
-	                           modname_str, modname_len, opt_modname_chunk);
+	Dee_ast_symref_init_extern(&result->a_data.ad_symref_rd.asrrd_sym, mod, sym);
 	return result;
 err:
+	Dee_Decref(mod);
 	return NULL;
 }
 
-INTERN WUNUSED NONNULL((1)) DeeAst *DCALL
-DeeAst_NewSymRefThis_(DeeAst_DBG_PARAMS) {
+INTERN WUNUSED DeeAst *DCALL
+DeeAst_NewSymRefSimple_(enum Dee_ast_symref_kind kind DeeAst__DBG_PARAMS) {
 	DeeAst *result = _DeeAst_Dbg_MallocUninitializedSymbolLike(DBG_file, DBG_line);
 	if unlikely(!result)
 		goto err;
 	_DeeAst_InitCommon(result, Dee_AST_SYMREF_RD);
-	Dee_ast_symref_init_this(&result->a_data.ad_symref_rd.asrrd_sym);
-	return result;
-err:
-	return NULL;
-}
-
-INTERN WUNUSED NONNULL((1)) DeeAst *DCALL
-DeeAst_NewSymRefTpThis_(DeeAst_DBG_PARAMS) {
-	DeeAst *result = _DeeAst_Dbg_MallocUninitializedSymbolLike(DBG_file, DBG_line);
-	if unlikely(!result)
-		goto err;
-	_DeeAst_InitCommon(result, Dee_AST_SYMREF_RD);
-	Dee_ast_symref_init_tp_this(&result->a_data.ad_symref_rd.asrrd_sym);
+	Dee_ast_symref_init_simple(&result->a_data.ad_symref_rd.asrrd_sym, kind);
 	return result;
 err:
 	return NULL;
@@ -814,34 +1181,29 @@ err:
 PRIVATE ATTR_COLD ATTR_NOINLINE WUNUSED NONNULL((1, 2)) DeeAst *DCALL
 DeeAst_Transform_Del_dummy_(/*inherit(always)*/ DeeAst *__restrict self,
                             DeeLexer *__restrict lexer,
-                            struct Dee_ast_loc *__restrict loc DeeAst__DBG_PARAMS) {
+                            DeeAstLoc const *__restrict loc DeeAst__DBG_PARAMS) {
 	DeeAst *const_none;
 	if (DeeLexer_WarnfLoc(lexer, loc, TPP_W_ASM_STORE_TO_RVALUE))
 		goto err; /* Emit warning */
-	const_none = DeeAst_NewConst_(Dee_None DBG__args);
+	const_none = DeeAst_NewConst_(DeeNone_NewRef() DBG__args);
 	if unlikely(!const_none)
 		goto err;
 	DeeAst_SetLoc(const_none, loc);
-	return DeeAst_TrySetLoc(DeeAst_NewOperator2_(OPERATOR_ASSIGN, self, const_none DBG__args), loc);
+	return DeeAst_TrySetLoc(DeeAst_NewOperator2_(OPERATOR_ASSIGN, self,
+	                                             const_none DBG__args),
+	                        loc);
 err:
 	DeeAst_Destroy(self);
 	return NULL;
 }
 
 /* Transform the given AST `self` for an expression `del(<self>)`:
- * - Convert `Dee_AST_OPERATOR + OPERATOR_GETATTR` into `Dee_AST_OPERATOR + OPERATOR_DELATTR`
- * - Convert `Dee_AST_OPERATOR + OPERATOR_GETITEM` into `Dee_AST_OPERATOR + OPERATOR_DELITEM`
- * - Convert `Dee_AST_OPERATOR + OPERATOR_GETRANGE` into `Dee_AST_OPERATOR + OPERATOR_DELRANGE`
- * - Convert `Dee_AST_SYMBOL_RD` into `Dee_AST_SYMBOL_DEL`
- * - Convert `Dee_AST_SYMREF_RD` into `Dee_AST_SYMREF_DEL`
- * - Convert `Dee_AST_MULTI + Dee_AST_MULTI_KIND_ISSEQ()` into `Dee_AST_MULTI + Dee_AST_MULTI_KIND_KEEPLAST`,
- *   where each element is the appropriate `Dee_AST_SYMBOL_DEL` / `Dee_AST_SYMREF_DEL` / ...
- * All other types of ASTs are warned about, then packed with `<self> := none` */
+ * A warning is emitted if `!DeeAst_IsRValue(self)` */
 INTERN WUNUSED NONNULL((1, 3, 4)) DeeAst *DCALL
 DeeAst_Transform_Del_(/*inherit(always)*/ DeeAst *__restrict self,
                       Dee_ast_symref_del_flag flag,
                       DeeLexer *__restrict lexer,
-                      struct Dee_ast_loc *__restrict loc DeeAst__DBG_PARAMS) {
+                      DeeAstLoc const *__restrict loc DeeAst__DBG_PARAMS) {
 	DeeAst_UpdateLoc(self, loc);
 	switch (self->a_kind) {
 
@@ -891,6 +1253,7 @@ DeeAst_Transform_Del_(/*inherit(always)*/ DeeAst *__restrict self,
 	}	break;
 
 	case Dee_AST_OPERATOR:
+	case Dee_AST_IOPERATOR:
 		if (!Dee_ast_operator_id_hasid(&self->a_data.ad_operator.ao_id))
 			break;
 		switch (Dee_ast_operator_id_getid(&self->a_data.ad_operator.ao_id)) {
@@ -912,7 +1275,7 @@ DeeAst_Transform_Del_(/*inherit(always)*/ DeeAst *__restrict self,
 		              offsetof(DeeAst, a_data.ad_symbol_del.asub_symbol));
 		Dee_link_symbol_rd_dec(self->a_data.ad_symbol_del.asub_symbol);
 		self->a_kind = Dee_AST_SYMBOL_DEL;
-		Dee_link_symbol_del_inc(self->a_data.ad_symbol_del.asub_symbol);
+		Dee_link_symbol_wr_inc(self->a_data.ad_symbol_del.asub_symbol);
 		return self;
 	}	break;
 
@@ -933,121 +1296,17 @@ PRIVATE ATTR_COLD ATTR_NOINLINE WUNUSED NONNULL((1, 2, 3, 4)) DeeAst *DCALL
 DeeAst_Transform_Store_dummy_(/*inherit(always)*/ DeeAst *__restrict dst,
                               /*inherit(always)*/ DeeAst *__restrict value,
                               DeeLexer *__restrict lexer,
-                              struct Dee_ast_loc *__restrict loc DeeAst__DBG_PARAMS) {
+                              DeeAstLoc const *__restrict loc DeeAst__DBG_PARAMS) {
 	/* Emit warning (using `dst` as location context) */
 	if (DeeLexer_WarnfLoc(lexer, loc, TPP_W_ASM_STORE_TO_RVALUE))
 		goto err;
-	return DeeAst_TrySetLoc(DeeAst_NewOperator2_(OPERATOR_ASSIGN, dst, value DBG__args), loc);
+	return DeeAst_TrySetLoc(DeeAst_NewOperator2_(OPERATOR_ASSIGN, dst,
+	                                             value DBG__args),
+	                        loc);
 err:
 	DeeAst_Destroy(value);
 	DeeAst_Destroy(dst);
 	return NULL;
-}
-
-PRIVATE WUNUSED NONNULL((1, 2, 3)) int DCALL
-Dee_ast_unpack_wr_target_init_from_ast(struct Dee_ast_unpack_wr_target *__restrict self,
-                                       /*inherit(always)*/ DeeAst *__restrict from,
-                                       DeeLexer *__restrict lexer) {
-	/* Inherit metadata. */
-	self->aupwrt_loc    = from->a_loc;
-	self->aupwrt_labels = from->a_labels;
-	from->a_labels      = NULL; /* Steal */
-
-	/* Convert AST into unpack-write-target */
-	switch (from->a_kind) {
-	case Dee_AST_CONST:
-		/* Check for special case: `none` */
-		if (DeeNone_Check(from->a_data.ad_const.ace_value)) {
-			self->aupwrt_kind = Dee_AST_UNPACK_WR_TARGET_KIND_NONE;
-			DeeAst_Destroy(from);
-			return 0;
-		}
-		break;
-
-	case Dee_AST_SYMBOL_RD:
-		self->aupwrt_kind = Dee_AST_UNPACK_WR_TARGET_KIND_SYMBOL;
-		self->aupwrt_data.aupwrtd_symbol = from->a_data.ad_symbol_rd.asrd_symbol;
-		Dee_link_symbol_wr_inc(self->aupwrt_data.aupwrtd_symbol);
-		Dee_link_symbol_incref(self->aupwrt_data.aupwrtd_symbol);
-		DeeAst_Destroy(from);
-		return 0;
-
-	case Dee_AST_SYMREF_RD:
-		self->aupwrt_kind = Dee_AST_UNPACK_WR_TARGET_KIND_SYMREF;
-		Dee_ast_symref_move(&self->aupwrt_data.aupwrtd_symref,
-		                    &from->a_data.ad_symref_rd.asrrd_sym);
-		_DeeAst_FiniCommon(from);
-		_DeeAst_FreeUninitializedSymbolLike(from);
-		return 0;
-
-	case Dee_AST_OPERATOR:
-		if (!Dee_ast_operator_id_hasid(&from->a_data.ad_operator.ao_id))
-			break;
-		switch (Dee_ast_operator_id_getid(&from->a_data.ad_operator.ao_id)) {
-
-		case OPERATOR_GETATTR:
-			if (from->a_data.ad_operator.ao_argc != 2)
-				break;
-			if (from->a_data.ad_operator.ao_flag & (Dee_AST_OPERATOR_FLAG_POSTOP |
-			                                        Dee_AST_OPERATOR_FLAG_VARARG))
-				break; /* Not allowed */
-			self->aupwrt_kind = Dee_AST_UNPACK_WR_TARGET_KIND_SETATTR;
-			self->aupwrt_data.aupwrtd_setattr.aupwrtsa_obj  = from->a_data.ad_operator.ao_argv[0]; /* Steal */
-			self->aupwrt_data.aupwrtd_setattr.aupwrtsa_attr = from->a_data.ad_operator.ao_argv[1]; /* Steal */
-			ASSERT(self->aupwrt_data.aupwrtd_setattr.aupwrtsa_obj);
-			ASSERT(self->aupwrt_data.aupwrtd_setattr.aupwrtsa_attr);
-			_DeeAst_FiniCommon(from);
-			DeeAst_FreeUninitializedOperator(from);
-			return 0;
-
-		case OPERATOR_GETITEM:
-			if (from->a_data.ad_operator.ao_argc != 2)
-				break;
-			if (from->a_data.ad_operator.ao_flag & (Dee_AST_OPERATOR_FLAG_POSTOP |
-			                                        Dee_AST_OPERATOR_FLAG_VARARG))
-				break; /* Not allowed */
-			self->aupwrt_kind = Dee_AST_UNPACK_WR_TARGET_KIND_SETITEM;
-			self->aupwrt_data.aupwrtd_setitem.aupwrtsi_obj  = from->a_data.ad_operator.ao_argv[0]; /* Steal */
-			self->aupwrt_data.aupwrtd_setitem.aupwrtsi_item = from->a_data.ad_operator.ao_argv[1]; /* Steal */
-			ASSERT(self->aupwrt_data.aupwrtd_setitem.aupwrtsi_obj);
-			ASSERT(self->aupwrt_data.aupwrtd_setitem.aupwrtsi_item);
-			_DeeAst_FiniCommon(from);
-			DeeAst_FreeUninitializedOperator(from);
-			return 0;
-
-		case OPERATOR_GETRANGE:
-			if (from->a_data.ad_operator.ao_argc != 3)
-				break;
-			if (from->a_data.ad_operator.ao_flag & (Dee_AST_OPERATOR_FLAG_POSTOP |
-			                                        Dee_AST_OPERATOR_FLAG_VARARG))
-				break; /* Not allowed */
-			self->aupwrt_kind = Dee_AST_UNPACK_WR_TARGET_KIND_SETRANGE;
-			self->aupwrt_data.aupwrtd_setrange.aupwrtsr_obj   = from->a_data.ad_operator.ao_argv[0]; /* Steal */
-			self->aupwrt_data.aupwrtd_setrange.aupwrtsr_start = from->a_data.ad_operator.ao_argv[1]; /* Steal */
-			self->aupwrt_data.aupwrtd_setrange.aupwrtsr_end   = from->a_data.ad_operator.ao_argv[2]; /* Steal */
-			ASSERT(self->aupwrt_data.aupwrtd_setrange.aupwrtsr_obj);
-			ASSERT(self->aupwrt_data.aupwrtd_setrange.aupwrtsr_start);
-			ASSERT(self->aupwrt_data.aupwrtd_setrange.aupwrtsr_end);
-			_DeeAst_FiniCommon(from);
-			DeeAst_FreeUninitializedOperator(from);
-			return 0;
-
-		default: break;
-		}
-		break;
-
-	default: break;
-	}
-
-	/* Fallback: use `Dee_AST_UNPACK_WR_TARGET_KIND_ASSIGN` */
-	if (DeeLexer_WarnfAst(lexer, from, TPP_W_ASM_STORE_TO_RVALUE))
-		goto err_from; /* Emit warning (using `from` as location context) */
-	self->aupwrt_kind = Dee_AST_UNPACK_WR_TARGET_KIND_ASSIGN;
-	self->aupwrt_data.aupwrtd_assign.aupwrtas_obj = from;
-	return 0;
-err_from:
-	DeeAst_Destroy(from);
-	return -1;
 }
 
 PRIVATE WUNUSED NONNULL((2, 3, 4, 5, 6)) DeeAst *DCALL
@@ -1056,19 +1315,18 @@ DeeAst_Transform_Store_multi_impl(size_t count,
                                   /*inherit(always)*/ DeeAst *__restrict value,
                                   DeeAst *__restrict orig_dst,
                                   DeeLexer *__restrict lexer,
-                                  struct Dee_ast_loc *__restrict loc DeeAst__DBG_PARAMS) {
+                                  DeeAstLoc const *__restrict loc DeeAst__DBG_PARAMS) {
 	size_t i;
 	DeeAst *result = DeeAst_Dbg_MallocUninitializedUnpackWr(count, DBG_file, DBG_line);
 	if unlikely(!result)
 		goto err_elem;
 	for (i = 0; i < count; ++i) {
 		DeeAst *this_elem = elem[i];
-		struct Dee_ast_unpack_wr_target *this_target;
-		this_target = &result->a_data.ad_unpack_wr.aupwr_targetv[i];
-		if (Dee_ast_unpack_wr_target_init_from_ast(this_target, this_elem, lexer))
+		DeeAstRValue *this_target = &result->a_data.ad_unpack_wr.aupwr_targetv[i];
+		if (DeeAstRValue_FromAst(this_target, this_elem, lexer, Dee_AST_RVALUE_MODE_WR))
 			goto err_r_i;
 	}
-	_DeeAst_MoveCommon(result, Dee_AST_SYMREF_RD, orig_dst);
+	_DeeAst_MoveCommon(result, Dee_AST_UNPACK_WR, orig_dst);
 	result->a_data.ad_unpack_wr.aupwr_expr    = value;
 	result->a_data.ad_unpack_wr.aupwr_targetc = count;
 	DeeAst_Destroy(orig_dst);
@@ -1077,10 +1335,10 @@ DeeAst_Transform_Store_multi_impl(size_t count,
 err_r_i:
 	DeeAst_Destroyv(elem + (i + 1), count - (i + 1));
 	while (i) {
-		struct Dee_ast_unpack_wr_target *this_target;
+		DeeAstRValue *this_target;
 		--i;
 		this_target = &result->a_data.ad_unpack_wr.aupwr_targetv[i];
-		Dee_ast_unpack_wr_target_fini(this_target);
+		DeeAstRValue_Fini(this_target, Dee_AST_RVALUE_MODE_WR);
 	}
 	DeeAst_FreeUninitializedUnpackWr(result);
 err:
@@ -1093,18 +1351,12 @@ err_elem:
 }
 
 /* Transform the given AST `dst` for an expression `<dst> = <value>`:
- * - Convert `Dee_AST_OPERATOR + OPERATOR_GETATTR` into `Dee_AST_OPERATOR + OPERATOR_SETATTR`
- * - Convert `Dee_AST_OPERATOR + OPERATOR_GETITEM` into `Dee_AST_OPERATOR + OPERATOR_SETITEM`
- * - Convert `Dee_AST_OPERATOR + OPERATOR_GETRANGE` into `Dee_AST_OPERATOR + OPERATOR_SETRANGE`
- * - Convert `Dee_AST_SYMBOL_RD` into `Dee_AST_SYMBOL_WR`
- * - Convert `Dee_AST_SYMREF_RD` into `Dee_AST_SYMREF_WR`
- * - Convert `Dee_AST_MULTI + Dee_AST_MULTI_KIND_ISSEQ()` into `Dee_AST_UNPACK_WR`
- * All other types of ASTs are warned about, then packed with `<dst> := <value>` */
+ * A warning is emitted if `!DeeAst_IsRValue(self)` */
 INTERN WUNUSED NONNULL((1, 2, 3, 4)) DeeAst *DCALL
 DeeAst_Transform_Store_(/*inherit(always)*/ DeeAst *__restrict dst,
                         /*inherit(always)*/ DeeAst *__restrict value,
                         DeeLexer *__restrict lexer,
-                        struct Dee_ast_loc *__restrict loc DeeAst__DBG_PARAMS) {
+                        DeeAstLoc const *__restrict loc DeeAst__DBG_PARAMS) {
 	DeeAst_UpdateLoc(dst, loc);
 	switch (dst->a_kind) {
 
@@ -1166,6 +1418,35 @@ append_argument:
 		}
 		break;
 
+#if 0 /* Not necessary, because `Dee_AST_IOPERATOR` shouldn't be used for OPERATOR_GET(ATTR|ITEM|RANGE) */
+	case Dee_AST_IOPERATOR:
+		if (!Dee_ast_operator_id_hasid(&dst->a_data.ad_ioperator.aio_id))
+			break;
+		if (dst->a_data.ad_ioperator.aio_flag & (Dee_AST_OPERATOR_FLAG_POSTOP |
+		                                       Dee_AST_OPERATOR_FLAG_VARARG))
+			break; /* Not allowed */
+		switch (Dee_ast_operator_id_getid(&dst->a_data.ad_ioperator.aio_id)) {
+		case OPERATOR_GETATTR:
+			Dee_ast_operator_id_setid(&dst->a_data.ad_ioperator.aio_id, OPERATOR_SETATTR);
+append_i_argument:
+			if (dst->a_data.ad_ioperator.aio_argc < Dee_AST_OPERATOR_ARGC_MAX) {
+				dst->a_data.ad_ioperator.aio_xargv[dst->a_data.ad_ioperator.aio_argc - 1] = value;
+				++dst->a_data.ad_ioperator.aio_argc;
+			} else {
+				DeeAst_Destroy(value);
+			}
+			return dst;
+		case OPERATOR_GETITEM:
+			Dee_ast_operator_id_setid(&dst->a_data.ad_ioperator.aio_id, OPERATOR_SETITEM);
+			goto append_i_argument;
+		case OPERATOR_GETRANGE:
+			Dee_ast_operator_id_setid(&dst->a_data.ad_ioperator.aio_id, OPERATOR_SETRANGE);
+			goto append_i_argument;
+		default: break;
+		}
+		break;
+#endif
+
 	case Dee_AST_SYMBOL_RD: {
 		STATIC_ASSERT(offsetof(DeeAst, a_data.ad_symbol_rd.asrd_symbol) ==
 		              offsetof(DeeAst, a_data.ad_symbol_wr.aswr_symbol));
@@ -1190,10 +1471,301 @@ append_argument:
 }
 
 
+
+PRIVATE DEFINE_TUPLE(bound_catch_mask, 2, {
+	Dee_AsObject(&DeeError_AttributeError),
+	Dee_AsObject(&DeeError_NotImplemented),
+});
+
+/* Transform `self` into: `({ <self>; true; })` */
+PRIVATE WUNUSED NONNULL((1, 2)) DeeAst *DCALL
+DeeAst_WrapEvaluateAndReturnTrue(/*inherit(always)*/ DeeAst *__restrict self,
+                                 DeeAstLoc const *__restrict loc) {
+	DeeAst *result;
+	DeeAst *block_elem[2];
+	block_elem[1] = DeeAst_NewConst(DeeBool_NewTrue());
+	if unlikely(!block_elem[1])
+		goto err_self;
+	DeeAst_SetLoc(block_elem[1], loc);
+	block_elem[0] = self;
+	result = DeeAst_NewMulti(Dee_AST_MULTI_KIND_KEEPLAST, 2, block_elem);
+	result = DeeAst_TrySetLoc(result, loc);
+	return result;
+err_self:
+	DeeAst_Destroy(self);
+	return NULL;
+}
+
+/* Transform `self` into:
+ * >> (try ({ <self>; true; }) catch (AttributeError from errors | NotImplemented from errors) false) */
+PRIVATE WUNUSED NONNULL((1, 2)) DeeAst *DCALL
+DeeAst_WrapBound(/*inherit(always)*/ DeeAst *__restrict self,
+                 DeeAstLoc const *__restrict loc) {
+	DeeAst *result;
+	DeeAst *catch_mask;
+	DeeAst *false_value;
+	DeeAst *catcher;
+	self = DeeAst_WrapEvaluateAndReturnTrue(self, loc);
+	if unlikely(!self)
+		goto err;
+	catcher = DeeAst_MallocUninitializedCatch(1);
+	if unlikely(!catcher)
+		goto err_self;
+	catch_mask = DeeAst_NewConst(Dee_AsObject(&bound_catch_mask));
+	if unlikely(!catch_mask)
+		goto err_self_catcher;
+	DeeAst_SetLoc(catch_mask, loc);
+	false_value = DeeAst_NewConst(DeeBool_NewFalse());
+	if unlikely(!false_value)
+		goto err_self_catcher_mask;
+	DeeAst_SetLoc(false_value, loc);
+	DeeAst_GetCatchHandlers(catcher)[0].ach_flag = Dee_AST_CATCH_HANDLER_FLAG_NORMAL;
+	DeeAst_GetCatchHandlers(catcher)[0].ach_mask = catch_mask;
+	DeeAst_GetCatchHandlers(catcher)[0].ach_into = NULL;
+	DeeAst_GetCatchHandlers(catcher)[0].ach_body = false_value;
+	result = DeeAst_PackCatch(self, self, 1);
+	result = DeeAst_TrySetLoc(result, loc);
+	return result;
+err_self_catcher_mask:
+	DeeAst_Destroy(catch_mask);
+err_self_catcher:
+	DeeAst_FreeUninitializedCatch(catcher);
+err_self:
+	DeeAst_Destroy(self);
+err:
+	return NULL;
+}
+
+
+/* Transform the given AST `self` for an expression `bound(<self>):
+ * A warning is emitted if `!DeeAst_IsRValue(self)` */
+INTERN WUNUSED NONNULL((1, 2, 3)) DeeAst *DCALL
+DeeAst_Transform_Bound_(/*inherit(always)*/ DeeAst *__restrict self,
+                        DeeLexer *__restrict lexer,
+                        DeeAstLoc const *__restrict loc DeeAst__DBG_PARAMS) {
+	DeeAst_UpdateLoc(self, loc);
+	switch (self->a_kind) {
+
+	case Dee_AST_OPERATOR:
+#if 0 /* Not necessary, because `Dee_AST_IOPERATOR` shouldn't be used for OPERATOR_GET(ATTR|ITEM|RANGE) */
+	case Dee_AST_IOPERATOR:
+#endif
+		if (!Dee_ast_operator_id_hasid(&self->a_data.ad_operator.ao_id))
+			break;
+		if (self->a_data.ad_operator.ao_flag & (Dee_AST_OPERATOR_FLAG_POSTOP |
+		                                        Dee_AST_OPERATOR_FLAG_VARARG))
+			break; /* Not allowed */
+		switch (Dee_ast_operator_id_getid(&self->a_data.ad_operator.ao_id)) {
+		case OPERATOR_GETATTR:
+		case OPERATOR_GETITEM:
+		case OPERATOR_GETRANGE:
+			return DeeAst_WrapBound(self, loc);
+		default: break;
+		}
+		break;
+
+	case Dee_AST_SYMBOL_RD: {
+		STATIC_ASSERT(offsetof(DeeAst, a_data.ad_symbol_rd.asrd_symbol) ==
+		              offsetof(DeeAst, a_data.ad_symbol_bnd.asbn_symbol));
+		self->a_kind = Dee_AST_SYMBOL_BND;
+		return self;
+	}	break;
+
+	case Dee_AST_SYMREF_RD: {
+		STATIC_ASSERT(offsetof(DeeAst, a_data.ad_symref_rd.asrrd_sym) ==
+		              offsetof(DeeAst, a_data.ad_symref_bnd.asrbn_sym));
+		self->a_kind = Dee_AST_SYMREF_BND;
+		return self;
+	}	break;
+
+	default: break;
+	}
+
+	if (DeeLexer_WarnfLoc(lexer, loc, TPP_W_ASM_STORE_TO_RVALUE))
+		goto err_self;
+	return DeeAst_WrapBound(self, loc);
+err_self:
+	DeeAst_Destroy(self);
+	return NULL;
+}
+
+
 /* Label functions */
 INTERN WUNUSED NONNULL((1, 2)) DeeAst *DCALL DeeAst_AddGotoLabel_(/*inherit(always)*/ DeeAst *__restrict self, tpp_keyword const *__restrict name DeeAst__DBG_PARAMS);
 INTERN WUNUSED NONNULL((1, 2)) DeeAst *DCALL DeeAst_AddCaseLabel_(/*inherit(always)*/ DeeAst *__restrict self, /*inherit(always)*/ DeeAst *__restrict expr DeeAst__DBG_PARAMS);
 INTERN WUNUSED NONNULL((1)) DeeAst *DCALL DeeAst_AddDefaultLabel_(/*inherit(always)*/ DeeAst *__restrict self DeeAst__DBG_PARAMS);
+
+
+
+/* Misc. helpers... */
+INTERN WUNUSED NONNULL((1)) DeeAst *DCALL
+DeeAst_NewCall_(/*inherit(always)*/ DeeAst *__restrict func, size_t argc,
+                /*inherit(always)*/ DeeAst *const *argv DeeAst__DBG_PARAMS) {
+	DeeAst *call_args = DeeAst_NewMulti_(Dee_AST_MULTI_KIND_TUPLE, argc, argv DBG__args);
+	if unlikely(!call_args)
+		goto err_func;
+	return DeeAst_NewOperator2_(OPERATOR_CALL, func, call_args DBG__args);
+err_func:
+	DeeAst_Destroy(func);
+/*err:*/
+	return NULL;
+}
+
+INTERN WUNUSED NONNULL((1, 2)) DeeAst *DCALL
+DeeAst_NewCallSymRefExtern_(/*inherit(always)*/ DREF struct Dee_module_object *__restrict mod,
+                            struct Dee_module_symbol *__restrict sym,
+                            size_t argc, /*inherit(always)*/ DeeAst *const *argv DeeAst__DBG_PARAMS) {
+	DeeAst *func = DeeAst_NewSymRefExtern_(mod, sym DBG__args);
+	if unlikely(!func)
+		goto err_argv;
+	return DeeAst_NewCall_(func, argc, argv DBG__args);
+err_argv:
+	DeeAst_Destroyv(argv, argc);
+/*err:*/
+	return NULL;
+}
+
+INTERN WUNUSED NONNULL((1, 2)) DeeAst *DCALL
+DeeAst_NewImportModule_(/*inherit(always)*/ DeeAst *__restrict module_name DeeAst__DBG_PARAMS) {
+	DeeAst *import_argv[2];
+	import_argv[0] = DeeAst_NewSymRefThisModule();
+	if unlikely(!import_argv[0])
+		goto err_module_name;
+	import_argv[1] = module_name;
+	return DeeAst_NewCallSymRefExtern_(DeeModule_NewDeemon(),
+	                                   &deemon_modsym___import__,
+	                                   2, import_argv DBG__args);
+err_module_name:
+	DeeAst_Destroy(module_name);
+/*err:*/
+	return NULL;
+}
+
+INTERN WUNUSED NONNULL((1, 2)) DeeAst *DCALL
+DeeAst_NewSymRefExternByName_(/*utf-8*/char const *module_name,
+                              /*utf-8*/char const *symbol_name,
+                              DeeLexer *__restrict lexer DeeAst__DBG_PARAMS) {
+	DeeAst *module_name_ast;
+	DeeAst *module_import_ast;
+	DeeAst *symbol_name_ast;
+	DREF DeeModuleObject *mod = DeeLexer_OpenModule(lexer, module_name);
+	if likely(ITER_ISOK(mod)) {
+		struct Dee_module_symbol *sym = DeeLexer_GetModuleSymbol(lexer, mod, symbol_name);
+		if (ITER_ISOK(sym))
+			return DeeAst_NewSymRefExtern_(mod, sym DBG__args);
+
+		/* Emit as `{Dee_AST_CONST:mod}.operator . ({Dee_AST_CONST:symbol_name})` */
+		if unlikely(!sym)
+			goto err_mod;
+		module_import_ast = DeeAst_NewConst_(Dee_AsObject(mod) DBG__args);
+	} else {
+		if unlikely(!mod)
+			goto err;
+		module_name_ast = DeeAst_NewConstString_(module_name, strlen(module_name) DBG__args);
+		if unlikely(!module_name_ast)
+			goto err;
+		/* Module not found -> emit a call to `deemon.import` */
+		module_import_ast = DeeAst_NewImportModule_(module_name_ast DBG__args);
+	}
+	if unlikely(!module_import_ast)
+		goto err;
+	symbol_name_ast = DeeAst_NewConstString_(symbol_name, strlen(symbol_name) DBG__args);
+	if unlikely(!symbol_name_ast)
+		goto err_module_import_ast;
+	return DeeAst_NewOperator2_(OPERATOR_GETATTR, module_import_ast, symbol_name_ast DBG__args);
+err_module_import_ast:
+	DeeAst_Destroy(module_import_ast);
+	goto err;
+err_mod:
+	Dee_Decref(mod);
+err:
+	return NULL;
+}
+
+INTERN WUNUSED NONNULL((1, 2)) DeeAst *DCALL /* import.deemon.InstanceMethod({method}, {thisarg}) */
+DeeAst_NewInstanceMethod_(/*inherit(always)*/ DeeAst *__restrict method,
+                          /*inherit(always)*/ DeeAst *__restrict thisarg DeeAst__DBG_PARAMS) {
+	DeeAst *instance_method_args[2];
+	instance_method_args[0] = method;
+	instance_method_args[1] = thisarg;
+	return DeeAst_NewCallSymRefExtern_(DeeModule_NewDeemon(), &deemon_modsym_InstanceMethod,
+	                                   2, instance_method_args DBG__args);
+}
+
+INTERN WUNUSED NONNULL((1, 2)) DeeAst *DCALL
+DeeAst_NewOperatorFunction_(/*inherit(always)*/ struct Dee_ast_operator_id *__restrict opid,
+                            DeeLexer *__restrict lexer DeeAst__DBG_PARAMS) {
+	DeeAst *operators_operator;
+	DeeAst *constexpr_id;
+	DREF DeeObject *const_id;
+	Dee_operator_t id;
+	struct Dee_opinfo const *opinfo;
+	if (!Dee_ast_operator_id_hasid(opid)) {
+		/* TODO: Support for named operators */
+	}
+
+	id = Dee_ast_operator_id_getid(opid);
+	Dee_ast_operator_id_fini(opid);
+	opinfo = DeeTypeType_GetOperatorById(&DeeType_Type, id);
+	if (opinfo) /* `import.operators.{opinfo->oi_sname}` */
+		return DeeAst_NewSymRefExternByName_(STR_operators, opinfo->oi_sname, lexer DBG__args);
+
+	/* `import.deemon.InstanceMethod(import.operators.operator, {id})` */
+	operators_operator = DeeAst_NewSymRefExternByName_(STR_operators, STR_operator, lexer DBG__args);
+	if unlikely(!operators_operator)
+		goto err;
+	const_id = DeeInt_NEWU(id);
+	if unlikely(!const_id)
+		goto err_operators_operator;
+	constexpr_id = DeeAst_NewConst_(const_id DBG__args);
+	if unlikely(!constexpr_id)
+		goto err_operators_operator;
+	return DeeAst_NewInstanceMethod_(operators_operator, constexpr_id DBG__args);
+err_operators_operator:
+	DeeAst_Destroy(operators_operator);
+err:
+	return NULL;
+}
+
+INTERN WUNUSED NONNULL((1, 2)) DeeAst *DCALL /* {obj}.operator . ({attr})({argv...}) */
+DeeAst_NewCallAttr_(/*inherit(always)*/ DeeAst *__restrict obj,
+                    /*inherit(always)*/ DeeAst *__restrict attr,
+                    size_t argc, /*inherit(always)*/ DeeAst *const *argv DeeAst__DBG_PARAMS) {
+	DeeAst *getattr_ast;
+	DeeAst *call_args = DeeAst_NewMulti_(Dee_AST_MULTI_KIND_TUPLE, argc, argv DBG__args);
+	if unlikely(!call_args)
+		goto err_obj_attr;
+	getattr_ast = DeeAst_NewOperator2_(OPERATOR_GETATTR, obj, attr DBG__args);
+	if unlikely(!getattr_ast)
+		goto err_call_args;
+	return DeeAst_NewOperator2_(OPERATOR_CALL, getattr_ast, call_args DBG__args);
+err_call_args:
+	DeeAst_Destroy(call_args);
+	goto err;
+err_obj_attr:
+	DeeAst_Destroy(attr);
+/*err_obj:*/
+	DeeAst_Destroy(obj);
+err:
+	return NULL;
+}
+
+INTERN WUNUSED NONNULL((1, 2)) DeeAst *DCALL /* {obj}.operator . ({attr})({argv...}) */
+DeeAst_NewCallAttrConst_(/*inherit(always)*/ DeeAst *__restrict obj,
+                         /*inherit(always)*/ /*string*/ DREF DeeObject *__restrict attr,
+                         size_t argc, /*inherit(always)*/ DeeAst *const *argv DeeAst__DBG_PARAMS) {
+	DeeAst *attr_ast = DeeAst_NewConst_(attr DBG__args);
+	if unlikely(!attr_ast)
+		goto err_obj_argv;
+	return DeeAst_NewCallAttr_(obj, attr_ast, argc, argv DBG__args);
+err_obj_argv:
+	DeeAst_Destroyv(argv, argc);
+/*err_obj:*/
+	DeeAst_Destroy(obj);
+/*err:*/
+	return NULL;
+}
+
 
 #undef DBG__args
 #undef DBG_line

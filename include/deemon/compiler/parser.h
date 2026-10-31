@@ -59,6 +59,153 @@ typedef struct Dee_parser {
 	uint_fast8_t p_flags; /* Parsing flags (set of `DeeParser_F_*`) */
 } DeeParser;
 
+/* Describe a region of code where `TPP_TOK_LF` should not be produced. */
+#define DeeParser_NoLf_Push(self)                                                           \
+	do {                                                                                    \
+		bool const _dpnlf_olf = !!tpp_lexer_getfeature(&(self)->p_lexer.dl_lexer, TPP_FEAT_TOK_LF); \
+		tpp_lexer_disablefeature(&(self)->p_lexer.dl_lexer, TPP_FEAT_TOK_LF)
+#define DeeParser_NoLf_Break(self) \
+		tpp_lexer_setfeature(&(self)->p_lexer.dl_lexer, TPP_FEAT_TOK_LF, _dpnlf_olf)
+#define DeeParser_NoLf_Pop(self)    \
+		DeeParser_NoLf_Break(self); \
+	}	__WHILE0
+
+/* Describe a region of code where `TPP_TOK_LF` is enabled if `PARSE_FLFSTMT` is set */
+#define DeeParser_EnableLf_Push(self)                            \
+	do {                                                         \
+		bool const _dpelf_olf = !!tpp_lexer_getfeature(&(self)->p_lexer.dl_lexer, TPP_FEAT_TOK_LF); \
+		if (!(parser_flags & PARSE_FLFSTMT)) {                   \
+		} else                                                   \
+			tpp_lexer_enablefeature(&(self)->p_lexer.dl_lexer, TPP_FEAT_TOK_LF)
+#define DeeParser_EnableLf_Break(self) \
+		tpp_lexer_setfeature(&(self)->p_lexer.dl_lexer, TPP_FEAT_TOK_LF, _dpelf_olf)
+#define DeeParser_EnableLf_Pop(self)    \
+		DeeParser_EnableLf_Break(self); \
+	}	__WHILE0
+
+
+/* Convenience wrappers... */
+#define DeeParser_OfTPP(p_tpp_lexer)                     COMPILER_CONTAINER_OF(p_tpp_lexer, DeeParser, p_lexer.dl_lexer)
+#define DeeParser_Has(self, feat)                        DeeLexer_Has(&(self)->p_lexer, feat)
+#define DeeParser_IsIdentifier(self, name)               DeeLexer_IsIdentifier(&(self)->p_lexer, name)
+#define DeeParser_GetTok(self)                           DeeLexer_GetTok(&(self)->p_lexer)
+#define DeeParser_HasTokenKwd(self)                      DeeLexer_HasTokenKwd(&(self)->p_lexer)
+#define DeeParser_GetTokenKwd(self)                      DeeLexer_GetTokenKwd(&(self)->p_lexer)
+#define DeeParser_GetTokenKwdCStr(self)                  DeeLexer_GetTokenKwdCStr(&(self)->p_lexer)
+#define DeeParser_GetTokenKwdStr(self)                   DeeLexer_GetTokenKwdStr(&(self)->p_lexer)
+#define DeeParser_GetTokenKwdLen(self)                   DeeLexer_GetTokenKwdLen(&(self)->p_lexer)
+#define DeeParser_GetTokenStart(self)                    DeeLexer_GetTokenStart(&(self)->p_lexer)
+#define DeeParser_GetTokenEnd(self)                      DeeLexer_GetTokenEnd(&(self)->p_lexer)
+#define DeeParser_GetTokenLen(self)                      DeeLexer_GetTokenLen(&(self)->p_lexer)
+#define DeeParser_GetFile(self)                          DeeLexer_GetFile(&(self)->p_lexer)
+#define DeeParser_Yield(self)                            DeeLexer_Yield(&(self)->p_lexer)
+#define DeeParser_Require(self, tok)                     DeeLexer_Require(&(self)->p_lexer, tok)
+#define DeeParser_Skip(self, expected_tok)               DeeLexer_Skip(&(self)->p_lexer, expected_tok)
+#define DeeParser_ParenBegin(self, p_has_paren)          DeeLexer_ParenBegin(&(self)->p_lexer, p_has_paren)
+#define DeeParser_ParenEnd(self, has_paren)              DeeLexer_ParenEnd(&(self)->p_lexer, has_paren)
+#define DeeParser_Warnf(self, ...)                       DeeLexer_Warnf(&(self)->p_lexer, __VA_ARGS__)
+#define DeeParser_VWarnf(self, id, args)                 DeeLexer_VWarnf(&(self)->p_lexer, id, args)
+#define DeeParser_WarnfAt(self, file, pos, ...)          DeeLexer_WarnfAt(&(self)->p_lexer, file, pos, __VA_ARGS__)
+#define DeeParser_VWarnfAt(self, file, pos, id, args)    DeeLexer_VWarnfAt(&(self)->p_lexer, file, pos, id, args)
+#define DeeParser_WarnfLc(self, filename, lc, ...)       DeeLexer_WarnfLc(&(self)->p_lexer, filename, lc, __VA_ARGS__)
+#define DeeParser_VWarnfLc(self, filename, lc, id, args) DeeLexer_VWarnfLc(&(self)->p_lexer, filename, lc, id, args)
+#define DeeParser_WarnfLoc(self, loc, ...)               DeeLexer_WarnfLoc(&(self)->p_lexer, loc, __VA_ARGS__)
+#define DeeParser_VWarnfLoc(self, loc, id, args)         DeeLexer_VWarnfLoc(&(self)->p_lexer, loc, id, args)
+#define DeeParser_WarnfAst(self, p_ast, ...)             DeeLexer_WarnfAst(&(self)->p_lexer, p_ast, __VA_ARGS__)
+#define DeeParser_VWarnfAst(self, p_ast, id, args)       DeeLexer_VWarnfAst(&(self)->p_lexer, p_ast, id, args)
+#define DeeParser_WarnfSym(self, p_sym, ...)             DeeLexer_WarnfSym(&(self)->p_lexer, p_sym, __VA_ARGS__)
+#define DeeParser_VWarnfSym(self, p_sym, id, args)       DeeLexer_VWarnfSym(&(self)->p_lexer, p_sym, id, args)
+#define DeeParser_Errf(self, ...)                        DeeLexer_Errf(&(self)->p_lexer, __VA_ARGS__)
+#define DeeParser_VErrf(self, id, args)                  DeeLexer_VErrf(&(self)->p_lexer, id, args)
+#define DeeParser_ErrfAt(self, file, pos, ...)           DeeLexer_ErrfAt(&(self)->p_lexer, file, pos, __VA_ARGS__)
+#define DeeParser_VErrfAt(self, file, pos, id, args)     DeeLexer_VErrfAt(&(self)->p_lexer, file, pos, id, args)
+#define DeeParser_ErrfLc(self, filename, lc, ...)        DeeLexer_ErrfLc(&(self)->p_lexer, filename, lc, __VA_ARGS__)
+#define DeeParser_VErrfLc(self, filename, lc, id, args)  DeeLexer_VErrfLc(&(self)->p_lexer, filename, lc, id, args)
+#define DeeParser_ErrfLoc(self, loc, ...)                DeeLexer_ErrfLoc(&(self)->p_lexer, loc, __VA_ARGS__)
+#define DeeParser_VErrfLoc(self, loc, id, args)          DeeLexer_VErrfLoc(&(self)->p_lexer, loc, id, args)
+#define DeeParser_ErrfAst(self, p_ast, ...)              DeeLexer_ErrfAst(&(self)->p_lexer, p_ast, __VA_ARGS__)
+#define DeeParser_VErrfAst(self, p_ast, id, args)        DeeLexer_VErrfAst(&(self)->p_lexer, p_ast, id, args)
+#define DeeParser_ErrfSym(self, p_sym, ...)              DeeLexer_ErrfSym(&(self)->p_lexer, p_sym, __VA_ARGS__)
+#define DeeParser_VErrfSym(self, p_sym, id, args)        DeeLexer_VErrfSym(&(self)->p_lexer, p_sym, id, args)
+#define DeeParser_GetLoc(self, info)                     DeeLexer_GetLoc(&(self)->p_lexer, info)
+
+
+/* Helper function for opening (sub-)modules, whilst
+ * dealing with file-not-found and recursion warnings,
+ * as well as context flags.
+ * WARNING: The caller still needs to deal with case
+ *          where `.` is used as module name!
+ *
+ * @return: * :        The module in question, or something to substitute it
+ * @return: NULL:      An error was thrown
+ * @return: ITER_DONE: Cannot load module (caller should load module at runtime) */
+INTDEF WUNUSED NONNULL((1, 2)) DREF struct Dee_module_object *DCALL
+DeeLexer_OpenModule(DeeLexer *__restrict self, /*utf-8*/ char const *__restrict module_name);
+#define DeeParser_OpenModule(self, module_name) \
+	DeeLexer_OpenModule(&(self)->p_lexer, module_name)
+
+/* @return: * :        Module symbol in question
+ * @return: NULL:      An error was thrown
+ * @return: ITER_DONE: No such symbol (a warning `TPP_W_MODULE_IMPORT_NOT_FOUND` was already emit) */
+INTDEF WUNUSED NONNULL((1, 2, 3)) struct Dee_module_symbol *DCALL
+DeeLexer_GetModuleSymbol(DeeLexer *__restrict self,
+                         struct Dee_module_object *__restrict mod,
+                         /*utf-8*/ char const *__restrict symbol_name);
+#define DeeParser_GetModuleSymbol(self, mod, symbol_name) \
+	DeeLexer_GetModuleSymbol(&(self)->p_lexer, mod, symbol_name)
+
+/************************************************************************/
+/* file: ../../../src/deemon/compiler/parser/operator.c                 */
+/************************************************************************/
+INTDEF WUNUSED NONNULL((1, 2)) int DFCALL DeeParser_ParseOperatorName(DeeParser *__restrict self, /*out*/struct Dee_ast_operator_id *__restrict result);
+
+/************************************************************************/
+/* file: ../../../src/deemon/compiler/parser/expression.c               */
+/************************************************************************/
+#define TPP_CASE_TPP_TOK_UNARY_OPERATOR \
+	case '#':                           \
+	case '~':                           \
+	case '+':                           \
+	case '-':                           \
+	case '!':                           \
+	case TPP_TOK_PLUS_PLUS:             \
+	case TPP_TOK_MINUS_MINUS:
+#define TPP_TOK_IS_UNARY_OPERATOR(tok)               \
+	((tok) == '#' || (tok) == '~' || (tok) == '+' || \
+	 (tok) == '-' || (tok) == '!' ||                 \
+	 (tok) == TPP_TOK_PLUS_PLUS ||                   \
+	 (tok) == TPP_TOK_MINUS_MINUS)
+
+INTDEF WUNUSED NONNULL((1)) DeeAst *DFCALL DeeParser_ParseUnaryInt(DeeParser *__restrict self); /* TPP_CASE_TPP_TOK_INT */
+INTDEF WUNUSED NONNULL((1)) DeeAst *DFCALL DeeParser_ParseUnaryCharacterLiteral(DeeParser *__restrict self); /* TPP_CASE_TPP_TOK_STRING (DeeParser_Has(self, CHARACTER_LITERALS)) */
+INTDEF WUNUSED NONNULL((1)) DeeAst *DFCALL DeeParser_ParseUnaryString(DeeParser *__restrict self); /* Parse a TPP_TOK_ISSTRING()-like token into an AST (includes template string handling) */
+INTDEF WUNUSED NONNULL((1)) DeeAst *DFCALL DeeParser_ParseUnaryFloat(DeeParser *__restrict self); /* TPP_CASE_TPP_TOK_FLOAT */
+INTDEF WUNUSED NONNULL((1)) DeeAst *DFCALL DeeParser_ParseUnaryBuiltinConstant(DeeParser *__restrict self); /* TPP_TOK_IS_UNARY_BUILTIN_CONSTANT */
+INTDEF WUNUSED NONNULL((1)) DeeAst *DFCALL DeeParser_ParseUnaryBound(DeeParser *__restrict self); /* TPP_KWD_bound `bound(expr)` */
+INTDEF WUNUSED NONNULL((1)) DeeAst *DFCALL DeeParser_ParseUnaryBuiltinFunction(DeeParser *__restrict self); /* TPP_TOK_IS_UNARY_BUILTIN_FUNCTION */
+INTDEF WUNUSED NONNULL((1)) DeeAst *DFCALL DeeParser_ParseUnaryOperator(DeeParser *__restrict self); /* TPP_TOK_IS_UNARY_OPERATOR */
+INTDEF WUNUSED NONNULL((1)) DeeAst *DFCALL DeeParser_ParseUnaryCell(DeeParser *__restrict self); /* '<' + TPP_TOK_MC_STARTSWITH_LANGLE */
+INTDEF WUNUSED NONNULL((1)) DeeAst *DFCALL DeeParser_ParseUnaryHead(DeeParser *__restrict self);
+INTDEF WUNUSED NONNULL((1, 2)) DeeAst *DFCALL DeeParser_ParseUnaryOperand(DeeParser *__restrict self, /*inherit(always)*/ DeeAst *__restrict lhs);
+INTDEF WUNUSED NONNULL((1)) DeeAst *DFCALL DeeParser_ParseUnary(DeeParser *__restrict self);
+
+INTDEF WUNUSED NONNULL((1, 2)) DeeAst *DFCALL DeeParser_ParseProdOperand(DeeParser *__restrict self, /*inherit(always)*/ DeeAst *__restrict lhs);
+INTDEF WUNUSED NONNULL((1, 2)) DeeAst *DFCALL DeeParser_ParseSumOperand(DeeParser *__restrict self, /*inherit(always)*/ DeeAst *__restrict lhs);
+INTDEF WUNUSED NONNULL((1, 2)) DeeAst *DFCALL DeeParser_ParseShiftOperand(DeeParser *__restrict self, /*inherit(always)*/ DeeAst *__restrict lhs);
+INTDEF WUNUSED NONNULL((1, 2)) DeeAst *DFCALL DeeParser_ParseCmpOperand(DeeParser *__restrict self, /*inherit(always)*/ DeeAst *__restrict lhs);
+INTDEF WUNUSED NONNULL((1, 2)) DeeAst *DFCALL DeeParser_ParseCmpeqOperand(DeeParser *__restrict self, /*inherit(always)*/ DeeAst *__restrict lhs);
+INTDEF WUNUSED NONNULL((1, 2)) DeeAst *DFCALL DeeParser_ParseAndOperand(DeeParser *__restrict self, /*inherit(always)*/ DeeAst *__restrict lhs);
+INTDEF WUNUSED NONNULL((1, 2)) DeeAst *DFCALL DeeParser_ParseXorOperand(DeeParser *__restrict self, /*inherit(always)*/ DeeAst *__restrict lhs);
+INTDEF WUNUSED NONNULL((1, 2)) DeeAst *DFCALL DeeParser_ParseOrOperand(DeeParser *__restrict self, /*inherit(always)*/ DeeAst *__restrict lhs);
+INTDEF WUNUSED NONNULL((1, 2)) DeeAst *DFCALL DeeParser_ParseAsOperand(DeeParser *__restrict self, /*inherit(always)*/ DeeAst *__restrict lhs);
+INTDEF WUNUSED NONNULL((1, 2)) DeeAst *DFCALL DeeParser_ParseLandOperand(DeeParser *__restrict self, /*inherit(always)*/ DeeAst *__restrict lhs);
+INTDEF WUNUSED NONNULL((1, 2)) DeeAst *DFCALL DeeParser_ParseLorOperand(DeeParser *__restrict self, /*inherit(always)*/ DeeAst *__restrict lhs);
+INTDEF WUNUSED NONNULL((1, 2)) DeeAst *DFCALL DeeParser_ParseCondOperand(DeeParser *__restrict self, /*inherit(always)*/ DeeAst *__restrict lhs);
+INTDEF WUNUSED NONNULL((1, 2)) DeeAst *DFCALL DeeParser_ParseAssignOperand(DeeParser *__restrict self, /*inherit(always)*/ DeeAst *__restrict lhs);
+#define DeeParser_ParseExprOperand DeeParser_ParseAssignOperand /* Parse operand of expression */
+
+INTDEF WUNUSED NONNULL((1)) DeeAst *DFCALL DeeParser_ParseExpr(DeeParser *__restrict self);
+
 #else /* CONFIG_EXPERIMENTAL_USE_STATELESS_PARSER */
 
 struct Dee_unicode_printer;
