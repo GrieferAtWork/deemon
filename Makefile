@@ -101,7 +101,7 @@ SRC_deemon$(EXE)  = \
 	src/deemon/*.c \
 	src/deemon/compiler/*.c \
 	src/deemon/compiler/asm/*.c \
-	src/deemon/compiler/lexer/*.c \
+	src/deemon/compiler/parser/*.c \
 	src/deemon/compiler/interface/*.c \
 	src/deemon/compiler/optimize/*.c \
 	src/deemon/execute/*.c \
@@ -440,7 +440,7 @@ $(foreach lib,$(_BIN_ALL),$(eval $(call LINK_RECIPE,$(lib))))
 ## The big, magical "make all" rule
 ## =======================================================================
 .PHONY: all _print_optional_module_summary
-_BLD_EARLY := $(BLD_RELPATH)/src/deemon/compiler/tpp.o
+_BLD_EARLY := $(BLD_RELPATH)/src/deemon/compiler/lexer.o
 ifndef CONFIG_WITHOUT_DEX_SQLITE3
 # Put the sqlite amalgamation early so it has lots of time to build when called
 # as `make -j $(nproc)`, while the other CPUs can build the rest of deemon
