@@ -38,6 +38,392 @@
 
 DECL_BEGIN
 
+#ifndef NDEBUG
+#define DBG_memset (void)memset
+#else /* !NDEBUG */
+#define DBG_memset(dst, byte, n_bytes) (void)0
+#endif /* NDEBUG */
+
+#ifdef CONFIG_EXPERIMENTAL_USE_STATELESS_PARSER
+
+INTERN NONNULL((1)) void DCALL
+Dee_ast_function_builder_fini(struct Dee_ast_function_builder *__restrict self) {
+	ASSERT(self->afb_argc_min <= self->afb_argc_max);
+	ASSERT(self->afb_argc_max <= self->afb_argc_alc);
+	if (self->afb_func) {
+		size_t i;
+		for (i = 0; i < self->afb_argc_max; ++i) {
+			struct Dee_ast_function_param *this_param;
+			this_param = &DeeAst_GetFunctionParams(self->afb_func)[i];
+			Dee_ast_function_param_fini(this_param);
+		}
+		if (self->afb_hasreturn)
+			Dee_ast_typedef_fini(DeeAst_GetFunctionReturnTypedef(self->afb_func));
+		DeeAst_FreeUninitializedFunction(self->afb_func);
+	} else {
+		ASSERT(self->afb_argc_min == 0);
+		ASSERT(self->afb_argc_max == 0);
+		ASSERT(self->afb_argc_alc == 0);
+	}
+	Dee_ast_function_param_base_xdestroy(self->afb_varargs);
+	Dee_ast_function_param_base_xdestroy(self->afb_varkwds);
+}
+
+
+/* Package a function builder into a proper AST. The caller should still add
+ * location info to the returned AST, as it comes without any by default. */
+INTERN WUNUSED NONNULL((1, 3)) DeeAst *DCALL
+Dee_ast_function_builder_pack(/*inherit(always)*/ struct Dee_ast_function_builder *__restrict self,
+                              tpp_keyword const *opt_name, /*inherit(always)*/ DeeAst *__restrict body) {
+	DeeAst *result = self->afb_func;
+	ASSERT(self->afb_argc_min <= self->afb_argc_max);
+	ASSERT(self->afb_argc_max <= self->afb_argc_alc);
+	if (result == NULL) {
+		ASSERT(self->afb_argc_min == 0);
+		ASSERT(self->afb_argc_max == 0);
+		ASSERT(self->afb_argc_alc == 0);
+		result = DeeAst_MallocUninitializedFunction(0);
+		if unlikely(!result)
+			goto err_self_body;
+	}
+
+	/* If a return-typedef expression was never parsed, initialize it as empty now. */
+	if (!self->afb_hasreturn)
+		Dee_ast_typedef_init(DeeAst_GetFunctionReturnTypedef(result));
+
+	/* Package everything */
+	result = DeeAst_PackFunction(self->afb_func,
+	                             self->afb_flag,
+	                             opt_name, body,
+	                             self->afb_varargs,
+	                             self->afb_varkwds,
+	                             self->afb_argc_min,
+	                             self->afb_argc_max);
+	DBG_memset(self, 0xcc, sizeof(*self));
+	return result;
+err_self_body:
+	Dee_ast_function_builder_fini(self);
+	DeeAst_Destroy(body);
+	return NULL;
+}
+
+
+PRIVATE WUNUSED NONNULL((1, 2, 4)) int DCALL
+DeeParser_ParseFunctionParam_VarArgs(DeeParser *__restrict self,
+                                     struct Dee_ast_function_builder *__restrict builder,
+                                     Dee_parser_functionparam_flag flag,
+                                     DeeAstLoc const *__restrict argument_loc,
+                                     /*0..1*/ tpp_keyword const *argument_name) {
+	struct Dee_ast_function_param_base *varargs;
+	if ((varargs = builder->afb_varargs) != NULL) {
+		if (DeeParser_WarnfLoc(self, argument_loc, TPP_W_VARARGS_PARAMETER_ALREADY_DEFINED, varargs))
+			goto err;
+		Dee_ast_function_param_base_fini(varargs);
+		builder->afb_varargs = NULL;
+	} else {
+		varargs = Dee_ast_function_param_base_alloc();
+		if unlikely(!varargs)
+			goto err;
+	}
+	if (TPP_TOK_ISERR(DeeParser_Yield(self)))
+		goto err_varargs;
+	if (DeeParser_GetTok(self) == ':') {
+		if (TPP_TOK_ISERR(DeeParser_Yield(self)))
+			goto err_varargs;
+		if (DeeParser_ParseTypeDef(self, &varargs->afpb_typedef))
+			goto err_varargs;
+	} else {
+		Dee_ast_typedef_init(&varargs->afpb_typedef);
+	}
+	varargs->afpb_loc    = *argument_loc;
+	varargs->afpb_name   = argument_name;
+	varargs->afpb_flag   = flag & (Dee_AST_SYMREF_BYNAME_FLAG_FINAL | Dee_AST_SYMREF_BYNAME_FLAG_VARYING);
+	varargs->afpb_sym    = NULL;
+	builder->afb_varargs = varargs;
+	return 0;
+err_varargs:
+	Dee_ast_function_param_base_free(varargs);
+err:
+	return -1;
+}
+
+/* Parse a function parameter;
+ * >> function(a: int = 42) { ... }
+ * >> function(b?: int) { ... }
+ * >> function(varargs...: {Object...}) { ... }
+ * >> function(...: {Object...}) { ... }
+ * >> function(**varkwds: {string: Object}) { ... }
+ *
+ * - In all examples, enter after `function(` and exit *on* `)`
+ * - Only parses at most 1 parameter.
+ * - Safely handles cases where `pack` causes a lack of a closing `)`
+ *
+ * @return: 0 : Success
+ * @return: -1: Error */
+INTERN WUNUSED NONNULL((1, 2)) int DFCALL
+DeeParser_ParseFunctionParam(DeeParser *__restrict self,
+                             struct Dee_ast_function_builder *__restrict builder,
+                             Dee_parser_functionparam_flag flag) {
+	DeeAstLoc argument_loc;
+	tpp_keyword const *argument_name;
+	struct Dee_ast_function_param *this_param;
+	STATIC_ASSERT(Dee_PARSER_FUNCTIONPARAM_FLAG_GOTLOCAL != Dee_PARSER_FUNCTIONPARAM_FLAG_GOTFINAL);
+	STATIC_ASSERT(Dee_PARSER_FUNCTIONPARAM_FLAG_GOTLOCAL != Dee_PARSER_FUNCTIONPARAM_FLAG_GOTVARYING);
+	STATIC_ASSERT(Dee_PARSER_FUNCTIONPARAM_FLAG_GOTFINAL == Dee_AST_SYMREF_BYNAME_FLAG_FINAL);
+	STATIC_ASSERT(Dee_PARSER_FUNCTIONPARAM_FLAG_GOTVARYING == Dee_AST_SYMREF_BYNAME_FLAG_VARYING);
+
+	/* Parse (additional) modifiers */
+again_modifier:
+	switch (DeeParser_GetTok(self)) {
+		Dee_parser_functionparam_flag modifier_flag;
+		__IF0 { case TPP_KWD_final: modifier_flag = Dee_PARSER_FUNCTIONPARAM_FLAG_GOTFINAL; }
+		__IF0 { case TPP_KWD_varying: modifier_flag = Dee_PARSER_FUNCTIONPARAM_FLAG_GOTVARYING; }
+		__IF0 { case TPP_KWD_local: modifier_flag = Dee_PARSER_FUNCTIONPARAM_FLAG_GOTLOCAL; }
+		if ((flag & modifier_flag) != 0) {
+			/* Modifier already present */
+			if (DeeParser_Warnf(self, TPP_W_VARIABLE_MODIFIER_DUPLICATED))
+				goto err;
+		}
+		flag |= modifier_flag;
+		if (TPP_TOK_ISERR(DeeParser_Yield(self)))
+			goto err;
+		goto again_modifier;
+
+	case TPP_TOK_STAR_STAR: {
+		/* Special case: varkwds argument */
+		struct Dee_ast_function_param_base *varkwds;
+		if ((varkwds = builder->afb_varkwds) != NULL) {
+			if (DeeParser_Warnf(self, TPP_W_VARKWDS_PARAMETER_ALREADY_DEFINED, varkwds))
+				goto err;
+			Dee_ast_function_param_base_fini(varkwds);
+			builder->afb_varkwds = NULL;
+		} else {
+			varkwds = Dee_ast_function_param_base_alloc();
+			if unlikely(!varkwds)
+				goto err;
+		}
+		if (DeeParser_GetLoc(self, &varkwds->afpb_loc)) {
+err_varkwds:
+			Dee_ast_function_param_base_free(varkwds);
+			goto err;
+		}
+		if (TPP_TOK_ISERR(DeeParser_Yield(self)))
+			goto err_varkwds;
+		if (!DeeParser_HasTokenKwd(self)) {
+			if (DeeParser_Warnf(self, TPP_W_EXPECTED_KEYWORD_FOR_PARAMETER_NAME))
+				goto err_varkwds;
+			varkwds->afpb_name = NULL;
+		} else {
+			if (DeeParser_GetLoc(self, &varkwds->afpb_loc))
+				goto err_varkwds;
+			varkwds->afpb_name = DeeParser_GetTokenKwd(self);
+			if (tpp_keyword_getid(varkwds->afpb_name) == TPP_KWD_none) {
+				varkwds->afpb_name = NULL;
+			} else if (DeeParser_IsIdentifier(self, varkwds->afpb_name)) {
+				if (DeeParser_Warnf(self, TPP_W_RESERVED_PARAMETER_NAME,
+				                    tpp_keyword_getcstr(varkwds->afpb_name)))
+					goto err_varkwds;
+			}
+			if (TPP_TOK_ISERR(DeeParser_Yield(self)))
+				goto err_varkwds;
+		}
+		if (DeeParser_GetTok(self) == ':') {
+			if (TPP_TOK_ISERR(DeeParser_Yield(self)))
+				goto err_varkwds;
+			if (DeeParser_ParseTypeDef(self, &varkwds->afpb_typedef))
+				goto err_varkwds;
+		} else {
+			Dee_ast_typedef_init(&varkwds->afpb_typedef);
+		}
+		varkwds->afpb_flag = flag & (Dee_AST_SYMREF_BYNAME_FLAG_FINAL | Dee_AST_SYMREF_BYNAME_FLAG_VARYING);
+		varkwds->afpb_sym = NULL;
+		builder->afb_varkwds = varkwds;
+		return 0;
+	}	break;
+
+	case TPP_TOK_DOT_DOT_DOT:
+		/* Special case: anonymous varargs argument */
+		if (DeeParser_GetLoc(self, &argument_loc)) 
+			goto err;
+		return DeeParser_ParseFunctionParam_VarArgs(self, builder, flag,
+		                                            &argument_loc, NULL);
+
+	default: break;
+	}
+
+	/* After modifiers, there should be the argument name (which may be `none` if unnamed) */
+	if (DeeParser_GetLoc(self, &argument_loc))
+		goto err;
+	if (!DeeParser_HasTokenKwd(self)) {
+		if (DeeParser_Warnf(self, TPP_W_EXPECTED_KEYWORD_FOR_PARAMETER_NAME))
+			goto err;
+		argument_name = NULL;
+	} else {
+		argument_name = DeeParser_GetTokenKwd(self);
+		if (tpp_keyword_getid(argument_name) == TPP_KWD_none) {
+			argument_name = NULL;
+		} else if (DeeParser_IsIdentifier(self, argument_name)) {
+			if (DeeParser_Warnf(self, TPP_W_RESERVED_PARAMETER_NAME,
+			                    tpp_keyword_getcstr(argument_name)))
+				goto err;
+		}
+		if (TPP_TOK_ISERR(DeeParser_Yield(self)))
+			goto err;
+	}
+
+	/* After the argument's name, there should be one of:
+	 * - `?`: Optional argument
+	 * - `...`: (named) varargs argument
+	 * - `=`: Argument with default value
+	 * - `:`: Argument typedef
+	 * - ...: Anything else means that it's a regular argument, and
+	 *        the current token is no longer part of that argument.
+	 *
+	 * Deal with `...` first, since all other types of arguments must
+	 * trigger warnings if used after a varargs/varkwds argument was
+	 * already defined. */
+	if (DeeParser_GetTok(self) == TPP_TOK_DOT_DOT_DOT) {
+		return DeeParser_ParseFunctionParam_VarArgs(self, builder, flag,
+		                                            &argument_loc,
+		                                            argument_name);
+	}
+
+	/* Emit a warning if positional arguments are used after `...` or `**` */
+	if (builder->afb_varargs || builder->afb_varkwds) {
+		if (DeeParser_WarnfLoc(self, &argument_loc,
+		                       TPP_W_POSITIONAL_PARAMETER_AFTER_VARARGS_OR_VARKWDS,
+		                       builder->afb_varargs ? builder->afb_varargs : builder->afb_varkwds,
+		                       argument_name))
+			goto err;
+	}
+
+	/* Allocate space for the extra parameter. */
+	ASSERT(builder->afb_argc_alc <= builder->afb_argc_max);
+	if (builder->afb_argc_alc < builder->afb_argc_max) {
+		DeeAst *new_function_ast;
+		size_t new_argc_alc = builder->afb_argc_alc * 2;
+		if (new_argc_alc < 3)
+			new_argc_alc = 3;
+		ASSERT(new_argc_alc > builder->afb_argc_max);
+		new_function_ast = DeeAst_TryReallocUninitializedFunction(builder->afb_func, new_argc_alc);
+		if unlikely(!new_function_ast) {
+			new_argc_alc = builder->afb_argc_max + 1;
+			new_function_ast = DeeAst_ReallocUninitializedFunction(builder->afb_func, new_argc_alc);
+			if unlikely(!new_function_ast)
+				goto err;
+		}
+		builder->afb_func = new_function_ast;
+		builder->afb_argc_alc = new_argc_alc;
+	}
+	this_param = &DeeAst_GetFunctionParams(builder->afb_func)[builder->afb_argc_max];
+
+	/* Initialize parameter (except for `afpb_typedef`) */
+	this_param->afp_base.afpb_name = argument_name;
+	this_param->afp_base.afpb_loc  = argument_loc;
+	this_param->afp_base.afpb_flag = flag;
+	this_param->afp_base.afpb_sym  = NULL;
+	this_param->afp_default        = NULL;
+
+	/* Parse parameter suffix modifiers: `:`, `?` and `=` */
+	switch (DeeParser_GetTok(self)) {
+	case '?':
+		/* Optional parameter */
+		if (TPP_TOK_ISERR(DeeParser_Yield(self)))
+			goto err;
+		if (DeeParser_GetTok(self) == ':') {
+			/* Type annotation can still appear after `?`-modifier */
+			if (TPP_TOK_ISERR(DeeParser_Yield(self)))
+				goto err;
+			if (DeeParser_ParseTypeDef(self, &this_param->afp_base.afpb_typedef))
+				goto err;
+		} else {
+			Dee_ast_typedef_init(&this_param->afp_base.afpb_typedef);
+		}
+		/* Fallthru to `++builder->afb_argc_max` -- by not changing
+		 * `afb_argc_min`, the parameter will be registered as optional! */
+		break;
+
+	case ':':
+		/* Parse parameter suffix modifiers: `:` */
+		if (TPP_TOK_ISERR(DeeParser_Yield(self)))
+			goto err;
+		if (DeeParser_ParseTypeDef(self, &this_param->afp_base.afpb_typedef))
+			goto err;
+		if (DeeParser_GetTok(self) == '=')
+			goto parse_default_value; /* Default can still appear after `:`-typedef */
+		goto setup_as_positional;
+
+	case '=': {
+		DeeAst *default_value;
+		Dee_ast_typedef_init(&this_param->afp_base.afpb_typedef);
+parse_default_value:
+		if (TPP_TOK_ISERR(DeeParser_Yield(self)))
+			goto err_this_param_typedef;
+		default_value = DeeParser_ParseExpr(self);
+		if (!default_value)
+			goto err_this_param_typedef;
+		this_param->afp_default = default_value;
+	}	break;
+
+	default:
+		Dee_ast_typedef_init(&this_param->afp_base.afpb_typedef);
+setup_as_positional:
+		if (builder->afb_argc_min == builder->afb_argc_max) {
+			/* Increment min-argc to go hand-in-hand with `++builder->afb_argc_max` below */
+			++builder->afb_argc_min;
+		} else {
+			/* Syntax error: non-optional argument after optional/default argument */
+			struct Dee_ast_function_param *prev_param;
+			ASSERT(builder->afb_argc_max >= 1);
+			prev_param = &DeeAst_GetFunctionParams(builder->afb_func)[builder->afb_argc_max - 1];
+			if (DeeParser_WarnfLoc(self, &this_param->afp_base.afpb_loc,
+			                       TPP_W_POSITIONAL_PARAMETER_AFTER_OPTIONAL_OR_DEFAULT,
+			                       prev_param, &this_param->afp_base))
+				goto err_this_param_typedef;
+		}
+		break;
+	}
+
+	++builder->afb_argc_max;
+	return 0;
+err_this_param_typedef:
+	Dee_ast_typedef_fini(&this_param->afp_base.afpb_typedef);
+err:
+	return -1;
+}
+
+/* Check if the current token is `:`, and if so: parse the return-type expression for `builder`
+ * The caller must ensure that this function is called at most once for any `builder`.
+ *
+ * @return: 0 : Success
+ * @return: -1: Error */
+INTERN WUNUSED NONNULL((1, 2)) int DFCALL
+DeeParser_MaybeParseFunctionReturnType(DeeParser *__restrict self,
+                                       struct Dee_ast_function_builder *__restrict builder) {
+	ASSERT(!builder->afb_hasreturn);
+	if (DeeParser_GetTok(self) == ':') {
+		DeeAst *function_ast;
+		if (TPP_TOK_ISERR(DeeParser_Yield(self)))
+			goto err;
+		function_ast = builder->afb_func;
+		if (function_ast == NULL) {
+			function_ast = DeeAst_MallocUninitializedFunction(0);
+			if unlikely(!function_ast)
+				goto err;
+			builder->afb_func = function_ast;
+		}
+		if (DeeParser_ParseTypeDef(self, DeeAst_GetFunctionReturnTypedef(function_ast)))
+			goto err;
+		builder->afb_hasreturn = true;
+	}
+	return 0;
+err:
+	return -1;
+}
+
+
+#else /* CONFIG_EXPERIMENTAL_USE_STATELESS_PARSER */
+
 PRIVATE WUNUSED NONNULL((1)) int DFCALL
 skip_argument_name(DeeLexer *self) {
 	if unlikely(!DeeLexer_HasTokenKwd(self)) {
@@ -1169,7 +1555,7 @@ err:
 	return -1;
 }
 #endif /* !CONFIG_EXPERIMENTAL_USE_TPP3 */
-
+#endif /* !CONFIG_EXPERIMENTAL_USE_STATELESS_PARSER */
 
 DECL_END
 

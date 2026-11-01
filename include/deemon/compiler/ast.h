@@ -133,6 +133,7 @@ enum Dee_ast_symref_kind {
 #define Dee_AST_SYMREF_KIND_ISSIMPLE(x) ((unsigned int)(x) >= (unsigned int)Dee_AST_SYMREF_KIND_THIS)
 	Dee_AST_SYMREF_KIND_TP_THIS, /* Reference to TYPE in `this as Type.__base__(TYPE)`, as used to implement `super` */
 	Dee_AST_SYMREF_KIND_THISMOD, /* Reference to the current module */
+	Dee_AST_SYMREF_KIND_VARARGS, /* Reference to the varargs argument of the current function */
 };
 
 enum Dee_ast_symref_byname_kind {
@@ -143,8 +144,9 @@ enum Dee_ast_symref_byname_kind {
 	Dee_AST_SYMREF_BYNAME_KIND_STATIC, /* `static local`  (Create/use static variable in current scope) */
 };
 typedef uint_fast8_t Dee_ast_symref_byname_flag;
-#define Dee_AST_SYMREF_BYNAME_FLAG_NORMAL 0x00 /* Normal flags */
-#define Dee_AST_SYMREF_BYNAME_FLAG_FINAL  0x01 /* `final` modifier used (ignored if `Dee_AST_SYMREF_BYNAME_KIND_AUTO` is used) */
+#define Dee_AST_SYMREF_BYNAME_FLAG_NORMAL  0x00 /* Normal flags */
+#define Dee_AST_SYMREF_BYNAME_FLAG_FINAL   0x01 /* `final` modifier used (ignored if `Dee_AST_SYMREF_BYNAME_KIND_AUTO` is used) */
+#define Dee_AST_SYMREF_BYNAME_FLAG_VARYING 0x02 /* `varying` modifier used (ignored if `Dee_AST_SYMREF_BYNAME_KIND_AUTO` is used) */
 
 struct Dee_ast_symref_byname {
 	tpp_keyword const              *asrbn_name;    /* [1..1] Symbol name */
@@ -348,10 +350,11 @@ enum Dee_ast_kind {
 	 * - `<base>.operator <name>`  ->  `(InstanceMethod from deemon)(<name> from operators, <base>)` */
 
 	/* Action AST type codes... */
-#define Dee_AST_ISACT1(id)                                   \
-	((unsigned int)(id) >= (unsigned int)Dee_AST_ACT1_NOT && \
-	 (unsigned int)(id) <= (unsigned int)Dee_AST_ACT1_UNPACK)
+#define Dee_AST_ISACT1(id)                                     \
+	((unsigned int)(id) >= (unsigned int)Dee_AST_ACT1_SCOPE && \
+	 (unsigned int)(id) <= (unsigned int)Dee_AST_ACT1_BOUND)
 #define Dee_AST_CASE_ACT1       \
+	case Dee_AST_ACT1_SCOPE:    \
 	case Dee_AST_ACT1_NOT:      \
 	case Dee_AST_ACT1_TYPEOF:   \
 	case Dee_AST_ACT1_CLASSOF:  \
@@ -360,8 +363,12 @@ enum Dee_ast_kind {
 	case Dee_AST_ACT1_PRINTLN:  \
 	case Dee_AST_ACT1_ASSERT:   \
 	case Dee_AST_ACT1_DEEPCOPY: \
-	case Dee_AST_ACT1_UNPACK:
-	Dee_AST_ACT1_NOT,        /* `!<act0>`                   - Convert `act1` into a boolean and negate the result */
+	case Dee_AST_ACT1_UNPACK:   \
+	case Dee_AST_ACT1_DEL:      \
+	case Dee_AST_ACT1_UNBIND:   \
+	case Dee_AST_ACT1_BOUND:
+	Dee_AST_ACT1_SCOPE,      /* `{ <act0>; }`               - Wrap `<act0>` in a child-scope (removed during linking) */
+	Dee_AST_ACT1_NOT,        /* `!<act0>`                   - Convert `<act0>` into a boolean and negate the result */
 	Dee_AST_ACT1_TYPEOF,     /* `type(<act0>)`              - Return the actual type of `<act0>` */
 	Dee_AST_ACT1_CLASSOF,    /* `<act0>.class`              - Return the effective class of `<act0>` (Dereference super objects) */
 	Dee_AST_ACT1_SUPEROF,    /* `<act0>.super`              - Return the super-object of `<act0>` */
@@ -370,9 +377,12 @@ enum Dee_ast_kind {
 	Dee_AST_ACT1_ASSERT,     /* `assert <act0>`             - Assert that <act0> evaluates to true at runtime. */
 	Dee_AST_ACT1_DEEPCOPY,   /* `deepcopy <act0>`           - Create a deep copy of `act0` */
 	Dee_AST_ACT1_UNPACK,     /* `<act0>...`                 - Unpack `act0` into a context-sensitive # of objects (without special handling: unpack to 1 object) */
+	Dee_AST_ACT1_DEL,        /* `del <act0>`                - Unbind `<act0>` and return `none` and (if it's a symbol, and that symbol was declared in the current scope), delete said symbol (replaced with other kinds of ASTs during linking) */
+	Dee_AST_ACT1_UNBIND,     /* `del(<act0>)`               - Unbind `<act0>` and return `none` (replaced with other kinds of ASTs during linking) */
+	Dee_AST_ACT1_BOUND,      /* `<act0>...`                 - Check if `<act0>` is bound and return `true` / `false` (replaced with other kinds of ASTs during linking) */
 #define Dee_AST_ISACT2(id)                                      \
 	((unsigned int)(id) >= (unsigned int)Dee_AST_ACT2_FPRINT && \
-	 (unsigned int)(id) <= (unsigned int)Dee_AST_ACT2_DIFFOBJ)
+	 (unsigned int)(id) <= (unsigned int)Dee_AST_ACT2_XCH)
 #define Dee_AST_CASE_ACT2        \
 	case Dee_AST_ACT2_FPRINT:    \
 	case Dee_AST_ACT2_FPRINTLN:  \
@@ -383,7 +393,9 @@ enum Dee_ast_kind {
 	case Dee_AST_ACT2_BOUNDATTR: \
 	case Dee_AST_ACT2_BOUNDITEM: \
 	case Dee_AST_ACT2_SAMEOBJ:   \
-	case Dee_AST_ACT2_DIFFOBJ:
+	case Dee_AST_ACT2_DIFFOBJ:   \
+	case Dee_AST_ACT2_STORE:     \
+	case Dee_AST_ACT2_XCH:
 
 	Dee_AST_ACT2_FPRINT,    /* `print <act0>: <act1>...,;` - Print the elements of a sequence in `<act1>` to a file in `<act0>` (without linefeed) */
 	Dee_AST_ACT2_FPRINTLN,  /* `print <act0>: <act1>...;`  - Print the elements of a sequence in `<act1>` to a file in `<act0>` */
@@ -397,6 +409,9 @@ enum Dee_ast_kind {
 	Dee_AST_ACT2_BOUNDITEM, /* `<act0>.operator [] (<act1>) is bound` - Check if the item `<act1>` of `<act0>` is currently bound. */
 	Dee_AST_ACT2_SAMEOBJ,   /* `<act0> === <act1>`         - Check if <act0> and <act1> are the same object */
 	Dee_AST_ACT2_DIFFOBJ,   /* `<act0> !== <act1>`         - Check if <act0> and <act1> are the different objects */
+	Dee_AST_ACT2_STORE,     /* `<act0> = <act1>`           - Store `<act1>` in `<act0>` and return value of `<act1>` (replaced with other kinds of ASTs during linking) */
+	Dee_AST_ACT2_INIT,      /* `if (<act0> !is bound) <act0> = <act1>` - Same as `Dee_AST_ACT2_STORE`, but only run initializer if `<act0>` was unbound (replaced with other kinds of ASTs during linking) */
+	Dee_AST_ACT2_XCH,       /* `xch(<act0>, <act1>)`       - Store `<act1>` in `<act0>` and return old value of `<act0>` (replaced with other kinds of ASTs during linking) */
 #define Dee_AST_ISACT3(id)                                     \
 	((unsigned int)(id) >= (unsigned int)Dee_AST_ACT3_RANGE && \
 	 (unsigned int)(id) <= (unsigned int)Dee_AST_ACT3_RANGE)
@@ -416,16 +431,9 @@ enum Dee_ast_kind {
 	                        * init-once semantics) */
 
 	/* The following AST kinds only exist before linking */
-	Dee_AST_SYMREF_RD,       /* reference: Read from symbol (replaced with `Dee_AST_SYMBOL_RD` during linking) */
-	Dee_AST_SYMREF_BND,      /* reference: Check if symbol is bound (replaced with `Dee_AST_SYMBOL_BND` during linking) */
-	Dee_AST_SYMREF_DEL,      /* reference: Unbind symbol (replaced with `Dee_AST_SYMBOL_DEL` during linking) */
-	Dee_AST_SYMREF_WR,       /* reference: Write to symbol (replaced with `Dee_AST_SYMBOL_WR` or `Dee_AST_SYMBOL_INIT` during linking) */
-	Dee_AST_SYMREF_XCH,      /* reference: Exchange value of symbol (replaced with `Dee_AST_SYMBOL_XCH` during linking) */
-//TODO:	Dee_AST_SYMREF_RD_ALIAS, /* Like `Dee_AST_SYMREF_RD`, but also declare the symbol as an alias within the current scope (for `import`-statements) */
-	/* TODO: Declaration of getset-like symbols (I finally want modules to have `global property`) */
-	/* TODO: AST for `import module` */
-	/* TODO: AST for `import * from module` */
-	/* TODO: AST for `import symbol as my_symbol from module` */
+	Dee_AST_SYMREF,        /* Access a symbol */
+	Dee_AST_SYMREF_ALIAS,  /* Declare a symbol alias (alternate name for the same symbol -- used to implement `import`) */
+	Dee_AST_IMPORT_STAR,   /* Declare symbols for all elements */
 
 	Dee_AST_GOTO,     /* Goto label (replaced with `Dee_AST_ASM_GOTO` during linking) */
 	Dee_AST_BREAK,    /* break-statement (replaced with `Dee_AST_ASM_GOTO` during linking) */
@@ -447,9 +455,7 @@ struct Dee_ast_const {
 
 /* === For `Dee_AST_MULTI` */
 enum Dee_ast_multi_kind {
-	Dee_AST_MULTI_KIND_KEEPLAST,    /* Evaluate all asts, but return only the value of the very last one */
-	Dee_AST_MULTI_KIND_SCOPE,       /* Same as `Dee_AST_MULTI_KIND_KEEPLAST`, but marks the start of an explicit `{ scope; }` */
-#define Dee_AST_MULTI_KIND_ISLAST(x) ((unsigned int)(x) <= (unsigned int)Dee_AST_MULTI_KIND_SCOPE)
+	Dee_AST_MULTI_KIND_LAST,        /* Evaluate all asts and return the value of the last one (if there are none, return `Dee_None`) */
 	Dee_AST_MULTI_KIND_GENERIC_SEQ, /* Create some abstract object derived from `deemon.Sequence` */
 	Dee_AST_MULTI_KIND_GENERIC_SET, /* Create some abstract object derived from `deemon.Set` */
 	Dee_AST_MULTI_KIND_TUPLE,       /* Create a `deemon.Tuple` object */
@@ -463,9 +469,9 @@ enum Dee_ast_multi_kind {
 	Dee_AST_MULTI_KIND_DICT,        /* Create a `deemon.Dict` object (even elements are keys, odd ones are values) */
 };
 struct Dee_ast_multi {
-	enum Dee_ast_multi_kind am_kind;    /* Multi-AST kind */
-	size_t  am_count;                   /* # of elements */
-	DeeAst *am_elem[Dee_AST_FLEXARRAY]; /* [1..1][owned][am_count] AST elements */
+	enum Dee_ast_multi_kind am_kind;  /* Multi-AST kind */
+	size_t                  am_count; /* # of elements */
+	DeeAst                 *am_elem[Dee_AST_FLEXARRAY]; /* [1..1][owned][am_count] AST elements */
 };
 
 /* HINT: Use `DeeAst_PackMulti()` to package. */
@@ -538,10 +544,12 @@ struct Dee_ast_if {
 	DeeAst         *ai_cond; /* [1..1][owned] If-condition */
 	DeeAst         *ai_tt;   /* [0..1][owned_if(!= ai_cond)] True-branch.
 	                          * When set to the same pointer as `ai_cond`, re-use the
-	                          * value of `ai_cond` as true-value (but only evaluate it once) */
+	                          * value of `ai_cond` as true-value (but only evaluate it once)
+	                          * When `NULL`, same as if set to `Dee_AST_CONST:Dee_None` */
 	DeeAst         *ai_ff;   /* [0..1][owned_if(!= ai_cond)] False-branch.
 	                          * When set to the same pointer as `ai_cond`, re-use the
-	                          * value of `ai_cond` as false-value (but only evaluate it once) */
+	                          * value of `ai_cond` as false-value (but only evaluate it once)
+	                          * When `NULL`, same as if set to `Dee_AST_CONST:Dee_None` */
 };
 #define DeeAst_MallocUninitializedIf()                  _DeeAst_MallocUninitializedFixed(ad_if)
 #define DeeAst_TryMallocUninitializedIf()               _DeeAst_TryMallocUninitializedFixed(ad_if)
@@ -704,7 +712,9 @@ struct Dee_ast_return {
 
 /* === For `Dee_AST_FUNCTION` */
 struct Dee_ast_function_param_base {
-	tpp_keyword const           *afpb_name;    /* [1..1] Parameter name */
+	tpp_keyword const           *afpb_name;    /* [0..1] Parameter name, or `NULL` if "none" was used as name */
+	DeeAstLoc                    afpb_loc;     /* Parameter (name) location */
+	Dee_ast_symref_byname_flag   afpb_flag;    /* Variable flags */
 	struct Dee_ast_typedef       afpb_typedef; /* Type annotation for parameter */
 	DREF struct Dee_link_symbol *afpb_sym;     /* [0..1] Set by linker: symbol for parameter */
 };
@@ -748,6 +758,7 @@ struct Dee_ast_function {
 	size_t                              af_argc_max;       /* Max # of function parameters */
 	DREF struct Dee_link_symbol        *af_symbol_this;    /* [0..1] Set/created by linker: symbol for `Dee_AST_SYMREF_KIND_THIS` (left `NULL` if `Dee_AST_FUNCTION_FLAG_THISCALL` isn't set) */
 	DREF struct Dee_link_symbol        *af_symbol_tp_this; /* [0..1] Set by linker: symbol for `Dee_AST_SYMREF_KIND_TP_THIS` (left `NULL` if `Dee_AST_FUNCTION_FLAG_THISCALL` isn't set, or not inside of a class scope; s.a. `struct Dee_ast_class::ac_tp_this`) */
+	struct Dee_ast_typedef              af_return_typedef; /* Type annotation for return value */
 	struct Dee_ast_function_param       af_params[Dee_AST_FLEXARRAY]; /* [af_argc_max] Function parameters */
 };
 
@@ -763,6 +774,7 @@ struct Dee_ast_function {
 #define DeeAst_Dbg_TryReallocUninitializedFunction(p, argc_max, file, line) _DeeAst_Dbg_TryReallocUninitializedVar(ad_function.af_params, p, argc_max, file, line)
 #define DeeAst_Dbg_FreeUninitializedFunction(p, file, line)                 _DeeAst_Dbg_FreeUninitializedVar(p, file, line)
 #define DeeAst_GetFunctionParams(self)                                      ((self)->a_data.ad_function.af_params)
+#define DeeAst_GetFunctionReturnTypedef(self)                               (&(self)->a_data.ad_function.af_return_typedef)
 /* === */
 
 
@@ -1006,6 +1018,12 @@ struct Dee_ast_act3 {
 struct Dee_ast_symbol_rd {
 	DREF struct Dee_link_symbol *asrd_symbol; /* [REFERENCE(Dee_link_symbol_rd_inc)][1..1] Symbol to read from */
 };
+#define DeeAst_MallocUninitializedSymbolRd()                  _DeeAst_MallocUninitializedFixed(ad_symbol_rd)
+#define DeeAst_TryMallocUninitializedSymbolRd()               _DeeAst_TryMallocUninitializedFixed(ad_symbol_rd)
+#define DeeAst_FreeUninitializedSymbolRd(p)                   _DeeAst_FreeUninitializedFixed(ad_symbol_rd, p)
+#define DeeAst_Dbg_MallocUninitializedSymbolRd(file, line)    _DeeAst_Dbg_MallocUninitializedFixed(ad_symbol_rd, file, line)
+#define DeeAst_Dbg_TryMallocUninitializedSymbolRd(file, line) _DeeAst_Dbg_TryMallocUninitializedFixed(ad_symbol_rd, file, line)
+#define DeeAst_Dbg_FreeUninitializedSymbolRd(p, file, line)   _DeeAst_Dbg_FreeUninitializedFixed(ad_symbol_rd, p, file, line)
 /* === */
 
 
@@ -1013,6 +1031,12 @@ struct Dee_ast_symbol_rd {
 struct Dee_ast_symbol_bnd {
 	DREF struct Dee_link_symbol *asbn_symbol; /* [REFERENCE(Dee_link_symbol_rd_inc)][1..1] Symbol to check binding of */
 };
+#define DeeAst_MallocUninitializedSymbolBnd()                  _DeeAst_MallocUninitializedFixed(ad_symbol_bnd)
+#define DeeAst_TryMallocUninitializedSymbolBnd()               _DeeAst_TryMallocUninitializedFixed(ad_symbol_bnd)
+#define DeeAst_FreeUninitializedSymbolBnd(p)                   _DeeAst_FreeUninitializedFixed(ad_symbol_bnd, p)
+#define DeeAst_Dbg_MallocUninitializedSymbolBnd(file, line)    _DeeAst_Dbg_MallocUninitializedFixed(ad_symbol_bnd, file, line)
+#define DeeAst_Dbg_TryMallocUninitializedSymbolBnd(file, line) _DeeAst_Dbg_TryMallocUninitializedFixed(ad_symbol_bnd, file, line)
+#define DeeAst_Dbg_FreeUninitializedSymbolBnd(p, file, line)   _DeeAst_Dbg_FreeUninitializedFixed(ad_symbol_bnd, p, file, line)
 /* === */
 
 
@@ -1020,6 +1044,12 @@ struct Dee_ast_symbol_bnd {
 struct Dee_ast_symbol_del {
 	DREF struct Dee_link_symbol *asub_symbol; /* [REFERENCE(Dee_link_symbol_wr_inc)][1..1] Symbol to unbind */
 };
+#define DeeAst_MallocUninitializedSymbolDel()                  _DeeAst_MallocUninitializedFixed(ad_symbol_del)
+#define DeeAst_TryMallocUninitializedSymbolDel()               _DeeAst_TryMallocUninitializedFixed(ad_symbol_del)
+#define DeeAst_FreeUninitializedSymbolDel(p)                   _DeeAst_FreeUninitializedFixed(ad_symbol_del, p)
+#define DeeAst_Dbg_MallocUninitializedSymbolDel(file, line)    _DeeAst_Dbg_MallocUninitializedFixed(ad_symbol_del, file, line)
+#define DeeAst_Dbg_TryMallocUninitializedSymbolDel(file, line) _DeeAst_Dbg_TryMallocUninitializedFixed(ad_symbol_del, file, line)
+#define DeeAst_Dbg_FreeUninitializedSymbolDel(p, file, line)   _DeeAst_Dbg_FreeUninitializedFixed(ad_symbol_del, p, file, line)
 /* === */
 
 
@@ -1028,6 +1058,12 @@ struct Dee_ast_symbol_wr {
 	DREF struct Dee_link_symbol *aswr_symbol; /* [REFERENCE(Dee_link_symbol_wr_inc)][1..1] Symbol to write to */
 	DeeAst                      *aswr_value;  /* [1..1][owned] Value to write (also result value of AST) */
 };
+#define DeeAst_MallocUninitializedSymbolWr()                  _DeeAst_MallocUninitializedFixed(ad_symbol_wr)
+#define DeeAst_TryMallocUninitializedSymbolWr()               _DeeAst_TryMallocUninitializedFixed(ad_symbol_wr)
+#define DeeAst_FreeUninitializedSymbolWr(p)                   _DeeAst_FreeUninitializedFixed(ad_symbol_wr, p)
+#define DeeAst_Dbg_MallocUninitializedSymbolWr(file, line)    _DeeAst_Dbg_MallocUninitializedFixed(ad_symbol_wr, file, line)
+#define DeeAst_Dbg_TryMallocUninitializedSymbolWr(file, line) _DeeAst_Dbg_TryMallocUninitializedFixed(ad_symbol_wr, file, line)
+#define DeeAst_Dbg_FreeUninitializedSymbolWr(p, file, line)   _DeeAst_Dbg_FreeUninitializedFixed(ad_symbol_wr, p, file, line)
 /* === */
 
 
@@ -1036,69 +1072,63 @@ struct Dee_ast_symbol_xch {
 	DREF struct Dee_link_symbol *asxc_symbol; /* [REFERENCE(Dee_link_symbol_rdwr_inc)][1..1] Symbol whose value to exchange */
 	DeeAst                      *asxc_value;  /* [1..1][owned] Value to write */
 };
+#define DeeAst_MallocUninitializedSymbolXch()                  _DeeAst_MallocUninitializedFixed(ad_symbol_xch)
+#define DeeAst_TryMallocUninitializedSymbolXch()               _DeeAst_TryMallocUninitializedFixed(ad_symbol_xch)
+#define DeeAst_FreeUninitializedSymbolXch(p)                   _DeeAst_FreeUninitializedFixed(ad_symbol_xch, p)
+#define DeeAst_Dbg_MallocUninitializedSymbolXch(file, line)    _DeeAst_Dbg_MallocUninitializedFixed(ad_symbol_xch, file, line)
+#define DeeAst_Dbg_TryMallocUninitializedSymbolXch(file, line) _DeeAst_Dbg_TryMallocUninitializedFixed(ad_symbol_xch, file, line)
+#define DeeAst_Dbg_FreeUninitializedSymbolXch(p, file, line)   _DeeAst_Dbg_FreeUninitializedFixed(ad_symbol_xch, p, file, line)
 /* === */
 
 
 /* === For `Dee_AST_SYMBOL_INIT` */
 struct Dee_ast_symbol_init {
-	DREF struct Dee_link_symbol *asin_symbol; /* [REFERENCE(Dee_link_symbol_wr_inc)][1..1] Symbol to initialize */
+	DREF struct Dee_link_symbol *asin_symbol; /* [REFERENCE(Dee_link_symbol_rdwr_inc)][1..1] Symbol to initialize */
 	DeeAst                      *asin_value;  /* [1..1][owned] Initializer value */
 };
+#define DeeAst_MallocUninitializedSymbolInit()                  _DeeAst_MallocUninitializedFixed(ad_symbol_init)
+#define DeeAst_TryMallocUninitializedSymbolInit()               _DeeAst_TryMallocUninitializedFixed(ad_symbol_init)
+#define DeeAst_FreeUninitializedSymbolInit(p)                   _DeeAst_FreeUninitializedFixed(ad_symbol_init, p)
+#define DeeAst_Dbg_MallocUninitializedSymbolInit(file, line)    _DeeAst_Dbg_MallocUninitializedFixed(ad_symbol_init, file, line)
+#define DeeAst_Dbg_TryMallocUninitializedSymbolInit(file, line) _DeeAst_Dbg_TryMallocUninitializedFixed(ad_symbol_init, file, line)
+#define DeeAst_Dbg_FreeUninitializedSymbolInit(p, file, line)   _DeeAst_Dbg_FreeUninitializedFixed(ad_symbol_init, p, file, line)
 /* === */
 
 
-/* === For `Dee_AST_SYMREF_RD` */
-struct Dee_ast_symref_rd {
-	struct Dee_ast_symref asrrd_sym; /* Symbol to read from */
+/* === For `Dee_AST_SYMREF` */
+#define DeeAst_MallocUninitializedSymref()                  _DeeAst_MallocUninitializedFixed(ad_symref)
+#define DeeAst_TryMallocUninitializedSymref()               _DeeAst_TryMallocUninitializedFixed(ad_symref)
+#define DeeAst_FreeUninitializedSymref(p)                   _DeeAst_FreeUninitializedFixed(ad_symref, p)
+#define DeeAst_Dbg_MallocUninitializedSymref(file, line)    _DeeAst_Dbg_MallocUninitializedFixed(ad_symref, file, line)
+#define DeeAst_Dbg_TryMallocUninitializedSymref(file, line) _DeeAst_Dbg_TryMallocUninitializedFixed(ad_symref, file, line)
+#define DeeAst_Dbg_FreeUninitializedSymref(p, file, line)   _DeeAst_Dbg_FreeUninitializedFixed(ad_symref, p, file, line)
+/* === */
+
+
+/* === For `Dee_AST_SYMREF_ALIAS` */
+struct Dee_ast_symref_alias {
+	struct Dee_ast_symref asra_symref; /* Underlying symbol reference */
+	tpp_keyword const    *asra_alias;  /* New name under which `asra_symref` should become available locally */
 };
+#define DeeAst_MallocUninitializedSymrefAlias()                  _DeeAst_MallocUninitializedFixed(ad_symref_alias)
+#define DeeAst_TryMallocUninitializedSymrefAlias()               _DeeAst_TryMallocUninitializedFixed(ad_symref_alias)
+#define DeeAst_FreeUninitializedSymrefAlias(p)                   _DeeAst_FreeUninitializedFixed(ad_symref_alias, p)
+#define DeeAst_Dbg_MallocUninitializedSymrefAlias(file, line)    _DeeAst_Dbg_MallocUninitializedFixed(ad_symref_alias, file, line)
+#define DeeAst_Dbg_TryMallocUninitializedSymrefAlias(file, line) _DeeAst_Dbg_TryMallocUninitializedFixed(ad_symref_alias, file, line)
+#define DeeAst_Dbg_FreeUninitializedSymrefAlias(p, file, line)   _DeeAst_Dbg_FreeUninitializedFixed(ad_symref_alias, p, file, line)
 /* === */
 
 
-/* === For `Dee_AST_SYMREF_BND` */
-struct Dee_ast_symref_bnd {
-	struct Dee_ast_symref asrbn_sym; /* Symbol to whose is-bound status to check */
+/* === For `Dee_AST_IMPORT_STAR` */
+struct Dee_ast_import_star {
+	DREF struct Dee_module_object *asra_mod; /* [1..1] Module whose symbols should be imported */
 };
-/* === */
-
-
-/* === For `Dee_AST_SYMREF_DEL` */
-typedef uint_fast8_t Dee_ast_symref_del_flag;
-#define Dee_AST_SYMREF_DEL_FLAG_NORMAL 0x00 /* Normal flags */
-#define Dee_AST_SYMREF_DEL_FLAG_DELETE 0x01 /* Delete the symbol if it was declared in the current scope.
-                                             * Subsequent code referencing a symbol of the same name will
-                                             * talk to a different symbol. */
-
-struct Dee_ast_symref_del {
-	struct Dee_ast_symref   asrub_sym;  /* Symbol to unbind */
-	Dee_ast_symref_del_flag asrub_flag; /* Unbind flags */
-};
-/* === */
-
-
-/* === For `Dee_AST_SYMREF_WR` */
-struct Dee_ast_symref_wr {
-	struct Dee_ast_symref asrwr_sym;   /* Symbol to write to */
-	DeeAst               *asrwr_value; /* [1..1][owned] Value to write (also result value of AST) */
-};
-/* === */
-
-
-/* === For `Dee_AST_SYMREF_XCH` */
-struct Dee_ast_symref_xch {
-	struct Dee_ast_symref asrxc_sym;   /* Symbol whose value to exchange */
-	DeeAst               *asrxc_value; /* [1..1][owned] Value to write */
-};
-/* === */
-
-
-/* === For `Dee_AST_THIS` */
-#define _DeeAst_SIZEOF_THIS                               COMPILER_OFFSETOF(DeeAst, a_data)
-#define DeeAst_MallocUninitializedThis()                  ((DeeAst *)DeeObject_FMalloc(_DeeAst_SIZEOF_THIS))
-#define DeeAst_TryMallocUninitializedThis()               ((DeeAst *)DeeObject_FTryMalloc(_DeeAst_SIZEOF_THIS))
-#define DeeAst_FreeUninitializedThis(p)                   DeeObject_FFree(p, _DeeAst_SIZEOF_THIS)
-#define DeeAst_Dbg_MallocUninitializedThis(file, line)    ((DeeAst *)DeeDbgObject_FMalloc(_DeeAst_SIZEOF_THIS, file, line))
-#define DeeAst_Dbg_TryMallocUninitializedThis(file, line) ((DeeAst *)DeeDbgObject_FTryMalloc(_DeeAst_SIZEOF_THIS, file, line))
-#define DeeAst_Dbg_FreeUninitializedThis(p, file, line)   DeeDbgObject_FFree(p, _DeeAst_SIZEOF_THIS, file, line)
+#define DeeAst_MallocUninitializedImportStar()                  _DeeAst_MallocUninitializedFixed(ad_import_star)
+#define DeeAst_TryMallocUninitializedImportStar()               _DeeAst_TryMallocUninitializedFixed(ad_import_star)
+#define DeeAst_FreeUninitializedImportStar(p)                   _DeeAst_FreeUninitializedFixed(ad_import_star, p)
+#define DeeAst_Dbg_MallocUninitializedImportStar(file, line)    _DeeAst_Dbg_MallocUninitializedFixed(ad_import_star, file, line)
+#define DeeAst_Dbg_TryMallocUninitializedImportStar(file, line) _DeeAst_Dbg_TryMallocUninitializedFixed(ad_import_star, file, line)
+#define DeeAst_Dbg_FreeUninitializedImportStar(p, file, line)   _DeeAst_Dbg_FreeUninitializedFixed(ad_import_star, p, file, line)
 /* === */
 
 
@@ -1142,9 +1172,11 @@ struct Dee_ast {
 		if (_a_labels)                                             \
 			Dee_ast_labels_destroy(_a_labels);                     \
 	}	__WHILE0
-#define _DeeAst_MoveCommon(self, kind, from)    \
-	(void)((self)->a_kind   = (kind),           \
-	       (self)->a_labels = (from)->a_labels, \
+#define _DeeAst_MoveCommon(self, kind, from) \
+	(void)((self)->a_kind = (kind),          \
+	       _DeeAst_MoveCommonNoKind(self, from))
+#define _DeeAst_MoveCommonNoKind(self, from)    \
+	(void)((self)->a_labels = (from)->a_labels, \
 	       (self)->a_loc    = (from)->a_loc,    \
 	       (from)->a_labels = NULL)
 	union {
@@ -1176,14 +1208,12 @@ struct Dee_ast {
 		struct Dee_ast_symbol_init ad_symbol_init; /* [valid_if(a_kind == Dee_AST_SYMBOL_INIT)] */
 
 		/* The following AST kinds only exist before linking */
-		struct Dee_ast_symref_rd   ad_symref_rd;   /* [valid_if(a_kind == Dee_AST_SYMREF_RD)] */
-		struct Dee_ast_symref_bnd  ad_symref_bnd;  /* [valid_if(a_kind == Dee_AST_SYMREF_BND)] */
-		struct Dee_ast_symref_wr   ad_symref_wr;   /* [valid_if(a_kind == Dee_AST_SYMREF_WR)] */
-		struct Dee_ast_symref_del  ad_symref_del;  /* [valid_if(a_kind == Dee_AST_SYMREF_DEL)] */
-		struct Dee_ast_symref_xch  ad_symref_xch;  /* [valid_if(a_kind == Dee_AST_SYMREF_XCH)] */
-		struct Dee_ast_goto        ad_goto;        /* [valid_if(a_kind == Dee_AST_GOTO)] */
-		struct Dee_ast_break       ad_break;       /* [valid_if(a_kind == Dee_AST_BREAK)] */
-		struct Dee_ast_continue    ad_continue;    /* [valid_if(a_kind == Dee_AST_CONTINUE)] */
+		struct Dee_ast_symref       ad_symref;       /* [valid_if(a_kind == Dee_AST_SYMREF)] */
+		struct Dee_ast_symref_alias ad_symref_alias; /* [valid_if(a_kind == Dee_AST_SYMREF_ALIAS)] */
+		struct Dee_ast_import_star  ad_import_star;  /* [valid_if(a_kind == Dee_AST_IMPORT_STAR)] */
+		struct Dee_ast_goto         ad_goto;         /* [valid_if(a_kind == Dee_AST_GOTO)] */
+		struct Dee_ast_break        ad_break;        /* [valid_if(a_kind == Dee_AST_BREAK)] */
+		struct Dee_ast_continue     ad_continue;     /* [valid_if(a_kind == Dee_AST_CONTINUE)] */
 	} a_data; /* Kind-specific AST data */
 };
 
@@ -1215,33 +1245,6 @@ enum { _DeeAst_SIZEOF_GOTO_LIKE = _DeeAst_SIZEOF_GOTO_LIKE_IMPL };
 #define _DeeAst_Dbg_MallocUninitializedGotoLike(file, line)    ((DeeAst *)DeeDbgObject_FMalloc(_DeeAst_SIZEOF_GOTO_LIKE, file, line))
 #define _DeeAst_Dbg_TryMallocUninitializedGotoLike(file, line) ((DeeAst *)DeeDbgObject_FTryMalloc(_DeeAst_SIZEOF_GOTO_LIKE, file, line))
 #define _DeeAst_Dbg_FreeUninitializedGotoLike(p, file, line)   DeeDbgObject_FFree(p, _DeeAst_SIZEOF_GOTO_LIKE, file, line)
-
-/* Allocator for:
- * - `Dee_AST_SYMBOL_RD`, `Dee_AST_SYMREF_RD`,
- * - `Dee_AST_SYMBOL_BND`, `Dee_AST_SYMREF_BND`,
- * - `Dee_AST_SYMBOL_WR`, `Dee_AST_SYMBOL_INIT`, `Dee_AST_SYMREF_WR`
- * - `Dee_AST_SYMBOL_DEL`, `Dee_AST_SYMREF_DEL`
- * - `Dee_AST_SYMBOL_XCH`, `Dee_AST_SYMREF_XCH` */
-#define _DeeAst_SIZEOF_SYMBOL_LIKE_IMPL                                   \
-	__hybrid_max_c11(COMPILER_OFFSETAFTER(DeeAst, a_data.ad_symbol_rd),   \
-	                 COMPILER_OFFSETAFTER(DeeAst, a_data.ad_symref_rd),   \
-	                 COMPILER_OFFSETAFTER(DeeAst, a_data.ad_symbol_bnd),  \
-	                 COMPILER_OFFSETAFTER(DeeAst, a_data.ad_symref_bnd),  \
-	                 COMPILER_OFFSETAFTER(DeeAst, a_data.ad_symbol_wr),   \
-	                 COMPILER_OFFSETAFTER(DeeAst, a_data.ad_symbol_init), \
-	                 COMPILER_OFFSETAFTER(DeeAst, a_data.ad_symref_wr),   \
-	                 COMPILER_OFFSETAFTER(DeeAst, a_data.ad_symbol_del),  \
-	                 COMPILER_OFFSETAFTER(DeeAst, a_data.ad_symref_del),  \
-	                 COMPILER_OFFSETAFTER(DeeAst, a_data.ad_symbol_xch),  \
-	                 COMPILER_OFFSETAFTER(DeeAst, a_data.ad_symref_xch))
-enum { _DeeAst_SIZEOF_SYMBOL_LIKE = _DeeAst_SIZEOF_SYMBOL_LIKE_IMPL };
-#undef _DeeAst_SIZEOF_SYMBOL_LIKE_IMPL
-#define _DeeAst_MallocUninitializedSymbolLike()                  ((DeeAst *)DeeObject_FMalloc(_DeeAst_SIZEOF_SYMBOL_LIKE))
-#define _DeeAst_TryMallocUninitializedSymbolLike()               ((DeeAst *)DeeObject_FTryMalloc(_DeeAst_SIZEOF_SYMBOL_LIKE))
-#define _DeeAst_FreeUninitializedSymbolLike(p)                   DeeObject_FFree(p, _DeeAst_SIZEOF_SYMBOL_LIKE)
-#define _DeeAst_Dbg_MallocUninitializedSymbolLike(file, line)    ((DeeAst *)DeeDbgObject_FMalloc(_DeeAst_SIZEOF_SYMBOL_LIKE, file, line))
-#define _DeeAst_Dbg_TryMallocUninitializedSymbolLike(file, line) ((DeeAst *)DeeDbgObject_FTryMalloc(_DeeAst_SIZEOF_SYMBOL_LIKE, file, line))
-#define _DeeAst_Dbg_FreeUninitializedSymbolLike(p, file, line)   DeeDbgObject_FFree(p, _DeeAst_SIZEOF_SYMBOL_LIKE, file, line)
 
 #ifdef CONFIG_BUILDING_DEEMON
 #undef DeeAst_HAVE_DBG
@@ -1382,9 +1385,9 @@ INTDEF WUNUSED NONNULL((2, 3, 4, 5)) DeeAst *DCALL DeeAst_NewOperator4_(Dee_oper
 INTDEF WUNUSED NONNULL((2)) DeeAst *DCALL DeeAst_NewAct1_(enum Dee_ast_kind act, /*inherit(always)*/ DeeAst *__restrict arg0 DeeAst__DBG_PARAMS);
 #define DeeAst_NewAct1(act, /*inherit(always)*/ arg0) DeeAst_NewAct1_(act, arg0 DeeAst__DBG_ARGS)
 INTDEF WUNUSED NONNULL((2, 3)) DeeAst *DCALL DeeAst_NewAct2_(enum Dee_ast_kind act, /*inherit(always)*/ DeeAst *__restrict arg0, /*inherit(always)*/ DeeAst *__restrict arg1 DeeAst__DBG_PARAMS);
-#define DeeAst_NewAct2(act, /*inherit(always)*/ arg0, /*inherit(always)*/ arg1) DeeAst_NewAct1_(act, arg0, arg1 DeeAst__DBG_ARGS)
+#define DeeAst_NewAct2(act, /*inherit(always)*/ arg0, /*inherit(always)*/ arg1) DeeAst_NewAct2_(act, arg0, arg1 DeeAst__DBG_ARGS)
 INTDEF WUNUSED NONNULL((2, 3, 4)) DeeAst *DCALL DeeAst_NewAct3_(enum Dee_ast_kind act, /*inherit(always)*/ DeeAst *__restrict arg0, /*inherit(always)*/ DeeAst *__restrict arg1, /*inherit(always)*/ DeeAst *__restrict arg2 DeeAst__DBG_PARAMS);
-#define DeeAst_NewAct3(act, /*inherit(always)*/ arg0, /*inherit(always)*/ arg1, /*inherit(always)*/ arg2) DeeAst_NewAct1_(act, arg0, arg1, arg2 DeeAst__DBG_ARGS)
+#define DeeAst_NewAct3(act, /*inherit(always)*/ arg0, /*inherit(always)*/ arg1, /*inherit(always)*/ arg2) DeeAst_NewAct3_(act, arg0, arg1, arg2 DeeAst__DBG_ARGS)
 INTDEF WUNUSED NONNULL((1)) DeeAst *DCALL DeeAst_NewGoto_(tpp_keyword const *label_name DeeAst__DBG_PARAMS);
 #define DeeAst_NewGoto(label_name) DeeAst_NewGoto_(label_name DeeAst__DBG_ARGS)
 INTDEF WUNUSED DeeAst *DCALL DeeAst_NewBreak_(tpp_keyword const *opt_label_name DeeAst__DBG_PARAMS);
@@ -1403,22 +1406,8 @@ INTDEF WUNUSED DeeAst *DCALL DeeAst_NewSymRefSimple_(enum Dee_ast_symref_kind ki
 #define DeeAst_NewSymRefThis()       DeeAst_NewSymRefSimple_(Dee_AST_SYMREF_KIND_THIS DeeAst__DBG_ARGS)
 #define DeeAst_NewSymRefTpThis()     DeeAst_NewSymRefSimple_(Dee_AST_SYMREF_KIND_TP_THIS DeeAst__DBG_ARGS)
 #define DeeAst_NewSymRefThisModule() DeeAst_NewSymRefSimple_(Dee_AST_SYMREF_KIND_THISMOD DeeAst__DBG_ARGS)
+#define DeeAst_NewSymRefVarargs()    DeeAst_NewSymRefSimple_(Dee_AST_SYMREF_KIND_VARARGS DeeAst__DBG_ARGS)
 
-
-/* Transform the given AST `self` for an expression `del(<self>)`:
- * A warning is emitted if `!DeeAst_IsRValue(self)` */
-INTDEF WUNUSED NONNULL((1, 3, 4)) DeeAst *DCALL DeeAst_Transform_Del_(/*inherit(always)*/ DeeAst *__restrict self, Dee_ast_symref_del_flag flag, DeeLexer *__restrict lexer, DeeAstLoc const *__restrict loc DeeAst__DBG_PARAMS);
-#define DeeAst_Transform_Del(/*inherit(always)*/ self, flag, lexer, loc) DeeAst_Transform_Del_(self, flag, lexer, loc DeeAst__DBG_ARGS)
-
-/* Transform the given AST `dst` for an expression `<dst> = <value>`:
- * A warning is emitted if `!DeeAst_IsRValue(self)` */
-INTDEF WUNUSED NONNULL((1, 2, 3, 4)) DeeAst *DCALL DeeAst_Transform_Store_(/*inherit(always)*/ DeeAst *__restrict dst, /*inherit(always)*/ DeeAst *__restrict value, DeeLexer *__restrict lexer, DeeAstLoc const *__restrict loc DeeAst__DBG_PARAMS);
-#define DeeAst_Transform_Store(/*inherit(always)*/ dst, /*inherit(always)*/ value, lexer, loc) DeeAst_Transform_Store_(dst, value, lexer, loc DeeAst__DBG_ARGS)
-
-/* Transform the given AST `self` for an expression `bound(<self>):
- * A warning is emitted if `!DeeAst_IsRValue(self)` */
-INTDEF WUNUSED NONNULL((1, 2, 3)) DeeAst *DCALL DeeAst_Transform_Bound_(/*inherit(always)*/ DeeAst *__restrict self, DeeLexer *__restrict lexer, DeeAstLoc const *__restrict loc DeeAst__DBG_PARAMS);
-#define DeeAst_Transform_Bound(/*inherit(always)*/ self, lexer, loc) DeeAst_Transform_Bound_(self, lexer, loc DeeAst__DBG_ARGS)
 
 /* Label functions */
 INTDEF WUNUSED NONNULL((1, 2)) DeeAst *DCALL DeeAst_AddGotoLabel_(/*inherit(always)*/ DeeAst *__restrict self, tpp_keyword const *__restrict name DeeAst__DBG_PARAMS);

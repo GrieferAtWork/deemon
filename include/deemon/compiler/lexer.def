@@ -337,6 +337,81 @@ TPP_WARNING(TPP_W_UNEXPECTED_EXPRESSION_FOR_DEL, 1(TPP_WG_SYNTAX), 0(), TPP_WSTA
 TPP_WARNING(TPP_W_EXPECTED_CATCH_OR_FINALLY_AFTER_TRY, 1(TPP_WG_SYNTAX), 0(), TPP_WSTATE_ERROR, "Expected %[catch%] or %[finally%] after %[try%], but got %Pt")
 TPP_WARNING(TPP_W_EXPECTED_KEYWORD_AFTER_CATCH_AS, 1(TPP_WG_SYNTAX), 0(), TPP_WSTATE_ERROR, "Expected a keyword after %[as%] in %[catch%], but got %Pt")
 
+#ifdef CONFIG_EXPERIMENTAL_USE_STATELESS_PARSER
+TPP_WARNING(TPP_W_RESERVED_PARAMETER_NAME, 2(TPP_WG_RESERVED, TPP_WG_SYMBOL), 0(), TPP_WSTATE_WARN, "parameter name %[%s%] is a reserved identifier")
+TPP_WARNING(TPP_W_EXPECTED_KEYWORD_FOR_PARAMETER_NAME, 1(TPP_WG_SYNTAX), 0(), TPP_WSTATE_ERROR, "expected a keyword as parameter name, but got %Pt")
+TPP_WARNING_EX(TPP_W_VARARGS_PARAMETER_ALREADY_DEFINED, 1(TPP_WG_SYNTAX), 0(), TPP_WSTATE_ERROR, {
+	struct Dee_ast_function_param_base const *param = tpp_current_va_arg(struct Dee_ast_function_param_base const *);
+	char const *existing_name = param->afpb_name ? tpp_keyword_getcstr(param->afpb_name) : "<anonymous>";
+	tpp_warn_printf1(tpp_current_info(), "varargs parameter has already been defined as %[%s%]\n", existing_name);
+	if (!DeeAstLoc_IsEmpty(&param->afpb_loc)) {
+		tpp_lexer_printf_info param_info;
+		tpp_lexer_printf_info_init_lc(&param_info, DeeAstLoc_GetName(&param->afpb_loc), DeeAstLoc_GetLc(&param->afpb_loc));
+		tpp_warn_print_file_and_line(&param_info);
+		tpp_warn_printf1(&param_info, "see declaration of varargs parameter %[%s%]\n", existing_name);
+	}
+})
+TPP_WARNING_EX(TPP_W_VARKWDS_PARAMETER_ALREADY_DEFINED, 1(TPP_WG_SYNTAX), 0(), TPP_WSTATE_ERROR, {
+	struct Dee_ast_function_param_base const *param = tpp_current_va_arg(struct Dee_ast_function_param_base const *);
+	char const *existing_name = param->afpb_name ? tpp_keyword_getcstr(param->afpb_name) : "<anonymous>";
+	tpp_warn_printf1(tpp_current_info(), "varkwds parameter has already been defined as %[%s%]\n", existing_name);
+	if (!DeeAstLoc_IsEmpty(&param->afpb_loc)) {
+		tpp_lexer_printf_info param_info;
+		tpp_lexer_printf_info_init_lc(&param_info, DeeAstLoc_GetName(&param->afpb_loc), DeeAstLoc_GetLc(&param->afpb_loc));
+		tpp_warn_print_file_and_line(&param_info);
+		tpp_warn_printf1(&param_info, "see declaration of varkwds parameter %[%s%]\n", existing_name);
+	}
+})
+TPP_WARNING_EX(TPP_W_POSITIONAL_PARAMETER_AFTER_VARARGS_OR_VARKWDS, 1(TPP_WG_SYNTAX), 0(), TPP_WSTATE_ERROR, {
+	struct Dee_ast_function_param_base const *var_param = tpp_current_va_arg(struct Dee_ast_function_param_base const *);
+	char const *var_name = var_param->afpb_name ? tpp_keyword_getcstr(var_param->afpb_name) : "<anonymous>";
+	tpp_keyword const *new_param = tpp_current_va_arg(tpp_keyword const *);
+	char const *new_name = new_param ? tpp_keyword_getcstr(new_param) : "<anonymous>";
+	tpp_warn_printf1(tpp_current_info(), "positional parameter %[%s%] after varargs/varkwds parameter %[%s%]\n", new_name, var_name);
+	if (!DeeAstLoc_IsEmpty(&var_param->afpb_loc)) {
+		tpp_lexer_printf_info var_param_info;
+		tpp_lexer_printf_info_init_lc(&var_param_info, DeeAstLoc_GetName(&var_param->afpb_loc), DeeAstLoc_GetLc(&var_param->afpb_loc));
+		tpp_warn_print_file_and_line(&var_param_info);
+		tpp_warn_printf1(&var_param_info, "see declaration of varargs/varkwds parameter %[%s%]\n", var_name);
+	}
+})
+TPP_WARNING_EX(TPP_W_POSITIONAL_PARAMETER_AFTER_OPTIONAL_OR_DEFAULT, 1(TPP_WG_SYNTAX), 0(), TPP_WSTATE_ERROR, {
+	struct Dee_ast_function_param const *opt_param = tpp_current_va_arg(struct Dee_ast_function_param const *);
+	struct Dee_ast_function_param_base const *this_param = tpp_current_va_arg(struct Dee_ast_function_param_base const *);
+	char const *opt_name = opt_param->afp_base.afpb_name ? tpp_keyword_getcstr(opt_param->afp_base.afpb_name) : "<anonymous>";
+	char const *this_name = this_param->afpb_name ? tpp_keyword_getcstr(this_param->afpb_name) : "<anonymous>";
+	tpp_warn_printf1(tpp_current_info(), "positional parameter %[%s%] following an optional/default parameter %[%s%]\n", this_name, opt_name);
+	tpp_do(DeeLexer_PrintSymbolDeclaration(tpp_current_lexer(), sym, tpp_current_printer(), tpp_current_printer_arg()));
+	if (!DeeAstLoc_IsEmpty(&opt_param->afp_base.afpb_loc)) {
+		tpp_lexer_printf_info opt_param_info;
+		tpp_lexer_printf_info_init_lc(&opt_param_info, DeeAstLoc_GetName(&opt_param->afp_base.afpb_loc), DeeAstLoc_GetLc(&opt_param->afp_base.afpb_loc));
+		tpp_warn_print_file_and_line(&opt_param_info);
+		tpp_warn_printf1(&opt_param_info, "see declaration of optional/default %[%s%]\n", opt_name);
+	}
+})
+#else /* CONFIG_EXPERIMENTAL_USE_STATELESS_PARSER */
+TPP_WARNING(TPP_W_RESERVED_ARGUMENT_NAME, 2(TPP_WG_RESERVED, TPP_WG_SYMBOL), 0(), TPP_WSTATE_WARN, "Argument name %[%s%] is a reserved identifier")
+TPP_WARNING(TPP_W_EXPECTED_KEYWORD_FOR_ARGUMENT_NAME, 1(TPP_WG_SYNTAX), 0(), TPP_WSTATE_ERROR, "Expected a keyword as argument name, but got %Pt")
+TPP_WARNING_EX(TPP_W_VARIABLE_ARGUMENT_ALREADY_DEFINED, 1(TPP_WG_SYNTAX), 0(), TPP_WSTATE_ERROR, {
+	struct symbol const *sym = tpp_current_va_arg(struct symbol const *);
+	tpp_warn_printf1(tpp_current_info(), "Variable arguments have already been defined as %[%s%]\n", SYMBOL_NAME(sym));
+	tpp_do(DeeLexer_PrintSymbolDeclaration(tpp_current_lexer(), sym, tpp_current_printer(), tpp_current_printer_arg()));
+})
+TPP_WARNING_EX(TPP_W_KEYWORD_ARGUMENT_ALREADY_DEFINED, 1(TPP_WG_SYNTAX), 0(), TPP_WSTATE_ERROR, {
+	struct symbol const *sym = tpp_current_va_arg(struct symbol const *);
+	tpp_warn_printf1(tpp_current_info(), "Keyword arguments have already been defined as %[%s%]\n", SYMBOL_NAME(sym));
+	tpp_do(DeeLexer_PrintSymbolDeclaration(tpp_current_lexer(), sym, tpp_current_printer(), tpp_current_printer_arg()));
+})
+TPP_WARNING_EX(TPP_W_EXPECTED_CONSTANT_EXPRESSION_FOR_ARGUMENT_DEFAULT, 2(TPP_WG_CONST, TPP_WG_VALUE), 0(), TPP_WSTATE_ERROR, {
+	struct symbol const *sym = tpp_current_va_arg(struct symbol const *);
+	tpp_warn_printf1(tpp_current_info(), "Expected a constant expression as default value for %[%s%]\n", SYMBOL_NAME(sym));
+	tpp_do(DeeLexer_PrintSymbolDeclaration(tpp_current_lexer(), sym, tpp_current_printer(), tpp_current_printer_arg()));
+})
+TPP_WARNING_EX(TPP_W_UNEXPECTED_DOTS_AFTER_VARARGS_OR_VARKWDS, 1(TPP_WG_SYNTAX), 0(), TPP_WSTATE_ERROR, {
+	struct symbol const *sym = tpp_current_va_arg(struct symbol const *);
+	tpp_warn_printf1(tpp_current_info(), "Variable argument modifier used after variable- or keyword argument %[%s%]\n", SYMBOL_NAME(sym));
+	tpp_do(DeeLexer_PrintSymbolDeclaration(tpp_current_lexer(), sym, tpp_current_printer(), tpp_current_printer_arg()));
+})
 TPP_WARNING_EX(TPP_W_POSITIONAL_ARGUMENT_AFTER_OPTIONAL_OR_DEFAULT, 1(TPP_WG_SYNTAX), 0(), TPP_WSTATE_ERROR, {
 	struct symbol const *sym = tpp_current_va_arg(struct symbol const *);
 	tpp_warn_printf1(tpp_current_info(), "Positional argument %[%s%] following an optional or default argument\n", SYMBOL_NAME(sym));
@@ -354,27 +429,6 @@ TPP_WARNING_EX(TPP_W_POSITIONAL_ARGUMENT_AFTER_VARKWDS, 1(TPP_WG_SYNTAX), 0(), T
 	tpp_warn_printf2(tpp_current_info(), "Positional argument %[%s%] following keyword arguments %[%s%]\n", SYMBOL_NAME(sym), SYMBOL_NAME(vsym));
 	tpp_do(DeeLexer_PrintSymbolDeclaration(tpp_current_lexer(), vsym, tpp_current_printer(), tpp_current_printer_arg()));
 })
-TPP_WARNING_EX(TPP_W_VARIABLE_ARGUMENT_ALREADY_DEFINED, 1(TPP_WG_SYNTAX), 0(), TPP_WSTATE_ERROR, {
-	struct symbol const *sym = tpp_current_va_arg(struct symbol const *);
-	tpp_warn_printf1(tpp_current_info(), "Variable arguments have already been defined as %[%s%]\n", SYMBOL_NAME(sym));
-	tpp_do(DeeLexer_PrintSymbolDeclaration(tpp_current_lexer(), sym, tpp_current_printer(), tpp_current_printer_arg()));
-})
-TPP_WARNING_EX(TPP_W_KEYWORD_ARGUMENT_ALREADY_DEFINED, 1(TPP_WG_SYNTAX), 0(), TPP_WSTATE_ERROR, {
-	struct symbol const *sym = tpp_current_va_arg(struct symbol const *);
-	tpp_warn_printf1(tpp_current_info(), "Keyword arguments have already been defined as %[%s%]\n", SYMBOL_NAME(sym));
-	tpp_do(DeeLexer_PrintSymbolDeclaration(tpp_current_lexer(), sym, tpp_current_printer(), tpp_current_printer_arg()));
-})
-TPP_WARNING(TPP_W_EXPECTED_KEYWORD_FOR_ARGUMENT_NAME, 1(TPP_WG_SYNTAX), 0(), TPP_WSTATE_ERROR, "Expected a keyword as argument name, but got %Pt")
-TPP_WARNING_EX(TPP_W_EXPECTED_CONSTANT_EXPRESSION_FOR_ARGUMENT_DEFAULT, 2(TPP_WG_CONST, TPP_WG_VALUE), 0(), TPP_WSTATE_ERROR, {
-	struct symbol const *sym = tpp_current_va_arg(struct symbol const *);
-	tpp_warn_printf1(tpp_current_info(), "Expected a constant expression as default value for %[%s%]\n", SYMBOL_NAME(sym));
-	tpp_do(DeeLexer_PrintSymbolDeclaration(tpp_current_lexer(), sym, tpp_current_printer(), tpp_current_printer_arg()));
-})
-TPP_WARNING_EX(TPP_W_UNEXPECTED_DOTS_AFTER_VARARGS_OR_VARKWDS, 1(TPP_WG_SYNTAX), 0(), TPP_WSTATE_ERROR, {
-	struct symbol const *sym = tpp_current_va_arg(struct symbol const *);
-	tpp_warn_printf1(tpp_current_info(), "Variable argument modifier used after variable- or keyword argument %[%s%]\n", SYMBOL_NAME(sym));
-	tpp_do(DeeLexer_PrintSymbolDeclaration(tpp_current_lexer(), sym, tpp_current_printer(), tpp_current_printer_arg()));
-})
 TPP_WARNING_EX(TPP_W_UNEXPECTED_OPTIONAL_AFTER_VARARGS_OR_VARKWDS, 1(TPP_WG_SYNTAX), 0(), TPP_WSTATE_ERROR, {
 	struct symbol const *sym = tpp_current_va_arg(struct symbol const *);
 	tpp_warn_printf1(tpp_current_info(), "Optional argument modifier used after variable- or keyword argument %[%s%]\n", SYMBOL_NAME(sym));
@@ -390,6 +444,7 @@ TPP_WARNING_EX(TPP_W_UNEXPECTED_DEFAULT_AFTER_OPTIONAL, 1(TPP_WG_SYNTAX), 0(), T
 	tpp_warn_printf1(tpp_current_info(), "Default value specified for optional argument %[%s%]\n", SYMBOL_NAME(sym));
 	tpp_do(DeeLexer_PrintSymbolDeclaration(tpp_current_lexer(), sym, tpp_current_printer(), tpp_current_printer_arg()));
 })
+#endif /* !CONFIG_EXPERIMENTAL_USE_STATELESS_PARSER */
 
 TPP_WARNING(TPP_W_VARIABLE_MODIFIER_DUPLICATED, 1(TPP_WG_SYNTAX), 0(), TPP_WSTATE_ERROR, "The variable modifier %Pt has already been used")
 TPP_WARNING(TPP_W_VARIABLE_MODIFIER_INCOMPATIBLE, 1(TPP_WG_SYNTAX), 0(), TPP_WSTATE_ERROR, "Variable modifier %Pt is incompatible with %[%s%]")
@@ -479,7 +534,6 @@ TPP_WARNING(TPP_W_UNUSED_ANNOTATION, 2(TPP_WG_SYNTAX, TPP_WG_QUALITY), 0(), TPP_
 /* Symbols */
 /*WARNING_NAMESPACE(WN_SYMBOLS, 2700)*/
 TPP_WARNING(TPP_W_RESERVED_SYMBOL_NAME, 2(TPP_WG_RESERVED, TPP_WG_SYMBOL), 0(), TPP_WSTATE_WARN, "Symbol name %[%s%] is a reserved identifier")
-TPP_WARNING(TPP_W_RESERVED_ARGUMENT_NAME, 2(TPP_WG_RESERVED, TPP_WG_SYMBOL), 0(), TPP_WSTATE_WARN, "Argument name %[%s%] is a reserved identifier")
 TPP_WARNING(TPP_W_RESERVED_MEMBER_NAME, 2(TPP_WG_RESERVED, TPP_WG_SYMBOL), 0(), TPP_WSTATE_WARN, "Member name %[%s%] is a reserved identifier")
 TPP_WARNING(TPP_W_RESERVED_ATTRIBUTE_NAME, 2(TPP_WG_RESERVED, TPP_WG_SYMBOL), 0(), TPP_WSTATE_WARN, "A reserved identifier is used in an attribute lookup. Consider using %[.operator . (\"%s\") instead%]")
 TPP_WARNING(TPP_W_UNKNOWN_NTH_SYMBOL, 1(TPP_WG_SYMBOL), 0(), TPP_WSTATE_ERROR, "Unknown %u-th symbol %Pt")

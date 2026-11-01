@@ -59,6 +59,13 @@ typedef struct Dee_parser {
 	uint_fast8_t p_flags; /* Parsing flags (set of `DeeParser_F_*`) */
 } DeeParser;
 
+/* Consume annotation flags (preventing warnings about unused annotations)
+ * Returns `true` if the resp. annotation was present (and consumed) */
+#define DeeParser_ConsumeAnnotation_Likely(self)   false
+#define DeeParser_ConsumeAnnotation_Unlikely(self) false
+#define DeeParser_ConsumeAnnotation_Copyable(self) false
+#define DeeParser_ConsumeAnnotation_ThisCall(self) false
+
 /* Describe a region of code where `TPP_TOK_LF` should not be produced. */
 #define DeeParser_NoLf_Push(self)                                                           \
 	do {                                                                                    \
@@ -155,36 +162,98 @@ DeeLexer_GetModuleSymbol(DeeLexer *__restrict self,
 	DeeLexer_GetModuleSymbol(&(self)->p_lexer, mod, symbol_name)
 
 /************************************************************************/
+/* file: ../../../src/deemon/compiler/parser/typedef.c                 */
+/************************************************************************/
+INTDEF WUNUSED NONNULL((1, 2)) int DFCALL DeeParser_ParseTypeDef(DeeParser *__restrict self, /*out*/ struct Dee_ast_typedef *__restrict result);
+
+/************************************************************************/
 /* file: ../../../src/deemon/compiler/parser/operator.c                 */
 /************************************************************************/
-INTDEF WUNUSED NONNULL((1, 2)) int DFCALL DeeParser_ParseOperatorName(DeeParser *__restrict self, /*out*/struct Dee_ast_operator_id *__restrict result);
+INTDEF WUNUSED NONNULL((1, 2)) int DFCALL DeeParser_ParseOperatorName(DeeParser *__restrict self, /*out*/ struct Dee_ast_operator_id *__restrict result);
+
+/************************************************************************/
+/* file: ../../../src/deemon/compiler/parser/function.c                 */
+/************************************************************************/
+struct Dee_ast_function_builder {
+	DeeAst                             *afb_func;      /* [0..afb_paramc][owned] The function AST being built */
+	size_t                              afb_argc_min;  /* Min # of parameters */
+	size_t                              afb_argc_max;  /* Used # of parameters (== argc_max) */
+	size_t                              afb_argc_alc;  /* Allocated # of parameters */
+	Dee_ast_function_flag               afb_flag;      /* Function flags */
+	struct Dee_ast_function_param_base *afb_varargs;   /* [0..1][owned] Parameter for `varargs...` parameter (or `NULL` if function doesn't take varargs) */
+	struct Dee_ast_function_param_base *afb_varkwds;   /* [0..1][owned] Parameter for `**varkwds` parameter (or `NULL` if function doesn't take varkwds) */
+	bool                                afb_hasreturn; /* True if `DeeAst_GetFunctionReturnTypedef()` is initialized */
+};
+
+#define Dee_ast_function_builder_init(self)                      \
+	(void)((self)->afb_func      = NULL,                         \
+	       (self)->afb_argc_min  = 0,                            \
+	       (self)->afb_argc_max  = 0,                            \
+	       (self)->afb_flag      = Dee_AST_FUNCTION_FLAG_NORMAL, \
+	       (self)->afb_varargs   = NULL,                         \
+	       (self)->afb_varkwds   = NULL,                         \
+	       (self)->afb_hasreturn = false)
+INTDEF NONNULL((1)) void DCALL
+Dee_ast_function_builder_fini(struct Dee_ast_function_builder *__restrict self);
+
+/* Consume function-related @attributes from `parser` */
+#define Dee_ast_function_builder_consume_attr(self, parser)     \
+	do {                                                        \
+		if (DeeParser_ConsumeAnnotation_Copyable(parser))       \
+			(self)->afb_flag |= Dee_AST_FUNCTION_FLAG_COPYABLE; \
+		if (DeeParser_ConsumeAnnotation_ThisCall(parser))       \
+			(self)->afb_flag |= Dee_AST_FUNCTION_FLAG_THISCALL; \
+	}	__WHILE0
+
+
+/* Package a function builder into a proper AST. The caller should still add
+ * location info to the returned AST, as it comes without any by default. */
+INTDEF WUNUSED NONNULL((1, 3)) DeeAst *DCALL
+Dee_ast_function_builder_pack(/*inherit(always)*/ struct Dee_ast_function_builder *__restrict self,
+                              tpp_keyword const *opt_name, /*inherit(always)*/ DeeAst *__restrict body);
+
+typedef uint_fast8_t Dee_parser_functionparam_flag;
+#define Dee_PARSER_FUNCTIONPARAM_FLAG_NORMAL     Dee_AST_SYMREF_BYNAME_FLAG_NORMAL
+#define Dee_PARSER_FUNCTIONPARAM_FLAG_GOTFINAL   Dee_AST_SYMREF_BYNAME_FLAG_FINAL   /* `final` encountered */
+#define Dee_PARSER_FUNCTIONPARAM_FLAG_GOTVARYING Dee_AST_SYMREF_BYNAME_FLAG_VARYING /* `varying` encountered */
+#define Dee_PARSER_FUNCTIONPARAM_FLAG_GOTLOCAL   0x04                               /* `local` encountered */
+
+/* Parse a function parameter;
+ * >> function(a: int = 42) { ... }
+ * >> function(b?: int) { ... }
+ * >> function(varargs...: {Object...}) { ... }
+ * >> function(...: {Object...}) { ... }
+ * >> function(**varkwds: {string: Object}) { ... }
+ *
+ * - In all examples, enter after `function(` and exit *on* `)`
+ * - Only parses at most 1 parameter.
+ * - Safely handles cases where `pack` causes a lack of a closing `)`
+ *
+ * @return: 0 : Success
+ * @return: -1: Error */
+INTDEF WUNUSED NONNULL((1, 2)) int DFCALL
+DeeParser_ParseFunctionParam(DeeParser *__restrict self,
+                             struct Dee_ast_function_builder *__restrict builder,
+                             Dee_parser_functionparam_flag flag);
+
+/* Check if the current token is `:`, and if so: parse the return-type expression for `builder`
+ * The caller must ensure that this function is called at most once for any `builder`.
+ *
+ * @return: 0 : Success
+ * @return: -1: Error */
+INTDEF WUNUSED NONNULL((1, 2)) int DFCALL
+DeeParser_MaybeParseFunctionReturnType(DeeParser *__restrict self,
+                                       struct Dee_ast_function_builder *__restrict builder);
+
+/* Parse a function declaration, starting at the `function` keyword. */
+INTDEF WUNUSED NONNULL((1)) DeeAst *DFCALL
+DeeParser_ParseFunction(DeeParser *__restrict self);
+
 
 /************************************************************************/
 /* file: ../../../src/deemon/compiler/parser/expression.c               */
 /************************************************************************/
-#define TPP_CASE_TPP_TOK_UNARY_OPERATOR \
-	case '#':                           \
-	case '~':                           \
-	case '+':                           \
-	case '-':                           \
-	case '!':                           \
-	case TPP_TOK_PLUS_PLUS:             \
-	case TPP_TOK_MINUS_MINUS:
-#define TPP_TOK_IS_UNARY_OPERATOR(tok)               \
-	((tok) == '#' || (tok) == '~' || (tok) == '+' || \
-	 (tok) == '-' || (tok) == '!' ||                 \
-	 (tok) == TPP_TOK_PLUS_PLUS ||                   \
-	 (tok) == TPP_TOK_MINUS_MINUS)
-
-INTDEF WUNUSED NONNULL((1)) DeeAst *DFCALL DeeParser_ParseUnaryInt(DeeParser *__restrict self); /* TPP_CASE_TPP_TOK_INT */
-INTDEF WUNUSED NONNULL((1)) DeeAst *DFCALL DeeParser_ParseUnaryCharacterLiteral(DeeParser *__restrict self); /* TPP_CASE_TPP_TOK_STRING (DeeParser_Has(self, CHARACTER_LITERALS)) */
-INTDEF WUNUSED NONNULL((1)) DeeAst *DFCALL DeeParser_ParseUnaryString(DeeParser *__restrict self); /* Parse a TPP_TOK_ISSTRING()-like token into an AST (includes template string handling) */
-INTDEF WUNUSED NONNULL((1)) DeeAst *DFCALL DeeParser_ParseUnaryFloat(DeeParser *__restrict self); /* TPP_CASE_TPP_TOK_FLOAT */
-INTDEF WUNUSED NONNULL((1)) DeeAst *DFCALL DeeParser_ParseUnaryBuiltinConstant(DeeParser *__restrict self); /* TPP_TOK_IS_UNARY_BUILTIN_CONSTANT */
-INTDEF WUNUSED NONNULL((1)) DeeAst *DFCALL DeeParser_ParseUnaryBound(DeeParser *__restrict self); /* TPP_KWD_bound `bound(expr)` */
-INTDEF WUNUSED NONNULL((1)) DeeAst *DFCALL DeeParser_ParseUnaryBuiltinFunction(DeeParser *__restrict self); /* TPP_TOK_IS_UNARY_BUILTIN_FUNCTION */
-INTDEF WUNUSED NONNULL((1)) DeeAst *DFCALL DeeParser_ParseUnaryOperator(DeeParser *__restrict self); /* TPP_TOK_IS_UNARY_OPERATOR */
-INTDEF WUNUSED NONNULL((1)) DeeAst *DFCALL DeeParser_ParseUnaryCell(DeeParser *__restrict self); /* '<' + TPP_TOK_MC_STARTSWITH_LANGLE */
+INTDEF ATTR_CONST WUNUSED bool DFCALL TPP_TOK_MAYBE_EXPR_START(tpp_token_id tok);
 INTDEF WUNUSED NONNULL((1)) DeeAst *DFCALL DeeParser_ParseUnaryHead(DeeParser *__restrict self);
 INTDEF WUNUSED NONNULL((1, 2)) DeeAst *DFCALL DeeParser_ParseUnaryOperand(DeeParser *__restrict self, /*inherit(always)*/ DeeAst *__restrict lhs);
 INTDEF WUNUSED NONNULL((1)) DeeAst *DFCALL DeeParser_ParseUnary(DeeParser *__restrict self);
@@ -205,6 +274,78 @@ INTDEF WUNUSED NONNULL((1, 2)) DeeAst *DFCALL DeeParser_ParseAssignOperand(DeePa
 #define DeeParser_ParseExprOperand DeeParser_ParseAssignOperand /* Parse operand of expression */
 
 INTDEF WUNUSED NONNULL((1)) DeeAst *DFCALL DeeParser_ParseExpr(DeeParser *__restrict self);
+
+struct Dee_ast_comma_builder {
+	DeeAst                         *acb_multi;   /* [0..acb_multi_c] Uninitialized `Dee_AST_MULTI` describing result (first `acb_multi_c` elem are initialized) */
+	size_t                          acb_multi_c; /* Used # of elements in `acb_multi` (both committed, and uncommitted) */
+	size_t                          acb_multi_a; /* Allocated # of elements in `acb_multi` */
+	enum Dee_ast_symref_byname_kind acb_symref_byname_kind; /* Variable declaration prefix (or `Dee_AST_SYMREF_BYNAME_KIND_AUTO` if no prefix) */
+	Dee_ast_symref_byname_flag      acb_symref_byname_flag; /* Variable declaration flags */
+	uint_fast8_t                    acb_flags;   /* Parser state flags (set of `Dee_AST_COMMA_BUILDER_FLAG_*`) */
+#define Dee_AST_COMMA_BUILDER_FLAG_NORMAL 0x00 /* Normal flags */
+#define Dee_AST_COMMA_BUILDER_FLAG_NOFUNC 0x01 /* Encountered something implying that this isn't a parameter-list
+                                                * When not set, `Dee_ast_function_builder_fromcomma()` can be used:
+                                                * - `a`                (flag not set)
+                                                * - `a, b`             (flag not set)
+                                                * - `a, b = 10`        (flag not set)
+                                                * - `a, b = 10...`     (flag not set)
+                                                * - `a, b = 10..., c`  (flag set)
+                                                * - `a, (b)`           (flag set)
+                                                * - `a, b?:c`          (flag not set)
+                                                * - `a, (b?:c)`        (flag set) */
+#define Dee_AST_COMMA_BUILDER_FLAG_LOCAL  0x02 /* `local` was explicitly written for `acb_symref_byname_kind` */
+};
+
+/* Transform a `Dee_ast_comma_builder` into a `Dee_ast_function_builder`. This
+ * function may only be used when `Dee_AST_COMMA_BUILDER_FLAG_NOFUNC` isn't set.
+ *
+ * @return: 0 : Success
+ * @return: -1: Error */
+INTDEF WUNUSED NONNULL((1, 2)) int DFCALL
+Dee_ast_function_builder_fromcomma(/*out*/ struct Dee_ast_function_builder *__restrict self,
+                                   /*inherit(always)*/ struct Dee_ast_comma_builder *__restrict from);
+
+
+/* HINT: `DeeParser_ParseCommaOperand()` also deals with stuff like `a, b, c = init...` */
+INTDEF WUNUSED NONNULL((1, 2)) DeeAst *DFCALL
+DeeParser_ParseCommaOperand(DeeParser *__restrict self,
+                            /*inherit(always)*/ DeeAst *__restrict lhs,
+                            enum Dee_ast_multi_kind kind);
+
+INTDEF WUNUSED NONNULL((1)) DeeAst *DFCALL
+DeeParser_ParseExprComma(DeeParser *__restrict self,
+                         enum Dee_ast_multi_kind kind);
+#define Dee_PARSER_PARSEEXPRCOMMA_NORMAL      0x00
+#define Dee_PARSER_PARSEEXPRCOMMA_FORCEMULTI  0x01 /* Always return a Dee_AST_MULTI as per `kind` */
+#define Dee_PARSER_PARSEEXPRCOMMA_ALLOWDECLS  0x02 /* DeeParser_ParseExprComma-only: Allow `local`, `global`, `static`, `__stack`, `final`, `varying`, as well as @attributes and typedefs */
+#define Dee_PARSER_PARSEEXPRCOMMA_PARSESEMI   0x04 /* Parse a trailing `;` */
+#define Dee_PARSER_PARSEEXPRCOMMA_NOTRILCOMMA 0x08 /* Don't consume an unused, trailing `,` */
+
+#define Dee_PARSER_PARSEEXPRCOMMA_ALLOWKWDLIST  0x1000 /* Stop if what a keyword list label is encountered. */
+
+
+/* Call after having parsed a `{` that can either be treated as the start
+ * of a statement-scope, or the start of a `{...}`-style sequence. This
+ * function will continue parsing until an unmatched `}`-token is reached,
+ * and must be called while the current token is `{`
+ *
+ * Examples:
+ * >> ({ 42 })       ->   Dee_AST_MULTI:Dee_AST_MULTI_KIND_GENERIC_SEQ { Dee_AST_CONST:42 }
+ *     ^     ^
+ *     enter exit
+ *
+ * >> ({ 42; })      ->  Dee_AST_ACT1_SCOPE { Dee_AST_MULTI:Dee_AST_MULTI_KIND_LAST { Dee_AST_CONST:42 } }
+ *     ^      ^
+ *     enter  exit
+ *
+ * If the AST was parsed as parsed as a statement, use
+ * `DeeParser_ParseStatementsOrBraces_WASSTMT()` */
+INTDEF WUNUSED NONNULL((1)) DeeAst *DFCALL
+DeeParser_ParseStatementsOrBraces(DeeParser *__restrict self);
+#define DeeParser_ParseStatementsOrBraces_WASSTMT(returned_ast) \
+	((returned_ast)->a_kind == Dee_AST_ACT1_SCOPE)
+
+
 
 #else /* CONFIG_EXPERIMENTAL_USE_STATELESS_PARSER */
 

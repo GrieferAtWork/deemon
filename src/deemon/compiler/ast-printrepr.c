@@ -88,6 +88,7 @@ Dee_link_symbol_printrepr(struct Dee_link_symbol const *__restrict self,
                           Dee_ast_printrepr_flag flag,
                           Dee_formatprinter_t printer, void *arg) {
 	(void)self;
+	(void)flag;
 	/* TODO */
 	return DeeFormat_PRINT(printer, arg, "<link-symbol>");
 }
@@ -153,12 +154,10 @@ Dee_ast_symref_printrepr(struct Dee_ast_symref const *__restrict self,
 		                        tpp_keyword_getcstr(self->asr_data.asr_nth.asrnt_name),
 		                        (flag & Dee_AST_PRINTREPR_FLAG_PAREN) ? ")" : "");
 	case Dee_AST_SYMREF_KIND_EXTERN:
-		return DeeFormat_Printf(printer, arg, "%s%$s from %$q%s",
+		return DeeFormat_Printf(printer, arg, "%s%s from %q%s",
 		                        (flag & Dee_AST_PRINTREPR_FLAG_PAREN) ? "(" : "",
-		                        tpp_keyword_getlen(self->asr_data.asr_extern.asrex_name),
-		                        tpp_keyword_getcstr(self->asr_data.asr_extern.asrex_name),
-		                        self->asr_data.asr_extern.asrex_modname_len,
-		                        (char const *)self->asr_data.asr_extern.asrex_modname_str,
+		                        self->asr_data.asr_extern.asrex_sym->ss_name,
+		                        DeeModule_GetShortName(self->asr_data.asr_extern.asrex_mod),
 		                        (flag & Dee_AST_PRINTREPR_FLAG_PAREN) ? ")" : "");
 	case Dee_AST_SYMREF_KIND_THIS:
 		return DeeFormat_PRINT(printer, arg, "this");
@@ -166,6 +165,8 @@ Dee_ast_symref_printrepr(struct Dee_ast_symref const *__restrict self,
 		return DeeFormat_PRINT(printer, arg, "<tp-this>");
 	case Dee_AST_SYMREF_KIND_THISMOD:
 		return DeeFormat_PRINT(printer, arg, "import(\".\")");
+	case Dee_AST_SYMREF_KIND_VARARGS:
+		return DeeFormat_PRINT(printer, arg, "(...)");
 	default: __builtin_unreachable();
 	}
 	__builtin_unreachable();
@@ -302,10 +303,10 @@ err_temp:
 /* Wrap something that can only be printed as a statement, inside of an expression... */
 PRIVATE ATTR_NOINLINE WUNUSED NONNULL((3, 5)) Dee_ssize_t DCALL
 DeeAst_PrintRepr_stmt_as_expr_start(size_t indent_level, Dee_formatprinter_t printer, void *arg) {
-	Dee_ssize_t temp, result = DeeFormat_PRINT(printer, arg, "({\n");
+	Dee_ssize_t temp, result = DeeFormat_PRINT(printer, arg, "({ // NOSCOPE\n");
 	if unlikely(result < 0)
 		goto done;
-	EDO(err_temp, DeeFormat_Repeat(printer, arg, '\t', indent_level));
+	EDO(err_temp, DeeFormat_Repeat(printer, arg, '\t', indent_level + 1));
 done:
 	return result;
 err_temp:
@@ -444,9 +445,11 @@ err_temp:
 
 PRIVATE ATTR_NOINLINE WUNUSED NONNULL((4)) Dee_ssize_t DCALL
 DeeAst_PrintRepr_impl_multi_as_stmt_brace(size_t count, DeeAst const *const *elem,
-                                          size_t indent_level,
+                                          size_t indent_level, bool has_scope,
                                           Dee_formatprinter_t printer, void *arg) {
-	Dee_ssize_t temp, result = DeeFormat_PRINT(printer, arg, "{\n");
+	Dee_ssize_t temp, result;
+	result = has_scope ? DeeFormat_PRINT(printer, arg, "{")
+	                   : DeeFormat_PRINT(printer, arg, "{ // NOSCOPE\n");
 	if unlikely(result < 0)
 		goto done;
 	EDO(err_temp, DeeFormat_Repeat(printer, arg, '\t', indent_level));
@@ -462,12 +465,12 @@ err_temp:
 
 PRIVATE ATTR_NOINLINE WUNUSED NONNULL((4)) Dee_ssize_t DCALL
 DeeAst_PrintRepr_impl_multi_as_stmt_in_expr(size_t count, DeeAst const *const *elem,
-                                            size_t indent_level,
+                                            size_t indent_level, bool has_scope,
                                             Dee_formatprinter_t printer, void *arg) {
 	Dee_ssize_t temp, result = DeeFormat_PRINT(printer, arg, "(");
 	if unlikely(result < 0)
 		goto done;
-	EDO(err_temp, DeeAst_PrintRepr_impl_multi_as_stmt_brace(count, elem, indent_level, printer, arg));
+	EDO(err_temp, DeeAst_PrintRepr_impl_multi_as_stmt_brace(count, elem, indent_level, has_scope, printer, arg));
 	EDO(err_temp, DeeFormat_PRINT(printer, arg, ")"));
 done:
 	return result;
@@ -941,6 +944,8 @@ DeeAst_PrintRepr_impl_function_params(struct Dee_ast_function const *__restrict 
 		if (i != 0)
 			EDO(err_temp, DeeFormat_PRINT(printer, arg, ", "));
 		EDO(err_temp, Dee_ast_typedef_print_docstring(&this_param->afp_base.afpb_typedef, indent_level, printer, arg));
+		if (this_param->afp_base.afpb_flag & Dee_AST_SYMREF_BYNAME_FLAG_FINAL)
+			EDO(err_temp, DeeFormat_PRINT(printer, arg, "final "));
 		EDO(err_temp, tpp_keyword_print(this_param->afp_base.afpb_name, printer, arg));
 		if (this_param->afp_default == NULL && i > self->af_argc_min)
 			EDO(err_temp, DeeFormat_PRINT(printer, arg, "?"));
@@ -1952,15 +1957,23 @@ DeeAst_PrintRepr_impl_operator(struct Dee_ast_operator const *__restrict self,
 		goto done;
 	}
 
-	result = DeeFormat_PRINT(printer, arg, "({ local <postop-temp> = copy(");
+	result = DeeAst_PrintRepr_stmt_as_expr_start(indent_level, printer, arg);
+	if unlikely(result < 0)
+		goto done;
+	result = DeeFormat_PRINT(printer, arg, "local <postop-temp> = copy(");
 	if unlikely(result < 0)
 		goto done;
 	EDO(err_temp, DeeAst_PrintRepr(self->ao_argv[0], Dee_AST_PRINTREPR_FLAG_ASEXPR,
-	                               indent_level, printer, arg));
-	EDO(err_temp, DeeFormat_PRINT(printer, arg, "); "));
+	                               indent_level + 1, printer, arg));
+	EDO(err_temp, DeeFormat_PRINT(printer, arg, ");\n"));
+	EDO(err_temp, DeeFormat_Repeat(printer, arg, '\t', indent_level + 1));
 	EDO(err_temp, DeeAst_PrintRepr_impl_operator_nopostop(self, Dee_AST_PRINTREPR_FLAG_ASEXPR,
-	                                                      indent_level, "<postop-temp>", printer, arg));
-	EDO(err_temp, DeeFormat_PRINT(printer, arg, "; <postop-temp>; })"));
+	                                                      indent_level + 1, "<postop-temp>",
+	                                                      printer, arg));
+	EDO(err_temp, DeeFormat_PRINT(printer, arg, ";\n"));
+	EDO(err_temp, DeeFormat_Repeat(printer, arg, '\t', indent_level + 1));
+	EDO(err_temp, DeeFormat_PRINT(printer, arg, "<postop-temp>;"));
+	EDO(err_temp, DeeAst_PrintRepr_stmt_as_expr_end(indent_level, printer, arg));
 done:
 	return result;
 err_temp:
@@ -2013,11 +2026,39 @@ DeeAst_PrintRepr_impl_printact(DeeAst const *file_arg, DeeAst const *print_args,
 	Dee_ssize_t temp, result;
 	if (flag & Dee_AST_PRINTREPR_FLAG_ASEXPR)
 		return DeeAst_PrintRepr_impl_printact_impl(file_arg, print_args, is_print_ln, indent_level, printer, arg);
-	result = DeeFormat_PRINT(printer, arg, "({ ");
+	result = DeeAst_PrintRepr_stmt_as_expr_start(indent_level, printer, arg);
 	if unlikely(result < 0)
 		goto done;
-	EDO(err_temp, DeeAst_PrintRepr_impl_printact_impl(file_arg, print_args, is_print_ln, indent_level, printer, arg));
-	EDO(err_temp, DeeFormat_PRINT(printer, arg, " })"));
+	EDO(err_temp, DeeAst_PrintRepr_impl_printact_impl(file_arg, print_args, is_print_ln, indent_level + 1, printer, arg));
+	EDO(err_temp, DeeAst_PrintRepr_stmt_as_expr_end(indent_level, printer, arg));
+done:
+	return result;
+err_temp:
+	return temp;
+}
+
+PRIVATE ATTR_NOINLINE WUNUSED NONNULL((1, 3)) Dee_ssize_t DCALL
+DeeAst_PrintRepr_impl_del_stmt(DeeAst const *__restrict expr, size_t indent_level,
+                               Dee_formatprinter_t printer, void *arg) {
+	Dee_ssize_t temp, result = DeeFormat_PRINT(printer, arg, "del ");
+	if unlikely(result < 0)
+		goto done;
+	EDO(err_temp, DeeAst_PrintRepr(expr, Dee_AST_PRINTREPR_FLAG_ASEXPR, indent_level, printer, arg));
+	EDO(err_temp, DeeFormat_PRINT(printer, arg, ";"));
+done:
+	return result;
+err_temp:
+	return temp;
+}
+
+PRIVATE ATTR_NOINLINE WUNUSED NONNULL((1, 3)) Dee_ssize_t DCALL
+DeeAst_PrintRepr_impl_del_stmt_asexpr(DeeAst const *__restrict expr, size_t indent_level,
+                                      Dee_formatprinter_t printer, void *arg) {
+	Dee_ssize_t temp, result = DeeAst_PrintRepr_stmt_as_expr_start(indent_level, printer, arg);
+	if unlikely(result < 0)
+		goto done;
+	EDO(err_temp, DeeAst_PrintRepr_impl_del_stmt(expr, indent_level + 1, printer, arg));
+	EDO(err_temp, DeeAst_PrintRepr_stmt_as_expr_end(indent_level, printer, arg));
 done:
 	return result;
 err_temp:
@@ -2034,6 +2075,24 @@ DeeAst_PrintRepr_impl_act1(enum Dee_ast_kind act1_kind,
 	char const *unary_suffix;
 	size_t unary_prefix_len;
 	switch (act1_kind) {
+	case Dee_AST_ACT1_SCOPE: {
+		if (argv0->a_kind == Dee_AST_MULTI) {
+			size_t count = argv0->a_data.ad_multi.am_count;
+			DeeAst const *const *elem = argv0->a_data.ad_multi.am_elem;
+			if (flag & Dee_AST_PRINTREPR_FLAG_ASEXPR) {
+				return DeeAst_PrintRepr_impl_multi_as_stmt_in_expr(count, elem, indent_level,
+				                                                   true, printer, arg);
+			}
+			return DeeAst_PrintRepr_impl_multi_as_stmt_brace(count, elem, indent_level,
+			                                                 true, printer, arg);
+		}
+		if (flag & Dee_AST_PRINTREPR_FLAG_ASEXPR) {
+			return DeeAst_PrintRepr_impl_multi_as_stmt_in_expr(1, (DeeAst const *const *)&argv0,
+			                                                   indent_level, true, printer, arg);
+		}
+		return DeeAst_PrintRepr_impl_multi_as_stmt_brace(1, (DeeAst const *const *)&argv0,
+		                                                 indent_level, true, printer, arg);
+	}	break;
 	case Dee_AST_ACT1_PRINT:
 		return DeeAst_PrintRepr_impl_printact(NULL, argv0, false, flag, indent_level, printer, arg);
 	case Dee_AST_ACT1_PRINTLN:
@@ -2045,6 +2104,12 @@ DeeAst_PrintRepr_impl_act1(enum Dee_ast_kind act1_kind,
 	case Dee_AST_ACT1_ASSERT: unary_prefix = "assert("; goto do_unary_prefix;
 	case Dee_AST_ACT1_DEEPCOPY: unary_prefix = "deepcopy("; goto do_unary_prefix;
 	case Dee_AST_ACT1_UNPACK: unary_suffix = "..."; goto do_unary_suffix;
+	case Dee_AST_ACT1_DEL:
+		if (flag & Dee_AST_PRINTREPR_FLAG_ASEXPR)
+			return DeeAst_PrintRepr_impl_del_stmt_asexpr(argv0, indent_level, printer, arg);
+		return DeeAst_PrintRepr_impl_del_stmt(argv0, indent_level, printer, arg);
+	case Dee_AST_ACT1_UNBIND: unary_prefix = "del("; goto do_unary_prefix;
+	case Dee_AST_ACT1_BOUND: unary_prefix = "bound("; goto do_unary_prefix;
 	default: __builtin_unreachable();
 	}
 	__builtin_unreachable();
@@ -2208,7 +2273,9 @@ DeeAst_PrintRepr_impl_act2(enum Dee_ast_kind act2_kind,
 	case Dee_AST_ACT2_AS: binary_repr = " as "; goto do_binary_repr;
 	case Dee_AST_ACT2_SAMEOBJ: binary_repr = " === "; goto do_binary_repr;
 	case Dee_AST_ACT2_DIFFOBJ: binary_repr = " !== "; goto do_binary_repr;
-		break;
+	case Dee_AST_ACT2_STORE: binary_repr = " = "; goto do_binary_repr;
+	case Dee_AST_ACT2_INIT: binary_repr = " <INIT>= "; goto do_binary_repr;
+	case Dee_AST_ACT2_XCH: binary_repr = " <XCH>= "; goto do_binary_repr;
 	default: __builtin_unreachable();
 	}
 do_binary_repr:
@@ -2278,17 +2345,15 @@ DeeAst_PrintRepr_impl(DeeAst const *__restrict self,
 		size_t count = self->a_data.ad_multi.am_count;
 		DeeAst const *const *elem = self->a_data.ad_multi.am_elem;
 		switch (self->a_data.ad_multi.am_kind) {
-		case Dee_AST_MULTI_KIND_KEEPLAST:
+		case Dee_AST_MULTI_KIND_LAST:
 			if (!(flag & (Dee_AST_PRINTREPR_FLAG_ASEXPR | Dee_AST_PRINTREPR_FLAG_ASSTMT))) {
 				/* Special case: brace-less multi-statements are allowed */
 				return DeeAst_PrintRepr_impl_multi_as_stmt(count, elem, indent_level, printer, arg);
 			}
-			ATTR_FALLTHROUGH
-		case Dee_AST_MULTI_KIND_SCOPE: {
 			if (flag & Dee_AST_PRINTREPR_FLAG_ASEXPR)
-				return DeeAst_PrintRepr_impl_multi_as_stmt_in_expr(count, elem, indent_level, printer, arg);
-			return DeeAst_PrintRepr_impl_multi_as_stmt_brace(count, elem, indent_level, printer, arg);
-		}	break;
+				return DeeAst_PrintRepr_impl_multi_as_stmt_in_expr(count, elem, indent_level, false, printer, arg);
+			return DeeAst_PrintRepr_impl_multi_as_stmt_brace(count, elem, indent_level, false, printer, arg);
+
 		case Dee_AST_MULTI_KIND_GENERIC_SEQ:
 			result = DeeAst_PrintRepr_impl_multi_as_seq(count, elem, indent_level, printer, arg, '{', '}');
 			goto maybe_print_semicolon;
@@ -2490,15 +2555,11 @@ DeeAst_PrintRepr_impl(DeeAst const *__restrict self,
 		return DeeFormat_PRINT(printer, arg, "TODO");
 	case Dee_AST_SYMBOL_INIT:
 		return DeeFormat_PRINT(printer, arg, "TODO");
-	case Dee_AST_SYMREF_RD:
+	case Dee_AST_SYMREF:
 		return DeeFormat_PRINT(printer, arg, "TODO");
-	case Dee_AST_SYMREF_BND:
+	case Dee_AST_SYMREF_ALIAS:
 		return DeeFormat_PRINT(printer, arg, "TODO");
-	case Dee_AST_SYMREF_DEL:
-		return DeeFormat_PRINT(printer, arg, "TODO");
-	case Dee_AST_SYMREF_WR:
-		return DeeFormat_PRINT(printer, arg, "TODO");
-	case Dee_AST_SYMREF_XCH:
+	case Dee_AST_IMPORT_STAR:
 		return DeeFormat_PRINT(printer, arg, "TODO");
 
 	case Dee_AST_GOTO: {
