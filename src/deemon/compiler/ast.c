@@ -1150,16 +1150,17 @@ err:
 	return NULL;
 }
 
-INTERN WUNUSED NONNULL((1)) DeeAst *DCALL
+INTERN WUNUSED NONNULL((1, 2)) DeeAst *DCALL
 DeeAst_NewSymRefNth_(tpp_keyword const *__restrict name,
-                     Dee_ast_symref_nth_id nth_id DeeAst__DBG_PARAMS) {
+                     /*inherit(always)*/ DeeAst *__restrict nth DeeAst__DBG_PARAMS) {
 	DeeAst *result = DeeAst_Dbg_MallocUninitializedSymref(DBG_file, DBG_line);
 	if unlikely(!result)
 		goto err;
 	_DeeAst_InitCommon(result, Dee_AST_SYMREF);
-	Dee_ast_symref_init_nth(&result->a_data.ad_symref, name, nth_id);
+	Dee_ast_symref_init_nth(&result->a_data.ad_symref, name, nth);
 	return result;
 err:
+	DeeAst_Destroy(nth);
 	return NULL;
 }
 
@@ -1197,81 +1198,118 @@ INTERN WUNUSED NONNULL((1)) DeeAst *DCALL DeeAst_AddDefaultLabel_(/*inherit(alwa
 
 
 /* Misc. helpers... */
-INTERN WUNUSED NONNULL((1)) DeeAst *DCALL
-DeeAst_NewCall_(/*inherit(always)*/ DeeAst *__restrict func, size_t argc,
-                /*inherit(always)*/ DeeAst *const *argv DeeAst__DBG_PARAMS) {
+INTERN WUNUSED NONNULL((2)) DeeAst *DCALL
+DeeAst_MakeCall_(/*0..1*/ DeeAstLoc const *loc,
+                 /*inherit(always)*/ DeeAst *__restrict func, size_t argc,
+                 /*inherit(always)*/ DeeAst *const *argv DeeAst__DBG_PARAMS) {
+	DeeAst *result;
 	DeeAst *call_args = DeeAst_NewMulti_(Dee_AST_MULTI_KIND_TUPLE, argc, argv DBG__args);
 	if unlikely(!call_args)
 		goto err_func;
-	return DeeAst_NewOperator2_(OPERATOR_CALL, func, call_args DBG__args);
+	if (loc != NULL)
+		DeeAst_SetLoc(call_args, loc);
+	result = DeeAst_NewOperator2_(OPERATOR_CALL, func, call_args DBG__args);
+	if unlikely(!result)
+		goto err;
+	if (loc != NULL)
+		DeeAst_SetLoc(result, loc);
+	return result;
 err_func:
 	DeeAst_Destroy(func);
-/*err:*/
+err:
 	return NULL;
 }
 
-INTERN WUNUSED NONNULL((1, 2)) DeeAst *DCALL
-DeeAst_NewCallSymRefExtern_(/*inherit(always)*/ DREF struct Dee_module_object *__restrict mod,
-                            struct Dee_module_symbol *__restrict sym,
-                            size_t argc, /*inherit(always)*/ DeeAst *const *argv DeeAst__DBG_PARAMS) {
+INTERN WUNUSED NONNULL((2, 3)) DeeAst *DCALL
+DeeAst_MakeCallSymRefExtern_(/*0..1*/ DeeAstLoc const *loc,
+                             /*inherit(always)*/ DREF struct Dee_module_object *__restrict mod,
+                             struct Dee_module_symbol *__restrict sym,
+                             size_t argc, /*inherit(always)*/ DeeAst *const *argv DeeAst__DBG_PARAMS) {
 	DeeAst *func = DeeAst_NewSymRefExtern_(mod, sym DBG__args);
 	if unlikely(!func)
 		goto err_argv;
-	return DeeAst_NewCall_(func, argc, argv DBG__args);
+	if (loc != NULL)
+		DeeAst_SetLoc(func, loc);
+	return DeeAst_MakeCall_(loc, func, argc, argv DBG__args);
 err_argv:
 	DeeAst_Destroyv(argv, argc);
 /*err:*/
 	return NULL;
 }
 
-INTERN WUNUSED NONNULL((1, 2)) DeeAst *DCALL
-DeeAst_NewImportModule_(/*inherit(always)*/ DeeAst *__restrict module_name DeeAst__DBG_PARAMS) {
+INTERN WUNUSED NONNULL((2)) DeeAst *DCALL
+DeeAst_MakeImportModule_(DeeAstLoc const *__restrict loc,
+                         /*inherit(always)*/ DeeAst *__restrict module_name
+                         DeeAst__DBG_PARAMS) {
 	DeeAst *import_argv[2];
 	import_argv[0] = DeeAst_NewSymRefThisModule();
 	if unlikely(!import_argv[0])
 		goto err_module_name;
+	if (loc != NULL)
+		DeeAst_SetLoc(import_argv[0], loc);
 	import_argv[1] = module_name;
-	return DeeAst_NewCallSymRefExtern_(DeeModule_NewDeemon(),
-	                                   &deemon_modsym___import__,
-	                                   2, import_argv DBG__args);
+	return DeeAst_MakeCallSymRefExtern_(loc, DeeModule_NewDeemon(),
+	                                    &deemon_modsym___import__,
+	                                    2, import_argv DBG__args);
 err_module_name:
 	DeeAst_Destroy(module_name);
 /*err:*/
 	return NULL;
 }
 
-INTERN WUNUSED NONNULL((1, 2)) DeeAst *DCALL
-DeeAst_NewSymRefExternByName_(/*utf-8*/char const *module_name,
-                              /*utf-8*/char const *symbol_name,
-                              DeeLexer *__restrict lexer DeeAst__DBG_PARAMS) {
+INTERN WUNUSED NONNULL((2, 3)) DeeAst *DCALL
+DeeAst_MakeSymRefExternByName_(/*0..1*/ DeeAstLoc const *loc,
+                               /*utf-8*/ char const *module_name,
+                               /*utf-8*/ char const *symbol_name,
+                               DeeLexer *__restrict lexer DeeAst__DBG_PARAMS) {
+	DeeAst *result;
 	DeeAst *module_name_ast;
 	DeeAst *module_import_ast;
 	DeeAst *symbol_name_ast;
-	DREF DeeModuleObject *mod = DeeLexer_OpenModule(lexer, module_name);
+	DREF DeeModuleObject *mod = DeeLexer_OpenModule(lexer, loc, module_name);
 	if likely(ITER_ISOK(mod)) {
-		struct Dee_module_symbol *sym = DeeLexer_GetModuleSymbol(lexer, mod, symbol_name);
-		if (ITER_ISOK(sym))
-			return DeeAst_NewSymRefExtern_(mod, sym DBG__args);
+		struct Dee_module_symbol *sym = DeeLexer_GetModuleSymbol(lexer, loc, mod, symbol_name);
+		if (ITER_ISOK(sym)) {
+			result = DeeAst_NewSymRefExtern_(mod, sym DBG__args);
+			if unlikely(!result)
+				goto err;
+			if (loc != NULL)
+				DeeAst_SetLoc(result, loc);
+			return result;
+		}
 
 		/* Emit as `{Dee_AST_CONST:mod}.operator . ({Dee_AST_CONST:symbol_name})` */
 		if unlikely(!sym)
 			goto err_mod;
 		module_import_ast = DeeAst_NewConst_(Dee_AsObject(mod) DBG__args);
+		if unlikely(!module_import_ast)
+			goto err;
+		if (loc != NULL)
+			DeeAst_SetLoc(module_import_ast, loc);
 	} else {
 		if unlikely(!mod)
 			goto err;
 		module_name_ast = DeeAst_NewConstString_(module_name, strlen(module_name) DBG__args);
 		if unlikely(!module_name_ast)
 			goto err;
+		if (loc != NULL)
+			DeeAst_SetLoc(module_name_ast, loc);
 		/* Module not found -> emit a call to `deemon.import` */
-		module_import_ast = DeeAst_NewImportModule_(module_name_ast DBG__args);
+		module_import_ast = DeeAst_MakeImportModule_(loc, module_name_ast DBG__args);
+		if unlikely(!module_import_ast)
+			goto err;
 	}
-	if unlikely(!module_import_ast)
-		goto err;
 	symbol_name_ast = DeeAst_NewConstString_(symbol_name, strlen(symbol_name) DBG__args);
 	if unlikely(!symbol_name_ast)
 		goto err_module_import_ast;
-	return DeeAst_NewOperator2_(OPERATOR_GETATTR, module_import_ast, symbol_name_ast DBG__args);
+	if (loc != NULL)
+		DeeAst_SetLoc(symbol_name_ast, loc);
+	result = DeeAst_NewOperator2_(OPERATOR_GETATTR, module_import_ast, symbol_name_ast DBG__args);
+	if unlikely(!result)
+		goto err;
+	if (loc != NULL)
+		DeeAst_SetLoc(result, loc);
+	return result;
 err_module_import_ast:
 	DeeAst_Destroy(module_import_ast);
 	goto err;
@@ -1281,19 +1319,22 @@ err:
 	return NULL;
 }
 
-INTERN WUNUSED NONNULL((1, 2)) DeeAst *DCALL /* import.deemon.InstanceMethod({method}, {thisarg}) */
-DeeAst_NewInstanceMethod_(/*inherit(always)*/ DeeAst *__restrict method,
-                          /*inherit(always)*/ DeeAst *__restrict thisarg DeeAst__DBG_PARAMS) {
+INTERN WUNUSED NONNULL((2, 3)) DeeAst *DCALL /* import.deemon.InstanceMethod({method}, {thisarg}) */
+DeeAst_MakeInstanceMethod_(/*0..1*/ DeeAstLoc const *loc,
+                           /*inherit(always)*/ DeeAst *__restrict method,
+                           /*inherit(always)*/ DeeAst *__restrict thisarg DeeAst__DBG_PARAMS) {
 	DeeAst *instance_method_args[2];
 	instance_method_args[0] = method;
 	instance_method_args[1] = thisarg;
-	return DeeAst_NewCallSymRefExtern_(DeeModule_NewDeemon(), &deemon_modsym_InstanceMethod,
-	                                   2, instance_method_args DBG__args);
+	return DeeAst_MakeCallSymRefExtern_(loc, DeeModule_NewDeemon(),
+	                                    &deemon_modsym_InstanceMethod,
+	                                    2, instance_method_args DBG__args);
 }
 
-INTERN WUNUSED NONNULL((1, 2)) DeeAst *DCALL
-DeeAst_NewOperatorFunction_(/*inherit(always)*/ struct Dee_ast_operator_id *__restrict opid,
-                            DeeLexer *__restrict lexer DeeAst__DBG_PARAMS) {
+INTERN WUNUSED NONNULL((2, 3)) DeeAst *DCALL
+DeeAst_MakeOperatorFunction_(/*0..1*/ DeeAstLoc const *loc,
+                             /*inherit(always)*/ struct Dee_ast_operator_id *__restrict opid,
+                             DeeLexer *__restrict lexer DeeAst__DBG_PARAMS) {
 	DeeAst *operators_operator;
 	DeeAst *constexpr_id;
 	DREF DeeObject *const_id;
@@ -1307,10 +1348,10 @@ DeeAst_NewOperatorFunction_(/*inherit(always)*/ struct Dee_ast_operator_id *__re
 	Dee_ast_operator_id_fini(opid);
 	opinfo = DeeTypeType_GetOperatorById(&DeeType_Type, id);
 	if (opinfo) /* `import.operators.{opinfo->oi_sname}` */
-		return DeeAst_NewSymRefExternByName_(STR_operators, opinfo->oi_sname, lexer DBG__args);
+		return DeeAst_MakeSymRefExternByName_(loc, STR_operators, opinfo->oi_sname, lexer DBG__args);
 
 	/* `import.deemon.InstanceMethod(import.operators.operator, {id})` */
-	operators_operator = DeeAst_NewSymRefExternByName_(STR_operators, STR_operator, lexer DBG__args);
+	operators_operator = DeeAst_MakeSymRefExternByName_(loc, STR_operators, STR_operator, lexer DBG__args);
 	if unlikely(!operators_operator)
 		goto err;
 	const_id = DeeInt_NEWU(id);
@@ -1319,25 +1360,36 @@ DeeAst_NewOperatorFunction_(/*inherit(always)*/ struct Dee_ast_operator_id *__re
 	constexpr_id = DeeAst_NewConst_(const_id DBG__args);
 	if unlikely(!constexpr_id)
 		goto err_operators_operator;
-	return DeeAst_NewInstanceMethod_(operators_operator, constexpr_id DBG__args);
+	if (loc != NULL)
+		DeeAst_SetLoc(constexpr_id, loc);
+	return DeeAst_MakeInstanceMethod_(loc, operators_operator, constexpr_id DBG__args);
 err_operators_operator:
 	DeeAst_Destroy(operators_operator);
 err:
 	return NULL;
 }
 
-INTERN WUNUSED NONNULL((1, 2)) DeeAst *DCALL /* {obj}.operator . ({attr})({argv...}) */
-DeeAst_NewCallAttr_(/*inherit(always)*/ DeeAst *__restrict obj,
-                    /*inherit(always)*/ DeeAst *__restrict attr,
-                    size_t argc, /*inherit(always)*/ DeeAst *const *argv DeeAst__DBG_PARAMS) {
+INTERN WUNUSED NONNULL((2, 3)) DeeAst *DCALL /* {obj}.operator . ({attr})({argv...}) */
+DeeAst_MakeCallAttr_(/*0..1*/ DeeAstLoc const *loc,
+                     /*inherit(always)*/ DeeAst *__restrict obj,
+                     /*inherit(always)*/ DeeAst *__restrict attr, size_t argc,
+                     /*inherit(always)*/ DeeAst *const *argv DeeAst__DBG_PARAMS) {
+	DeeAst *result;
 	DeeAst *getattr_ast;
 	DeeAst *call_args = DeeAst_NewMulti_(Dee_AST_MULTI_KIND_TUPLE, argc, argv DBG__args);
 	if unlikely(!call_args)
 		goto err_obj_attr;
+	if (loc != NULL)
+		DeeAst_SetLoc(call_args, loc);
 	getattr_ast = DeeAst_NewOperator2_(OPERATOR_GETATTR, obj, attr DBG__args);
 	if unlikely(!getattr_ast)
 		goto err_call_args;
-	return DeeAst_NewOperator2_(OPERATOR_CALL, getattr_ast, call_args DBG__args);
+	if (loc != NULL)
+		DeeAst_SetLoc(getattr_ast, loc);
+	result = DeeAst_NewOperator2_(OPERATOR_CALL, getattr_ast, call_args DBG__args);
+	if (loc != NULL)
+		DeeAst_SetLoc(result, loc);
+	return result;
 err_call_args:
 	DeeAst_Destroy(call_args);
 	goto err;
@@ -1349,14 +1401,17 @@ err:
 	return NULL;
 }
 
-INTERN WUNUSED NONNULL((1, 2)) DeeAst *DCALL /* {obj}.operator . ({attr})({argv...}) */
-DeeAst_NewCallAttrConst_(/*inherit(always)*/ DeeAst *__restrict obj,
-                         /*inherit(always)*/ /*string*/ DREF DeeObject *__restrict attr,
-                         size_t argc, /*inherit(always)*/ DeeAst *const *argv DeeAst__DBG_PARAMS) {
+INTERN WUNUSED NONNULL((2, 3)) DeeAst *DCALL /* {obj}.operator . ({attr})({argv...}) */
+DeeAst_MakeCallAttrConst_(/*0..1*/ DeeAstLoc const *loc,
+                          /*inherit(always)*/ DeeAst *__restrict obj,
+                          /*inherit(always)*/ /*string*/ DREF DeeObject *__restrict attr, size_t argc,
+                          /*inherit(always)*/ DeeAst *const *argv DeeAst__DBG_PARAMS) {
 	DeeAst *attr_ast = DeeAst_NewConst_(attr DBG__args);
 	if unlikely(!attr_ast)
 		goto err_obj_argv;
-	return DeeAst_NewCallAttr_(obj, attr_ast, argc, argv DBG__args);
+	if (loc != NULL)
+		DeeAst_SetLoc(attr_ast, loc);
+	return DeeAst_MakeCallAttr_(loc, obj, attr_ast, argc, argv DBG__args);
 err_obj_argv:
 	DeeAst_Destroyv(argv, argc);
 /*err_obj:*/
@@ -1364,7 +1419,6 @@ err_obj_argv:
 /*err:*/
 	return NULL;
 }
-
 
 #undef DBG__args
 #undef DBG_line

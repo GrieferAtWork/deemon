@@ -138,6 +138,7 @@ enum Dee_ast_symref_kind {
 
 enum Dee_ast_symref_byname_kind {
 	Dee_AST_SYMREF_BYNAME_KIND_AUTO,   /* <no prefix>     (find first matching symbol) */
+	Dee_AST_SYMREF_BYNAME_KIND_DECL,   /* <no prefix>     (declare as either `local` or `global` -- used for named function/class declaration) */
 	Dee_AST_SYMREF_BYNAME_KIND_LOCAL,  /* `local`         (Create/use local- or stack-variable in current scope) */
 	Dee_AST_SYMREF_BYNAME_KIND_STACK,  /* `__stack local` (Create/use stack-variable in current scope) */
 	Dee_AST_SYMREF_BYNAME_KIND_GLOBAL, /* `global`        (Create/use global variable in current scope (if create, and current scope isn't global scope, emit a warning)) */
@@ -154,10 +155,9 @@ struct Dee_ast_symref_byname {
 	Dee_ast_symref_byname_flag      asrbn_flag;    /* Variable flags */
 	struct Dee_ast_typedef          asrbn_typedef; /* Type annotation for symbol */
 };
-typedef unsigned int Dee_ast_symref_nth_id;
 struct Dee_ast_symref_nth {
-	tpp_keyword const    *asrnt_name; /* [1..1] Symbol name */
-	Dee_ast_symref_nth_id asrnt_nth;  /* Use the Nth match (where `0` means the same as `Dee_AST_SYMREF_KIND_BYNAME` + `Dee_AST_SYMREF_BYNAME_KIND_AUTO`) */
+	tpp_keyword const *asrnt_name; /* [1..1] Symbol name */
+	DeeAst            *asrnt_nth;  /* [1..1][owned] Expression describing which match to use (where `0` means the same as `Dee_AST_SYMREF_KIND_BYNAME` + `Dee_AST_SYMREF_BYNAME_KIND_AUTO`) */
 };
 
 struct Dee_module_symbol;
@@ -180,10 +180,10 @@ struct Dee_ast_symref {
 	       (self)->asr_data.asr_byname.asrbn_kind = (kind), \
 	       (self)->asr_data.asr_byname.asrbn_flag = (flag), \
 	       Dee_ast_typedef_init(&(self)->asr_data.asr_byname.asrbn_typedef))
-#define Dee_ast_symref_init_nth(self, name, nth_id)      \
-	(void)((self)->asr_kind = Dee_AST_SYMREF_KIND_NTH,   \
-	       (self)->asr_data.asr_nth.asrnt_name = (name), \
-	       (self)->asr_data.asr_nth.asrnt_nth  = (nth_id))
+#define Dee_ast_symref_init_nth(self, name, /*inherit(always)*/ nth) \
+	(void)((self)->asr_kind = Dee_AST_SYMREF_KIND_NTH,               \
+	       (self)->asr_data.asr_nth.asrnt_name = (name),             \
+	       (self)->asr_data.asr_nth.asrnt_nth  = (nth))
 #define Dee_ast_symref_init_extern(self, /*inherit(always)*/ mod, sym) \
 	(void)((self)->asr_kind = Dee_AST_SYMREF_KIND_EXTERN,              \
 	       (self)->asr_data.asr_extern.asrex_mod = (mod),              \
@@ -196,6 +196,9 @@ struct Dee_ast_symref {
 		switch ((self)->asr_kind) {                                           \
 		case Dee_AST_SYMREF_KIND_BYNAME:                                      \
 			Dee_ast_typedef_fini(&(self)->asr_data.asr_byname.asrbn_typedef); \
+			break;                                                            \
+		case Dee_AST_SYMREF_KIND_NTH:                                         \
+			DeeAst_Destroy((self)->asr_data.asr_nth.asrnt_nth);               \
 			break;                                                            \
 		case Dee_AST_SYMREF_KIND_EXTERN:                                      \
 			Dee_Decref((self)->asr_data.asr_extern.asrex_mod);                \
@@ -486,6 +489,10 @@ struct Dee_ast_multi {
 #define DeeAst_Dbg_TryReallocUninitializedMulti(p, count, file, line) _DeeAst_Dbg_TryReallocUninitializedVar(ad_multi.am_elem, p, count, file, line)
 #define DeeAst_Dbg_FreeUninitializedMulti(p, file, line)              _DeeAst_Dbg_FreeUninitializedVar(p, file, line)
 #define DeeAst_GetMultiElem(self)                                     ((self)->a_data.ad_multi.am_elem)
+#define DeeAst_ReallocMulti(p, count)                                 DeeAst_ReallocUninitializedMulti(p, count)
+#define DeeAst_TryReallocMulti(p, count)                              DeeAst_TryReallocUninitializedMulti(p, count)
+#define DeeAst_Dbg_ReallocMulti(p, count, file, line)                 DeeAst_Dbg_ReallocUninitializedMulti(p, count, file, line)
+#define DeeAst_Dbg_TryReallocMulti(p, count, file, line)              DeeAst_Dbg_TryReallocUninitializedMulti(p, count, file, line)
 /* === */
 
 
@@ -1159,7 +1166,6 @@ struct Dee_ast {
 	struct Dee_ast_labels *a_labels; /* [0..n][owned] AST labels */
 	DeeAstLoc              a_loc;    /* Location info */
 #define DeeAst_SetLoc(self, aloc)      (void)((self)->a_loc = *(aloc))
-#define DeeAst_UpdateLoc(self, aloc)   (ast_loc_isempty(aloc) ? (void)0 : DeeAst_SetLoc(self, aloc))
 #define DeeAst_SetLocHere(self, lexer) DeeLexer_GetLoc(lexer, &(self)->a_loc)
 
 #define _DeeAst_InitCommon(self, kind) \
@@ -1219,15 +1225,8 @@ struct Dee_ast {
 
 LOCAL NONNULL((2)) DeeAst *DCALL
 DeeAst_TrySetLoc(/*0..1*/DeeAst *self, DeeAstLoc const *__restrict aloc) {
-	if (self)
+	if likely(self)
 		DeeAst_SetLoc(self, aloc);
-	return self;
-}
-
-LOCAL NONNULL((2)) DeeAst *DCALL
-DeeAst_TryUpdateLoc(/*0..1*/DeeAst *self, DeeAstLoc const *__restrict aloc) {
-	if (self)
-		DeeAst_UpdateLoc(self, aloc);
 	return self;
 }
 
@@ -1398,8 +1397,8 @@ INTDEF WUNUSED DeeAst *DCALL DeeAst_NewContinue_(tpp_keyword const *opt_label_na
 /* Symbol functions */
 INTDEF WUNUSED NONNULL((1)) DeeAst *DCALL DeeAst_NewSymRefByName_(tpp_keyword const *__restrict name, enum Dee_ast_symref_byname_kind kind, Dee_ast_symref_byname_flag flag DeeAst__DBG_PARAMS);
 #define DeeAst_NewSymRefByName(name, kind, flag) DeeAst_NewSymRefByName_(name, kind, flag DeeAst__DBG_ARGS)
-INTDEF WUNUSED NONNULL((1)) DeeAst *DCALL DeeAst_NewSymRefNth_(tpp_keyword const *__restrict name, Dee_ast_symref_nth_id nth_id DeeAst__DBG_PARAMS);
-#define DeeAst_NewSymRefNth(name, nth_id) DeeAst_NewSymRefNth_(name, nth_id DeeAst__DBG_ARGS)
+INTDEF WUNUSED NONNULL((1, 2)) DeeAst *DCALL DeeAst_NewSymRefNth_(tpp_keyword const *__restrict name, /*inherit(always)*/ DeeAst *__restrict nth DeeAst__DBG_PARAMS);
+#define DeeAst_NewSymRefNth(name, /*inherit(always)*/ nth) DeeAst_NewSymRefNth_(name, nth DeeAst__DBG_ARGS)
 INTDEF WUNUSED NONNULL((1, 2)) DeeAst *DCALL DeeAst_NewSymRefExtern_(/*inherit(always)*/ DREF struct Dee_module_object *__restrict mod, struct Dee_module_symbol *__restrict sym DeeAst__DBG_PARAMS);
 #define DeeAst_NewSymRefExtern(/*inherit(always)*/ mod, sym) DeeAst_NewSymRefExtern_(mod, sym DeeAst__DBG_ARGS)
 INTDEF WUNUSED DeeAst *DCALL DeeAst_NewSymRefSimple_(enum Dee_ast_symref_kind kind DeeAst__DBG_PARAMS);
@@ -1419,22 +1418,22 @@ INTDEF WUNUSED NONNULL((1)) DeeAst *DCALL DeeAst_AddDefaultLabel_(/*inherit(alwa
 
 
 /* Misc. helpers... */
-INTDEF WUNUSED NONNULL((1)) DeeAst *DCALL DeeAst_NewCall_(/*inherit(always)*/ DeeAst *__restrict func, size_t argc, /*inherit(always)*/ DeeAst *const *argv DeeAst__DBG_PARAMS);
-#define DeeAst_NewCall(/*inherit(always)*/ func, argc, /*inherit(always)*/ argv) DeeAst_NewCall_(func, argc, argv DeeAst__DBG_ARGS)
-INTDEF WUNUSED NONNULL((1, 2)) DeeAst *DCALL DeeAst_NewCallSymRefExtern_(/*inherit(always)*/ DREF struct Dee_module_object *__restrict mod, struct Dee_module_symbol *__restrict sym, size_t argc, /*inherit(always)*/ DeeAst *const *argv DeeAst__DBG_PARAMS);
-#define DeeAst_NewCallSymRefExtern(/*inherit(always)*/ mod, sym, argc, /*inherit(always)*/ argv) DeeAst_NewCallSymRefExtern_(mod, sym, argc, argv DeeAst__DBG_ARGS)
-INTDEF WUNUSED NONNULL((1, 2)) DeeAst *DCALL DeeAst_NewImportModule_(/*inherit(always)*/ DeeAst *__restrict module_name DeeAst__DBG_PARAMS); /* Generate a call to `deemon.import()` using `module_name` as argument */
-#define DeeAst_NewImportModule(module_name) DeeAst_NewImportModule_(module_name DeeAst__DBG_ARGS)
-INTDEF WUNUSED NONNULL((1, 2)) DeeAst *DCALL DeeAst_NewSymRefExternByName_(/*utf-8*/ char const *module_name, /*utf-8*/char const *symbol_name, DeeLexer *__restrict lexer DeeAst__DBG_PARAMS);
-#define DeeAst_NewSymRefExternByName(module_name, symbol_name, lexer) DeeAst_NewSymRefExternByName_(module_name, symbol_name, lexer DeeAst__DBG_ARGS)
-INTDEF WUNUSED NONNULL((1, 2)) DeeAst *DCALL DeeAst_NewInstanceMethod_(/*inherit(always)*/ DeeAst *__restrict method, /*inherit(always)*/ DeeAst *__restrict thisarg DeeAst__DBG_PARAMS); /* import.deemon.InstanceMethod({method}, {thisarg}) */
-#define DeeAst_NewInstanceMethod(/*inherit(always)*/ method, /*inherit(always)*/ thisarg) DeeAst_NewInstanceMethod_(method, thisarg DeeAst__DBG_ARGS)
-INTDEF WUNUSED NONNULL((1, 2)) DeeAst *DCALL DeeAst_NewOperatorFunction_(/*inherit(always)*/ struct Dee_ast_operator_id *__restrict opid, DeeLexer *__restrict lexer DeeAst__DBG_PARAMS);
-#define DeeAst_NewOperatorFunction(/*inherit(always)*/ opid, lexer) DeeAst_NewOperatorFunction_(opid, lexer DeeAst__DBG_ARGS)
-INTDEF WUNUSED NONNULL((1, 2)) DeeAst *DCALL DeeAst_NewCallAttr_(/*inherit(always)*/ DeeAst *__restrict obj, /*inherit(always)*/ DeeAst *__restrict attr, size_t argc, /*inherit(always)*/ DeeAst *const *argv DeeAst__DBG_PARAMS); /* {obj}.operator . ({attr})({argv...}) */
-#define DeeAst_NewCallAttr(/*inherit(always)*/ obj, /*inherit(always)*/ attr, argc, /*inherit(always)*/ argv) DeeAst_NewCallAttr_(obj, attr, argc, argv DeeAst__DBG_ARGS)
-INTDEF WUNUSED NONNULL((1, 2)) DeeAst *DCALL DeeAst_NewCallAttrConst_(/*inherit(always)*/ DeeAst *__restrict obj, /*inherit(always)*/ /*string*/ DREF DeeObject *__restrict attr, size_t argc, /*inherit(always)*/ DeeAst *const *argv DeeAst__DBG_PARAMS); /* {obj}.operator . ({attr})({argv...}) */
-#define DeeAst_NewCallAttrConst(/*inherit(always)*/ obj, /*inherit(always)*/ /*string*/ attr, argc, /*inherit(always)*/ argv) DeeAst_NewCallAttrConst_(obj, attr, argc, argv DeeAst__DBG_ARGS)
+INTDEF WUNUSED NONNULL((2)) DeeAst *DCALL DeeAst_MakeCall_(/*0..1*/ DeeAstLoc const *loc, /*inherit(always)*/ DeeAst *__restrict func, size_t argc, /*inherit(always)*/ DeeAst *const *argv DeeAst__DBG_PARAMS);
+#define DeeAst_MakeCall(loc, /*inherit(always)*/ func, argc, /*inherit(always)*/ argv) DeeAst_MakeCall_(loc, func, argc, argv DeeAst__DBG_ARGS)
+INTDEF WUNUSED NONNULL((2, 3)) DeeAst *DCALL DeeAst_MakeCallSymRefExtern_(/*0..1*/ DeeAstLoc const *loc, /*inherit(always)*/ DREF struct Dee_module_object *__restrict mod, struct Dee_module_symbol *__restrict sym, size_t argc, /*inherit(always)*/ DeeAst *const *argv DeeAst__DBG_PARAMS);
+#define DeeAst_MakeCallSymRefExtern(loc, /*inherit(always)*/ mod, sym, argc, /*inherit(always)*/ argv) DeeAst_MakeCallSymRefExtern_(loc, mod, sym, argc, argv DeeAst__DBG_ARGS)
+INTDEF WUNUSED NONNULL((2)) DeeAst *DCALL DeeAst_MakeImportModule_(/*0..1*/ DeeAstLoc const *loc, /*inherit(always)*/ DeeAst *__restrict module_name DeeAst__DBG_PARAMS); /* Generate a call to `deemon.import()` using `module_name` as argument */
+#define DeeAst_MakeImportModule(loc, module_name) DeeAst_MakeImportModule_(loc, module_name DeeAst__DBG_ARGS)
+INTDEF WUNUSED NONNULL((2, 3)) DeeAst *DCALL DeeAst_MakeSymRefExternByName_(/*0..1*/ DeeAstLoc const *loc, /*utf-8*/ char const *module_name, /*utf-8*/char const *symbol_name, DeeLexer *__restrict lexer DeeAst__DBG_PARAMS);
+#define DeeAst_MakeSymRefExternByName(loc, module_name, symbol_name, lexer) DeeAst_MakeSymRefExternByName_(loc, module_name, symbol_name, lexer DeeAst__DBG_ARGS)
+INTDEF WUNUSED NONNULL((2, 3)) DeeAst *DCALL DeeAst_MakeInstanceMethod_(/*0..1*/ DeeAstLoc const *loc, /*inherit(always)*/ DeeAst *__restrict method, /*inherit(always)*/ DeeAst *__restrict thisarg DeeAst__DBG_PARAMS); /* import.deemon.InstanceMethod({method}, {thisarg}) */
+#define DeeAst_MakeInstanceMethod(loc, /*inherit(always)*/ method, /*inherit(always)*/ thisarg) DeeAst_MakeInstanceMethod_(loc, method, thisarg DeeAst__DBG_ARGS)
+INTDEF WUNUSED NONNULL((2, 3)) DeeAst *DCALL DeeAst_MakeOperatorFunction_(/*0..1*/ DeeAstLoc const *loc, /*inherit(always)*/ struct Dee_ast_operator_id *__restrict opid, DeeLexer *__restrict lexer DeeAst__DBG_PARAMS);
+#define DeeAst_MakeOperatorFunction(loc, /*inherit(always)*/ opid, lexer) DeeAst_MakeOperatorFunction_(loc, opid, lexer DeeAst__DBG_ARGS)
+INTDEF WUNUSED NONNULL((2, 3)) DeeAst *DCALL DeeAst_MakeCallAttr_(/*0..1*/ DeeAstLoc const *loc, /*inherit(always)*/ DeeAst *__restrict obj, /*inherit(always)*/ DeeAst *__restrict attr, size_t argc, /*inherit(always)*/ DeeAst *const *argv DeeAst__DBG_PARAMS); /* {obj}.operator . ({attr})({argv...}) */
+#define DeeAst_MakeCallAttr(loc, /*inherit(always)*/ obj, /*inherit(always)*/ attr, argc, /*inherit(always)*/ argv) DeeAst_MakeCallAttr_(loc, obj, attr, argc, argv DeeAst__DBG_ARGS)
+INTDEF WUNUSED NONNULL((2, 3)) DeeAst *DCALL DeeAst_MakeCallAttrConst_(/*0..1*/ DeeAstLoc const *loc, /*inherit(always)*/ DeeAst *__restrict obj, /*inherit(always)*/ /*string*/ DREF DeeObject *__restrict attr, size_t argc, /*inherit(always)*/ DeeAst *const *argv DeeAst__DBG_PARAMS); /* {obj}.operator . ({attr})({argv...}) */
+#define DeeAst_MakeCallAttrConst(loc, /*inherit(always)*/ obj, /*inherit(always)*/ /*string*/ attr, argc, /*inherit(always)*/ argv) DeeAst_MakeCallAttrConst_(loc, obj, attr, argc, argv DeeAst__DBG_ARGS)
 
 #endif /* CONFIG_BUILDING_DEEMON */
 

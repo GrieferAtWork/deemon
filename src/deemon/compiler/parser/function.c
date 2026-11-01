@@ -422,6 +422,146 @@ err:
 }
 
 
+/* Parse a function declaration, starting at the `function` keyword.
+ * @param: p_requires_semicolon: When non-NULL, set to `true` or `false` on success,
+ *                               indicative of the function's body being `-> expr`,
+ *                               as opposed to `{ expr; }` */
+INTERN WUNUSED NONNULL((1)) DeeAst *DFCALL
+DeeParser_ParseFunction(DeeParser *__restrict self,
+                        enum Dee_ast_symref_byname_kind decl_kind,
+                        Dee_ast_symref_byname_flag decl_flags,
+                        bool *p_requires_semicolon) {
+	DeeAst *result;
+	DeeAstLoc function_loc;
+	DeeAstLoc function_name_loc;
+	tpp_keyword const *function_name = NULL;
+	ASSERT(DeeParser_GetTok(self) == TPP_KWD_function);
+	if (DeeParser_GetLoc(self, &function_loc))
+		goto err;
+	if (TPP_TOK_ISERR(DeeParser_Yield(self)))
+		goto err;
+	function_name = NULL;
+	function_name_loc = function_loc;
+	if (DeeParser_HasTokenKwd(self)) {
+		function_name = DeeParser_GetTokenKwd(self);
+		if (tpp_keyword_getid(function_name) == TPP_KWD_none) {
+			function_name = NULL;
+		} else {
+			if (DeeParser_GetLoc(self, &function_name_loc))
+				goto err;
+			if (DeeParser_IsIdentifier(self, function_name)) {
+				if (DeeParser_Warnf(self, TPP_W_RESERVED_SYMBOL_NAME,
+				                    tpp_keyword_getcstr(function_name)))
+					goto err;
+			}
+		}
+		if (TPP_TOK_ISERR(DeeParser_Yield(self)))
+			goto err;
+	} else if (decl_flags != Dee_AST_SYMREF_BYNAME_FLAG_NORMAL ||
+	           decl_kind != Dee_AST_SYMREF_BYNAME_KIND_DECL) {
+		/* Warn about something like `final local function(a, b, c) {}`
+		 * (iow: missing function name when modifiers are used) */
+		/* TODO */
+	}
+	result = DeeParser_ParseFunction2(self, function_name, p_requires_semicolon);
+	if unlikely(!result)
+		goto err;
+	DeeAst_SetLoc(result, &function_loc);
+	if (function_name) {
+		/* Assign function to a symbol */
+		DeeAst *function_name_ast;
+		function_name_ast = DeeAst_NewSymRefByName(function_name, decl_kind, decl_flags);
+		if unlikely(!function_name_ast)
+			goto err_r;
+		DeeAst_SetLoc(function_name_ast, &function_name_loc);
+		result = DeeAst_NewAct2(Dee_AST_ACT2_INIT, function_name_ast, result);
+		if unlikely(!result)
+			goto err;
+		DeeAst_SetLoc(result, &function_name_loc);
+	}
+	return result;
+err_r:
+	DeeAst_Destroy(result);
+err:
+	return NULL;
+}
+
+/* Similar to `DeeParser_ParseFunction()`, but (should) start at the `(` of the
+ * function's parameter list. Additionally, the function isn't wrapped in a
+ * `Dee_AST_ACT2_STORE` AST to assign it to a symbol bearing its name, or will
+ * the returned function has location information yet. */
+INTERN WUNUSED NONNULL((1)) DeeAst *DFCALL
+DeeParser_ParseFunction2(DeeParser *__restrict self,
+                         tpp_keyword const *opt_function_name,
+                         bool *p_requires_semicolon) {
+	DeeAst *function_body;
+	struct Dee_ast_function_builder builder;
+	Dee_ast_function_builder_init(&builder);
+	Dee_ast_function_builder_consume_attr(&builder, self);
+
+	/* Parse parameter list */
+	if (DeeParser_GetTok(self) == '(' ||
+	    DeeParser_GetTok(self) == TPP_KWD_pack) {
+		bool has_paren;
+		if (DeeParser_ParenBegin(self, &has_paren))
+			goto err_builder;
+		DeeParser_NoLf_Push(self);
+		for (;;) {
+			if (DeeParser_ParseFunctionParam(self, &builder, Dee_PARSER_FUNCTIONPARAM_FLAG_NORMAL)) {
+err_builder_nolf_break:
+				DeeParser_NoLf_Break(self);
+				goto err_builder;
+			}
+			if (DeeParser_GetTok(self) != ',')
+				break;
+			if (TPP_TOK_ISERR(DeeParser_Yield(self)))
+				goto err_builder_nolf_break;
+		}
+		DeeParser_NoLf_Pop(self);
+		if (DeeParser_ParenEnd(self, has_paren))
+			goto err_builder;
+	} else {
+		if (DeeParser_Warnf(self, TPP_W_DEPRECATED_NO_PARAMETER_LIST))
+			goto err_builder;
+	}
+
+	/* Initialize return typedef */
+	if (DeeParser_MaybeParseFunctionReturnType(self, &builder))
+		goto err_builder;
+	if (DeeParser_GetTok(self) == '{') {
+		if (p_requires_semicolon)
+			*p_requires_semicolon = false;
+		function_body = DeeParser_ParseStatementsAtBrace(self);
+	} else {
+		if (p_requires_semicolon)
+			*p_requires_semicolon = true;
+		if (DeeParser_GetTok(self) == TPP_TOK_MINUS_RANGLE) {
+			DeeAstLoc arrow_loc;
+			if (DeeParser_GetLoc(self, &arrow_loc))
+				goto err_builder;
+			if (TPP_TOK_ISERR(DeeParser_Yield(self)))
+				goto err_builder;
+			function_body = DeeParser_ParseExpr(self);
+			if unlikely(!function_body)
+				goto err_builder;
+			function_body = DeeAst_NewReturn(function_body);
+			function_body = DeeAst_TrySetLoc(function_body, &arrow_loc);
+		} else {
+			if (DeeParser_Warnf(self, TPP_W_EXPECTED_LBRACE_AFTER_FUNCTION))
+				goto err_builder;
+			function_body = DeeAst_NewConst(DeeNone_NewRef());
+		}
+	}
+	if unlikely(!function_body)
+		goto err_builder;
+	return Dee_ast_function_builder_pack(&builder, opt_function_name, function_body);
+err_builder:
+	Dee_ast_function_builder_fini(&builder);
+err:
+	return NULL;
+}
+
+
 #else /* CONFIG_EXPERIMENTAL_USE_STATELESS_PARSER */
 
 PRIVATE WUNUSED NONNULL((1)) int DFCALL

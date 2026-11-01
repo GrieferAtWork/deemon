@@ -101,6 +101,9 @@ Dee_ast_symref_byname_printrepr_without_typedef(struct Dee_ast_symref_byname con
 	switch (self->asrbn_kind) {
 	case Dee_AST_SYMREF_BYNAME_KIND_AUTO:
 		return tpp_keyword_print(self->asrbn_name, printer, arg);
+	case Dee_AST_SYMREF_BYNAME_KIND_DECL:
+		prefix = "__decl ";
+		break;
 	case Dee_AST_SYMREF_BYNAME_KIND_LOCAL:
 		prefix = "local ";
 		break;
@@ -127,15 +130,48 @@ err_temp:
 
 PRIVATE WUNUSED NONNULL((1, 3)) Dee_ssize_t DCALL
 Dee_ast_symref_byname_printrepr(struct Dee_ast_symref_byname const *__restrict self,
-                                size_t indent_level, Dee_formatprinter_t printer, void *arg) {
-	Dee_ssize_t temp, result = Dee_ast_symref_byname_printrepr_without_typedef(self, printer, arg);
-	if unlikely(result < 0)
-		goto done;
+                                Dee_ast_printrepr_flag flag, size_t indent_level,
+                                Dee_formatprinter_t printer, void *arg) {
+	Dee_ssize_t temp, result = 0;
+	if (flag & Dee_AST_PRINTREPR_FLAG_PAREN)
+		EDO(err_temp, DeeFormat_PRINT(printer, arg, "("));
+	EDO(err_temp, Dee_ast_symref_byname_printrepr_without_typedef(self, printer, arg));
 	EDO(err_temp, Dee_ast_typedef_print_colon_and_repr(&self->asrbn_typedef, indent_level, printer, arg));
-done:
+	if (flag & Dee_AST_PRINTREPR_FLAG_PAREN)
+		EDO(err_temp, DeeFormat_PRINT(printer, arg, ")"));
 	return result;
 err_temp:
 	return temp;
+}
+
+PRIVATE WUNUSED NONNULL((1, 4)) Dee_ssize_t DCALL
+Dee_ast_symref_nth_printrepr(struct Dee_ast_symref_nth const *__restrict self,
+                             Dee_ast_printrepr_flag flag, size_t indent_level,
+                             Dee_formatprinter_t printer, void *arg) {
+	Dee_ssize_t temp, result = 0;
+	if (flag & Dee_AST_PRINTREPR_FLAG_PAREN)
+		EDO(err_temp, DeeFormat_PRINT(printer, arg, "("));
+	EDO(err_temp, DeeFormat_PRINT(printer, arg, "__nth("));
+	EDO(err_temp, DeeAst_PrintRepr(self->asrnt_nth, Dee_AST_PRINTREPR_FLAG_ASEXPR,
+	                               indent_level, printer, arg));
+	EDO(err_temp, DeeFormat_PRINT(printer, arg, ") "));
+	EDO(err_temp, tpp_keyword_print(self->asrnt_name, printer, arg));
+	if (flag & Dee_AST_PRINTREPR_FLAG_PAREN)
+		EDO(err_temp, DeeFormat_PRINT(printer, arg, ")"));
+	return result;
+err_temp:
+	return temp;
+}
+
+PRIVATE WUNUSED NONNULL((1, 4)) Dee_ssize_t DCALL
+Dee_ast_symref_extern_printrepr(struct Dee_ast_symref_extern const *__restrict self,
+                                Dee_ast_printrepr_flag flag, size_t indent_level,
+                                Dee_formatprinter_t printer, void *arg) {
+	return DeeFormat_Printf(printer, arg, "%s%s from %q%s",
+	                        (flag & Dee_AST_PRINTREPR_FLAG_PAREN) ? "(" : "",
+	                        self->asrex_sym->ss_name,
+	                        DeeModule_GetShortName(self->asrex_mod),
+	                        (flag & Dee_AST_PRINTREPR_FLAG_PAREN) ? ")" : "");
 }
 
 /* @param: flag: for `Dee_AST_PRINTREPR_FLAG_PAREN` only */
@@ -145,20 +181,11 @@ Dee_ast_symref_printrepr(struct Dee_ast_symref const *__restrict self,
                          Dee_formatprinter_t printer, void *arg) {
 	switch (self->asr_kind) {
 	case Dee_AST_SYMREF_KIND_BYNAME:
-		return Dee_ast_symref_byname_printrepr(&self->asr_data.asr_byname, indent_level, printer, arg);
+		return Dee_ast_symref_byname_printrepr(&self->asr_data.asr_byname, flag, indent_level, printer, arg);
 	case Dee_AST_SYMREF_KIND_NTH:
-		return DeeFormat_Printf(printer, arg, "%s__nth(%u) %$s%s",
-		                        (flag & Dee_AST_PRINTREPR_FLAG_PAREN) ? "(" : "",
-		                        (unsigned int)self->asr_data.asr_nth.asrnt_nth,
-		                        tpp_keyword_getlen(self->asr_data.asr_nth.asrnt_name),
-		                        tpp_keyword_getcstr(self->asr_data.asr_nth.asrnt_name),
-		                        (flag & Dee_AST_PRINTREPR_FLAG_PAREN) ? ")" : "");
+		return Dee_ast_symref_nth_printrepr(&self->asr_data.asr_nth, flag, indent_level, printer, arg);
 	case Dee_AST_SYMREF_KIND_EXTERN:
-		return DeeFormat_Printf(printer, arg, "%s%s from %q%s",
-		                        (flag & Dee_AST_PRINTREPR_FLAG_PAREN) ? "(" : "",
-		                        self->asr_data.asr_extern.asrex_sym->ss_name,
-		                        DeeModule_GetShortName(self->asr_data.asr_extern.asrex_mod),
-		                        (flag & Dee_AST_PRINTREPR_FLAG_PAREN) ? ")" : "");
+		return Dee_ast_symref_extern_printrepr(&self->asr_data.asr_extern, flag, indent_level, printer, arg);
 	case Dee_AST_SYMREF_KIND_THIS:
 		return DeeFormat_PRINT(printer, arg, "this");
 	case Dee_AST_SYMREF_KIND_TP_THIS:

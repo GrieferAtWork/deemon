@@ -146,20 +146,36 @@ typedef struct Dee_parser {
  * @return: * :        The module in question, or something to substitute it
  * @return: NULL:      An error was thrown
  * @return: ITER_DONE: Cannot load module (caller should load module at runtime) */
-INTDEF WUNUSED NONNULL((1, 2)) DREF struct Dee_module_object *DCALL
-DeeLexer_OpenModule(DeeLexer *__restrict self, /*utf-8*/ char const *__restrict module_name);
-#define DeeParser_OpenModule(self, module_name) \
-	DeeLexer_OpenModule(&(self)->p_lexer, module_name)
+INTDEF WUNUSED NONNULL((1, 3)) DREF struct Dee_module_object *DCALL
+DeeLexer_OpenModule(DeeLexer *__restrict self, /*0..1*/ DeeAstLoc const *loc,
+                    /*utf-8*/ char const *__restrict module_name);
+#define DeeParser_OpenModule(self, loc, module_name) \
+	DeeLexer_OpenModule(&(self)->p_lexer, loc, module_name)
 
 /* @return: * :        Module symbol in question
  * @return: NULL:      An error was thrown
  * @return: ITER_DONE: No such symbol (a warning `TPP_W_MODULE_IMPORT_NOT_FOUND` was already emit) */
-INTDEF WUNUSED NONNULL((1, 2, 3)) struct Dee_module_symbol *DCALL
+INTDEF WUNUSED NONNULL((1, 3, 4)) struct Dee_module_symbol *DCALL
 DeeLexer_GetModuleSymbol(DeeLexer *__restrict self,
+                         /*0..1*/ DeeAstLoc const *loc,
                          struct Dee_module_object *__restrict mod,
                          /*utf-8*/ char const *__restrict symbol_name);
-#define DeeParser_GetModuleSymbol(self, mod, symbol_name) \
-	DeeLexer_GetModuleSymbol(&(self)->p_lexer, mod, symbol_name)
+#define DeeParser_GetModuleSymbol(self, loc, mod, symbol_name) \
+	DeeLexer_GetModuleSymbol(&(self)->p_lexer, loc, mod, symbol_name)
+
+/************************************************************************/
+/* file: ../../../src/deemon/compiler/parser/import.c                   */
+/************************************************************************/
+struct Dee_unicode_printer;
+/* Parse a module name, which is defined as:
+ * >> MODULE_NAME      ::= [DOTS] [MODULE_NAME_PART [MODULE_NAME_TAIL]]
+ * >> MODULE_NAME_TAIL ::= DOTS MODULE_NAME_PART
+ * >> MODULE_NAME_PART ::= <KEYWORD> | <STRING>
+ * >> DOTS             ::= ('.' | '...')...
+ */
+INTDEF WUNUSED NONNULL((1, 2)) int DFCALL
+DeeParser_ParseModuleName(DeeParser *__restrict self,
+                          struct Dee_unicode_printer *__restrict printer);
 
 /************************************************************************/
 /* file: ../../../src/deemon/compiler/parser/typedef.c                 */
@@ -245,9 +261,24 @@ INTDEF WUNUSED NONNULL((1, 2)) int DFCALL
 DeeParser_MaybeParseFunctionReturnType(DeeParser *__restrict self,
                                        struct Dee_ast_function_builder *__restrict builder);
 
-/* Parse a function declaration, starting at the `function` keyword. */
+/* Parse a function declaration, starting at the `function` keyword.
+ * @param: p_requires_semicolon: When non-NULL, set to `true` or `false` on success,
+ *                               indicative of the function's body being `-> expr`,
+ *                               as opposed to `{ expr; }` */
 INTDEF WUNUSED NONNULL((1)) DeeAst *DFCALL
-DeeParser_ParseFunction(DeeParser *__restrict self);
+DeeParser_ParseFunction(DeeParser *__restrict self,
+                        enum Dee_ast_symref_byname_kind decl_kind,
+                        Dee_ast_symref_byname_flag decl_flags,
+                        bool *p_requires_semicolon);
+
+/* Similar to `DeeParser_ParseFunction()`, but (should) start at the `(` of the
+ * function's parameter list. Additionally, the function isn't wrapped in a
+ * `Dee_AST_ACT2_STORE` AST to assign it to a symbol bearing its name, or will
+ * the returned function has location information yet. */
+INTDEF WUNUSED NONNULL((1)) DeeAst *DFCALL
+DeeParser_ParseFunction2(DeeParser *__restrict self,
+                         tpp_keyword const *opt_function_name,
+                         bool *p_requires_semicolon);
 
 
 /************************************************************************/
@@ -257,24 +288,15 @@ INTDEF ATTR_CONST WUNUSED bool DFCALL TPP_TOK_MAYBE_EXPR_START(tpp_token_id tok)
 INTDEF WUNUSED NONNULL((1)) DeeAst *DFCALL DeeParser_ParseUnaryHead(DeeParser *__restrict self);
 INTDEF WUNUSED NONNULL((1, 2)) DeeAst *DFCALL DeeParser_ParseUnaryOperand(DeeParser *__restrict self, /*inherit(always)*/ DeeAst *__restrict lhs);
 INTDEF WUNUSED NONNULL((1)) DeeAst *DFCALL DeeParser_ParseUnary(DeeParser *__restrict self);
-
-INTDEF WUNUSED NONNULL((1, 2)) DeeAst *DFCALL DeeParser_ParseProdOperand(DeeParser *__restrict self, /*inherit(always)*/ DeeAst *__restrict lhs);
-INTDEF WUNUSED NONNULL((1, 2)) DeeAst *DFCALL DeeParser_ParseSumOperand(DeeParser *__restrict self, /*inherit(always)*/ DeeAst *__restrict lhs);
-INTDEF WUNUSED NONNULL((1, 2)) DeeAst *DFCALL DeeParser_ParseShiftOperand(DeeParser *__restrict self, /*inherit(always)*/ DeeAst *__restrict lhs);
-INTDEF WUNUSED NONNULL((1, 2)) DeeAst *DFCALL DeeParser_ParseCmpOperand(DeeParser *__restrict self, /*inherit(always)*/ DeeAst *__restrict lhs);
-INTDEF WUNUSED NONNULL((1, 2)) DeeAst *DFCALL DeeParser_ParseCmpeqOperand(DeeParser *__restrict self, /*inherit(always)*/ DeeAst *__restrict lhs);
-INTDEF WUNUSED NONNULL((1, 2)) DeeAst *DFCALL DeeParser_ParseAndOperand(DeeParser *__restrict self, /*inherit(always)*/ DeeAst *__restrict lhs);
-INTDEF WUNUSED NONNULL((1, 2)) DeeAst *DFCALL DeeParser_ParseXorOperand(DeeParser *__restrict self, /*inherit(always)*/ DeeAst *__restrict lhs);
-INTDEF WUNUSED NONNULL((1, 2)) DeeAst *DFCALL DeeParser_ParseOrOperand(DeeParser *__restrict self, /*inherit(always)*/ DeeAst *__restrict lhs);
-INTDEF WUNUSED NONNULL((1, 2)) DeeAst *DFCALL DeeParser_ParseAsOperand(DeeParser *__restrict self, /*inherit(always)*/ DeeAst *__restrict lhs);
-INTDEF WUNUSED NONNULL((1, 2)) DeeAst *DFCALL DeeParser_ParseLandOperand(DeeParser *__restrict self, /*inherit(always)*/ DeeAst *__restrict lhs);
-INTDEF WUNUSED NONNULL((1, 2)) DeeAst *DFCALL DeeParser_ParseLorOperand(DeeParser *__restrict self, /*inherit(always)*/ DeeAst *__restrict lhs);
-INTDEF WUNUSED NONNULL((1, 2)) DeeAst *DFCALL DeeParser_ParseCondOperand(DeeParser *__restrict self, /*inherit(always)*/ DeeAst *__restrict lhs);
-INTDEF WUNUSED NONNULL((1, 2)) DeeAst *DFCALL DeeParser_ParseAssignOperand(DeeParser *__restrict self, /*inherit(always)*/ DeeAst *__restrict lhs);
-#define DeeParser_ParseExprOperand DeeParser_ParseAssignOperand /* Parse operand of expression */
+INTDEF WUNUSED NONNULL((1, 2)) DeeAst *DFCALL DeeParser_ParseExprOperand(DeeParser *__restrict self, /*inherit(always)*/ DeeAst *__restrict lhs);
+#define DeeParser_ParseExprHead DeeParser_ParseUnaryHead
 
 INTDEF WUNUSED NONNULL((1)) DeeAst *DFCALL DeeParser_ParseExpr(DeeParser *__restrict self);
 
+
+/************************************************************************/
+/* file: ../../../src/deemon/compiler/parser/comma.c                    */
+/************************************************************************/
 struct Dee_ast_comma_builder {
 	DeeAst                         *acb_multi;   /* [0..acb_multi_c] Uninitialized `Dee_AST_MULTI` describing result (first `acb_multi_c` elem are initialized) */
 	size_t                          acb_multi_c; /* Used # of elements in `acb_multi` (both committed, and uncommitted) */
@@ -312,17 +334,44 @@ DeeParser_ParseCommaOperand(DeeParser *__restrict self,
                             /*inherit(always)*/ DeeAst *__restrict lhs,
                             enum Dee_ast_multi_kind kind);
 
+/* WARNING: The AST returned here may not include location information */
 INTDEF WUNUSED NONNULL((1)) DeeAst *DFCALL
 DeeParser_ParseExprComma(DeeParser *__restrict self,
-                         enum Dee_ast_multi_kind kind);
-#define Dee_PARSER_PARSEEXPRCOMMA_NORMAL      0x00
-#define Dee_PARSER_PARSEEXPRCOMMA_FORCEMULTI  0x01 /* Always return a Dee_AST_MULTI as per `kind` */
-#define Dee_PARSER_PARSEEXPRCOMMA_ALLOWDECLS  0x02 /* DeeParser_ParseExprComma-only: Allow `local`, `global`, `static`, `__stack`, `final`, `varying`, as well as @attributes and typedefs */
-#define Dee_PARSER_PARSEEXPRCOMMA_PARSESEMI   0x04 /* Parse a trailing `;` */
-#define Dee_PARSER_PARSEEXPRCOMMA_NOTRILCOMMA 0x08 /* Don't consume an unused, trailing `,` */
+                         enum Dee_ast_multi_kind kind,
+                         uint_fast8_t flags);
+#define Dee_PARSER_PARSEEXPRCOMMA_NORMAL     0x00
+#define Dee_PARSER_PARSEEXPRCOMMA_FORCEMULTI 0x01 /* Always return a Dee_AST_MULTI as per `kind` */
+#define Dee_PARSER_PARSEEXPRCOMMA_ALLOWDECLS 0x02 /* DeeParser_ParseExprComma-only: Allow `local`, `global`, `static`, `__stack`, `final`, `varying`, as well as @attributes and typedefs */
+#define Dee_PARSER_PARSEEXPRCOMMA_PARSESEMI  0x04 /* Parse a trailing `;`, if one is required */
 
-#define Dee_PARSER_PARSEEXPRCOMMA_ALLOWKWDLIST  0x1000 /* Stop if what a keyword list label is encountered. */
+struct Dee_parser_expr_arglist {
+	DeeAst *peal_args; /* [1..1][owned] AST for function arguments (always a Dee_AST_MULTI+Dee_AST_MULTI_KIND_TUPLE) */
+	DeeAst *peal_kwds; /* [0..1][owned] AST for keyword arguments (may be any kind of AST) */
+};
+#define Dee_parser_expr_arglist_fini(self) \
+	(DeeAst_Destroy((self)->peal_args),    \
+	 DeeAst_XDestroy((self)->peal_kwds))
 
+/* Parse an argument list, including support for keyword arguments. */
+INTDEF WUNUSED NONNULL((1, 2)) int DFCALL
+DeeParser_ParseExprArgList(DeeParser *__restrict self,
+                           /*out*/ struct Dee_parser_expr_arglist *__restrict result);
+
+/* Parse the contents of a `{ ... }` expression as either:
+ * >> { a, b, c }         // Dee_AST_MULTI+Dee_AST_MULTI_KIND_GENERIC_SEQ
+ * >> { a: b, c: d }      // Dee_AST_MULTI+Dee_AST_MULTI_KIND_GENERIC_MAP
+ * >> { a, b, c = d... }  // Compile as `{ ((a, b, c) = d)... }`, aka `{ (a, b, c = d...)... }`
+ *
+ * NOTE: This function must be called with the current token pointing **AFTER** the leading `{`
+ * IMPORTANT: The caller must still amend location information to the returned AST. */
+INTDEF WUNUSED NONNULL((1)) DeeAst *DFCALL
+DeeParser_ParseExprSequenceOrMapping(DeeParser *__restrict self);
+
+
+
+/************************************************************************/
+/* file: ../../../src/deemon/compiler/parser/hybrid.c                   */
+/************************************************************************/
 
 /* Call after having parsed a `{` that can either be treated as the start
  * of a statement-scope, or the start of a `{...}`-style sequence. This
@@ -333,6 +382,11 @@ DeeParser_ParseExprComma(DeeParser *__restrict self,
  * >> ({ 42 })       ->   Dee_AST_MULTI:Dee_AST_MULTI_KIND_GENERIC_SEQ { Dee_AST_CONST:42 }
  *     ^     ^
  *     enter exit
+ *
+ * Examples:
+ * >> ({ 42: 10 })   ->   Dee_AST_MULTI:Dee_AST_MULTI_KIND_GENERIC_MAP { Dee_AST_CONST:42, Dee_AST_CONST:10 }
+ *     ^         ^
+ *     enter     exit
  *
  * >> ({ 42; })      ->  Dee_AST_ACT1_SCOPE { Dee_AST_MULTI:Dee_AST_MULTI_KIND_LAST { Dee_AST_CONST:42 } }
  *     ^      ^
@@ -345,6 +399,28 @@ DeeParser_ParseStatementsOrBraces(DeeParser *__restrict self);
 #define DeeParser_ParseStatementsOrBraces_WASSTMT(returned_ast) \
 	((returned_ast)->a_kind == Dee_AST_ACT1_SCOPE)
 
+
+/************************************************************************/
+/* file: ../../../src/deemon/compiler/parser/statement.c                */
+/************************************************************************/
+
+/* Parse a singular statement (obviously including the trailing `;` if one is required) */
+INTDEF WUNUSED NONNULL((1)) DeeAst *DFCALL DeeParser_ParseStatement(DeeParser *__restrict self);
+
+/* Parse statements until a token is reached that does cannot be used to start an(other)
+ * statement (which will usually be a `}`-token). All statements parsed until that point
+ * are then wrapped as a `Dee_AST_MULTI:Dee_AST_MULTI_KIND_LAST` and returned.
+ *
+ * IMPORTANT: This function does **NOT** add `Dee_AST_ACT1_SCOPE` to its return!
+ * IMPORTANT: The caller must still amend location information to the returned AST. */
+INTDEF WUNUSED NONNULL((1)) DeeAst *DFCALL DeeParser_ParseStatements(DeeParser *__restrict self);
+
+/* With the current token being a `{`, parse a sequence of statements until
+ * a matching `}`-token is encountered, then return everything that was parsed
+ * in the form of a `Dee_AST_MULTI:Dee_AST_MULTI_KIND_LAST`.
+ *
+ * IMPORTANT: This function does **NOT** add `Dee_AST_ACT1_SCOPE` to its return! */
+INTDEF WUNUSED NONNULL((1)) DeeAst *DFCALL DeeParser_ParseStatementsAtBrace(DeeParser *__restrict self);
 
 
 #else /* CONFIG_EXPERIMENTAL_USE_STATELESS_PARSER */
