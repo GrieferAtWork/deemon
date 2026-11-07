@@ -2159,20 +2159,20 @@ type_expression_parser_parsetype(struct type_expression_parser *__restrict self,
 			}
 			++self->tep_doc;
 			if (name.ten_str == NULL) {
-				name.ten_str = (DREF DeeStringObject *)DeeString_NewUtf8(name.ten_start,
-				                                                         (size_t)(name.ten_end -
-				                                                                  name.ten_start),
-				                                                         STRING_ERROR_FSTRICT);
+				name.ten_str = (DREF DeeStringObject *)DeeString_NewUtf8Ex(name.ten_start,
+				                                                           (size_t)(name.ten_end -
+				                                                                    name.ten_start),
+				                                                           STRING_ERROR_FSTRICT);
 				if unlikely(!name.ten_str)
 					goto err_name;
 			}
 			if (type_expression_parser_parsename(self, &export_name))
 				goto err_name;
 			if (export_name.ten_str == NULL) {
-				export_name.ten_str = (DREF DeeStringObject *)DeeString_NewUtf8(export_name.ten_start,
-				                                                                (size_t)(export_name.ten_end -
-				                                                                         export_name.ten_start),
-				                                                                STRING_ERROR_FSTRICT);
+				export_name.ten_str = (DREF DeeStringObject *)DeeString_NewUtf8Ex(export_name.ten_start,
+				                                                                  (size_t)(export_name.ten_end -
+				                                                                           export_name.ten_start),
+				                                                                  STRING_ERROR_FSTRICT);
 				if unlikely(!export_name.ten_str)
 					goto err_name;
 			}

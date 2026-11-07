@@ -1164,54 +1164,54 @@ _DeeNTSystem_HandleGenericError(/*DWORD*/ DeeNT_DWORD dwError) {
 
 
 /* Figure out how to implement `DeeNTSystem_TranslateErrno()` */
-#undef DeeNTSystem_TranslateErrno_USE_ERRNO_NT2KOS
-#undef DeeNTSystem_TranslateErrno_USE_DOSMAPERR
+#undef DeeNTSystem_TranslateErrno_USE_errno_nt2kos
+#undef DeeNTSystem_TranslateErrno_USE__dosmaperr_errno
 #undef DeeNTSystem_TranslateErrno_USE_FALLBACK
 #if defined(CONFIG_HAVE_errno_nt2kos)
-#define DeeNTSystem_TranslateErrno_USE_ERRNO_NT2KOS 1
+#define DeeNTSystem_TranslateErrno_USE_errno_nt2kos 1
 #elif defined(CONFIG_HAVE__dosmaperr) && defined(CONFIG_HAVE_errno) && 0
-#define DeeNTSystem_TranslateErrno_USE_DOSMAPERR 1
+#define DeeNTSystem_TranslateErrno_USE__dosmaperr_errno 1
 #else
 #define DeeNTSystem_TranslateErrno_USE_FALLBACK 1
 #endif
 
 
 /* Figure out how to implement `DeeNTSystem_TranslateNtError()` */
-#undef DeeNTSystem_TranslateNtError_USE_ERRNO_KOS2NT
+#undef DeeNTSystem_TranslateErrno_USE_errno_kos2nt
 #undef DeeNTSystem_TranslateNtError_USE_FALLBACK
 #if defined(CONFIG_HAVE_errno_kos2nt)
-#define DeeNTSystem_TranslateNtError_USE_ERRNO_KOS2NT 1
+#define DeeNTSystem_TranslateErrno_USE_errno_kos2nt 1
 #else
 #define DeeNTSystem_TranslateNtError_USE_FALLBACK 1
 #endif
 
 
-#ifdef DeeNTSystem_TranslateErrno_USE_ERRNO_NT2KOS
+#ifdef DeeNTSystem_TranslateErrno_USE_errno_nt2kos
 #ifndef __errno_nt2kos_defined
 #ifndef __LIBCCALL
 #define __LIBCCALL /* nothing */
 #endif /* !__LIBCCALL */
 extern ATTR_DLLIMPORT /*errno_t*/ int __LIBCCALL errno_nt2kos(DeeNT_DWORD dwError);
 #endif /* !__errno_nt2kos_defined */
-#endif /* DeeNTSystem_TranslateErrno_USE_ERRNO_NT2KOS */
+#endif /* DeeNTSystem_TranslateErrno_USE_errno_nt2kos */
 
-#ifdef DeeNTSystem_TranslateNtError_USE_ERRNO_KOS2NT
+#ifdef DeeNTSystem_TranslateErrno_USE_errno_kos2nt
 #ifndef __errno_kos2nt_defined
 #ifndef __LIBCCALL
 #define __LIBCCALL /* nothing */
 #endif /* !__LIBCCALL */
 extern ATTR_DLLIMPORT DeeNT_DWORD __LIBCCALL errno_kos2nt(/*errno_t*/ int errno_value);
 #endif /* !__errno_kos2nt_defined */
-#endif /* DeeNTSystem_TranslateNtError_USE_ERRNO_KOS2NT */
+#endif /* DeeNTSystem_TranslateErrno_USE_errno_kos2nt */
 
-#ifdef DeeNTSystem_TranslateErrno_USE_DOSMAPERR
+#ifdef DeeNTSystem_TranslateErrno_USE__dosmaperr_errno
 #ifdef CONFIG_HAVE__doserrno
 #define IF_CONFIG_HAVE__doserrno(x) x
 #else /* CONFIG_HAVE__doserrno */
 #define IF_CONFIG_HAVE__doserrno(x) /* nothing */
 #endif /* !CONFIG_HAVE__doserrno */
 extern ATTR_DLLIMPORT void ATTR_CDECL _dosmaperr(DeeNT_DWORD dwError);
-#endif /* DeeNTSystem_TranslateErrno_USE_DOSMAPERR */
+#endif /* DeeNTSystem_TranslateErrno_USE__dosmaperr_errno */
 
 #if (defined(DeeNTSystem_TranslateErrno_USE_FALLBACK) || \
      defined(DeeNTSystem_TranslateNtError_USE_FALLBACK))
@@ -1749,10 +1749,10 @@ PRIVATE struct nt2errno_ent const nt2errno[] = {
  *       the given NT error code into an errno. */
 PUBLIC ATTR_CONST WUNUSED /*errno_t*/ int DCALL
 DeeNTSystem_TranslateErrno(/*DWORD*/ DeeNT_DWORD dwError) {
-#ifdef DeeNTSystem_TranslateErrno_USE_ERRNO_NT2KOS
+#ifdef DeeNTSystem_TranslateErrno_USE_errno_nt2kos
 	return errno_nt2kos(dwError);
-#endif /* DeeNTSystem_TranslateErrno_USE_ERRNO_NT2KOS */
-#ifdef DeeNTSystem_TranslateErrno_USE_DOSMAPERR
+#endif /* DeeNTSystem_TranslateErrno_USE_errno_nt2kos */
+#ifdef DeeNTSystem_TranslateErrno_USE__dosmaperr_errno
 	/*errno_t*/ int result, old_errno;
 	IF_CONFIG_HAVE__doserrno(DeeNT_DWORD old_doserrno);
 	if (dwError == 0)
@@ -1764,7 +1764,7 @@ DeeNTSystem_TranslateErrno(/*DWORD*/ DeeNT_DWORD dwError) {
 	IF_CONFIG_HAVE__doserrno(_doserrno = old_doserrno);
 	DeeSystem_SetErrno(old_errno);
 	return result;
-#endif /* DeeNTSystem_TranslateErrno_USE_DOSMAPERR */
+#endif /* DeeNTSystem_TranslateErrno_USE__dosmaperr_errno */
 #ifdef DeeNTSystem_TranslateErrno_USE_FALLBACK
 	unsigned int i;
 	if (dwError == 0)
@@ -1843,9 +1843,9 @@ DeeNTSystem_TranslateErrno(/*DWORD*/ DeeNT_DWORD dwError) {
 /* Do the reverse of `DeeNTSystem_TranslateErrno()` */
 PUBLIC ATTR_CONST WUNUSED /*DWORD*/ DeeNT_DWORD DCALL
 DeeNTSystem_TranslateNtError(/*errno_t*/ int errno_value) {
-#ifdef DeeNTSystem_TranslateNtError_USE_ERRNO_KOS2NT
+#ifdef DeeNTSystem_TranslateErrno_USE_errno_kos2nt
 	return errno_kos2nt(errno_value);
-#endif /* DeeNTSystem_TranslateNtError_USE_ERRNO_KOS2NT */
+#endif /* DeeNTSystem_TranslateErrno_USE_errno_kos2nt */
 
 #ifdef DeeNTSystem_TranslateNtError_USE_FALLBACK
 	unsigned int i;

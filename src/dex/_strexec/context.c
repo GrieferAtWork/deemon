@@ -1255,7 +1255,7 @@ JITContext_DoImportModule(JITContext *__restrict self,
 			if (args[0]) {
 				source_module = DeeObject_Call(self->jc_import, 2, args);
 			} else {
-				args[0] = DeeString_NewUtf8(source_name, source_size, STRING_ERROR_FSTRICT);
+				args[0] = DeeString_NewUtf8Ex(source_name, source_size, Dee_STRING_ERROR_FSTRICT);
 				if unlikely(!args[0])
 					goto err;
 				source_module = DeeObject_Call(self->jc_import, 2, args);
@@ -1270,7 +1270,7 @@ JITContext_DoImportModule(JITContext *__restrict self,
 			source_module = DeeObject_Call(self->jc_import, 1, (DeeObject **)&spec->ii_import_name);
 		} else {
 			DREF DeeStringObject *import_name;
-			import_name = (DREF DeeStringObject *)DeeString_NewUtf8(source_name, source_size, STRING_ERROR_FSTRICT);
+			import_name = (DREF DeeStringObject *)DeeString_NewUtf8Ex(source_name, source_size, Dee_STRING_ERROR_FSTRICT);
 			if unlikely(!import_name)
 				goto err;
 			source_module = DeeObject_Call(self->jc_import, 1, (DeeObject **)&import_name);

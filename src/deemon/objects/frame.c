@@ -542,7 +542,7 @@ frame_getlocation(Frame *__restrict self) {
 		} else {
 			if (!state.rs_regs.dr_path-- ||
 			    (path = DeeCode_GetDDIString(Dee_AsObject(code), state.rs_regs.dr_file)) == NULL) {
-				fileob = DeeString_New(file);
+				fileob = DeeString_NewUtf8(file);
 			} else {
 #ifdef TRACEBACK_SLASH_S
 				fileob = DeeString_Newf("%s" TRACEBACK_SLASH_S "%s", path, file);
@@ -557,7 +557,7 @@ frame_getlocation(Frame *__restrict self) {
 		if (!path) {
 			nameob = DeeNone_NewRef();
 		} else {
-			nameob = DeeString_New(path);
+			nameob = DeeString_NewUtf8(path);
 			if unlikely(!nameob)
 				goto err_state_r_fileob;
 		}
@@ -603,7 +603,7 @@ frame_getfile(Frame *__restrict self) {
 	} else {
 		if (!state.rs_regs.dr_path-- ||
 		    (path = DeeCode_GetDDIString(Dee_AsObject(code), state.rs_regs.dr_path)) == NULL) {
-			result = DeeString_New(file);
+			result = DeeString_NewUtf8(file);
 		} else {
 #ifdef TRACEBACK_SLASH_S
 			result = DeeString_Newf("%s" TRACEBACK_SLASH_S "%s", path, file);
@@ -667,7 +667,7 @@ frame_getname(Frame *__restrict self) {
 	if (code == (DREF DeeCodeObject *)ITER_DONE ||
 	    (name = DeeCode_GetDDIString(Dee_AsObject(code), state.rs_regs.dr_name)) == NULL)
 		return_none;
-	result = DeeString_New(name);
+	result = DeeString_NewUtf8(name);
 	Dee_ddi_state_fini(&state);
 	Dee_Decref(code);
 	return result;

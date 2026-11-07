@@ -1144,10 +1144,10 @@ typedef struct Dee_lexer {
 #endif /* !CONFIG_EXPERIMENTAL_USE_TPP3 */
 
 
-#define DeeString_FromTppKeyword(kwd)           \
-	DeeString_NewUtf8(tpp_keyword_getcstr(kwd), \
-	                  tpp_keyword_getlen(kwd),  \
-	                  Dee_STRING_ERROR_FIGNORE)
+#define DeeString_FromTppKeyword(kwd)             \
+	DeeString_NewUtf8Ex(tpp_keyword_getcstr(kwd), \
+	                    tpp_keyword_getlen(kwd),  \
+	                    Dee_STRING_ERROR_FREPLAC)
 
 
 struct ast;

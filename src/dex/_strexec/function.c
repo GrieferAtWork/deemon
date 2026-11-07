@@ -714,11 +714,11 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 jf_str(JITFunction *__restrict self) {
 	struct jit_object_entry *ent;
 	if (self->jf_selfarg == (size_t)-1)
-		return DeeString_New("<anonymous>");
+		return DeeString_NewAscii("<anonymous>");
 	ent = &self->jf_args.ot_list[self->jf_selfarg];
-	return DeeString_NewUtf8((char const *)ent->oe_namestr,
-	                         ent->oe_namelen,
-	                         STRING_ERROR_FSTRICT);
+	return DeeString_NewUtf8Ex((char const *)ent->oe_namestr,
+	                           ent->oe_namelen,
+	                           STRING_ERROR_FSTRICT);
 }
 
 
@@ -1234,9 +1234,9 @@ jf_getname(JITFunction *__restrict self) {
 	if (self->jf_selfarg == (size_t)-1)
 		return_none;
 	ent = &self->jf_args.ot_list[self->jf_selfarg];
-	return DeeString_NewUtf8(ent->oe_namestr,
-	                         ent->oe_namelen,
-	                         STRING_ERROR_FIGNORE);
+	return DeeString_NewUtf8Ex(ent->oe_namestr,
+	                           ent->oe_namelen,
+	                           STRING_ERROR_FIGNORE);
 }
 
 INTERN WUNUSED DREF DeeObject *DCALL
@@ -1256,9 +1256,9 @@ jf_getkwds(JITFunction *__restrict self) {
 		DREF DeeObject *name;
 		struct jit_object_entry *ent;
 		ent  = &self->jf_args.ot_list[self->jf_argv[i]];
-		name = DeeString_NewUtf8(ent->oe_namestr,
-		                         ent->oe_namelen,
-		                         STRING_ERROR_FIGNORE);
+		name = DeeString_NewUtf8Ex(ent->oe_namestr,
+		                           ent->oe_namelen,
+		                           STRING_ERROR_FIGNORE);
 		if unlikely(!name)
 			goto err_r_i;
 		DeeTuple_SET(result, i, name); /* Inherit reference. */
@@ -1273,9 +1273,9 @@ err_r_i:
 
 INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 jf_gettext(JITFunction *__restrict self) {
-	return DeeString_NewUtf8(self->jf_source_start,
-	                         (size_t)(self->jf_source_end - self->jf_source_start),
-	                         STRING_ERROR_FIGNORE);
+	return DeeString_NewUtf8Ex(self->jf_source_start,
+	                           (size_t)(self->jf_source_end - self->jf_source_start),
+	                           STRING_ERROR_FIGNORE);
 }
 
 INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL

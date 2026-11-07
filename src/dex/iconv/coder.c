@@ -153,7 +153,7 @@ PRIVATE WUNUSED DREF DeeObject *DCALL
 get_codec_name(iconv_codec_t codec) {
 	char const *name = libiconv_getcodecnames(codec);
 	if (name)
-		return DeeString_New(name);
+		return DeeString_NewAscii(name);
 	return DeeInt_NEWU(codec);
 }
 

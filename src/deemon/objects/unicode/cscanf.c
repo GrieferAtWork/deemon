@@ -352,9 +352,9 @@ yield_string_from_spec_data_start_until_data:
 				                             (byte_t *)spec_data_start,
 				                             (size_t)(data - spec_data_start));
 			} else {
-				result = DeeString_NewUtf8(spec_data_start,
-				                           (size_t)(data - spec_data_start),
-				                           STRING_ERROR_FNORMAL);
+				result = DeeString_NewUtf8Ex(spec_data_start,
+				                             (size_t)(data - spec_data_start),
+				                             Dee_STRING_ERROR_FSTRICT);
 			}
 		}	break;
 

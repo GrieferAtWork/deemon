@@ -37,7 +37,7 @@
 #include <deemon/pair.h>            /* DeeSeq_OfPairInherited */
 #include <deemon/regex.h>           /* DeeRegex*, DeeString_GetRegex, Dee_RE_* */
 #include <deemon/seq.h>             /* DeeSeqSome*, DeeSeq_NewEmpty */
-#include <deemon/string.h>          /* CASE_WIDTH_nBYTE, DeeCodec_Decode, DeeCodec_Encode, DeeDbgString_New2ByteBuffer, DeeDbgString_New4ByteBuffer, DeeString*, DeeUni_*, Dee_EmptyString, Dee_STRING_HASH_UNSET, Dee_STRING_UTF_FASCII, Dee_UNICODE_*, Dee_charptr, Dee_charptr_const, Dee_string_utf*, Dee_unicode_printer*, Dee_uniflag_t, Dee_unitraits, STRING_ERROR_FSTRICT, STRING_MUL_SIZEOF_WIDTH, STRING_WIDTH_COMMON, STRING_WIDTH_COMMON3, STRING_WIDTH_nBYTE, SWITCH_SIZEOF_WIDTH, WSTR_LENGTH */
+#include <deemon/string.h>          /* CASE_WIDTH_nBYTE, DeeCodec_Decode, DeeCodec_Encode, DeeDbgString_New2ByteBuffer, DeeDbgString_New4ByteBuffer, DeeString*, DeeUni_*, Dee_EmptyString, Dee_STRING_HASH_UNSET, Dee_STRING_UTF_FASCII, Dee_UNICODE_*, Dee_charptr, Dee_charptr_const, Dee_string_utf*, Dee_unicode_printer*, Dee_uniflag_t, Dee_unitraits, Dee_STRING_ERROR_FSTRICT, STRING_MUL_SIZEOF_WIDTH, STRING_WIDTH_COMMON, STRING_WIDTH_COMMON3, STRING_WIDTH_nBYTE, SWITCH_SIZEOF_WIDTH, WSTR_LENGTH */
 #include <deemon/stringutils.h>     /* DeeString_Foreach, DeeString_GetChar, Dee_unicode_utf8seqlen_safe */
 #include <deemon/system-features.h> /* DeeSystem_DEFINE_memsetp, bzero, close, isalnum, isalpha, isdigit, islower, isupper, memchr*, memcmp, memcmpb, memcmpl, memcmpw, memcpy*, memmeml, memmemw, memmoveb, memmovel, memmovew, mempcpy*, mempsetb, mempsetl, mempsetw, memrchrl, memrchrw, memrmeml, memrmemw, memsetb, memsetl, memsetw, open */
 #include <deemon/tuple.h>           /* DeeTuple* */
@@ -3717,7 +3717,7 @@ DeeCodec_GetErrorMode(char const *__restrict errors);
 INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 string_decode(DeeObject *self, size_t argc,
               DeeObject *const *argv, DeeObject *kw) {
-	unsigned int error_mode = STRING_ERROR_FSTRICT;
+	unsigned int error_mode = Dee_STRING_ERROR_FSTRICT;
 /*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("decode", params: """
 	DeeStringObject *codec;
 	char const *errors=!Pstrict = NULL;
@@ -3748,7 +3748,7 @@ err:
 INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 string_encode(DeeObject *self, size_t argc,
               DeeObject *const *argv, DeeObject *kw) {
-	unsigned int error_mode = STRING_ERROR_FSTRICT;
+	unsigned int error_mode = Dee_STRING_ERROR_FSTRICT;
 /*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("encode", params: """
 	DeeStringObject *codec;
 	char const *errors=!Pstrict = NULL;
@@ -9676,8 +9676,8 @@ string_relocate(String *self, size_t argc, DeeObject *const *argv, DeeObject *kw
 		goto err;
 	if (status == Dee_RE_STATUS_NOMATCH)
 		return_none;
-	return DeeString_NewUtf8((char const *)exec.rewr_exec.rx_inbase + (size_t)status,
-	                         match_size, STRING_ERROR_FSTRICT);
+	return DeeString_NewUtf8Ex((char const *)exec.rewr_exec.rx_inbase + (size_t)status,
+	                           match_size, Dee_STRING_ERROR_FSTRICT);
 err:
 	return NULL;
 }
@@ -9695,8 +9695,8 @@ string_rerlocate(String *self, size_t argc, DeeObject *const *argv, DeeObject *k
 		goto err;
 	if (status == Dee_RE_STATUS_NOMATCH)
 		return_none;
-	return DeeString_NewUtf8((char const *)exec.rewr_exec.rx_inbase + (size_t)status,
-	                         match_size, STRING_ERROR_FSTRICT);
+	return DeeString_NewUtf8Ex((char const *)exec.rewr_exec.rx_inbase + (size_t)status,
+	                           match_size, Dee_STRING_ERROR_FSTRICT);
 err:
 	return NULL;
 }
@@ -9711,9 +9711,9 @@ string_pack_utf8_partition_not_found(char const *__restrict utf8_base,
 	if unlikely(!result)
 		goto done;
 	if (startoff < endoff) {
-		str0 = DeeString_NewUtf8(utf8_base + startoff,
-		                         endoff - startoff,
-		                         STRING_ERROR_FSTRICT);
+		str0 = DeeString_NewUtf8Ex(utf8_base + startoff,
+		                           endoff - startoff,
+		                           Dee_STRING_ERROR_FSTRICT);
 		if unlikely(!str0)
 			goto err_r;
 	} else {
@@ -9746,15 +9746,15 @@ string_pack_utf8_partition_found(char const *__restrict utf8_base,
 	result = DeeTuple_NewUninitialized(3);
 	if unlikely(!result)
 		goto done;
-	str = DeeString_NewUtf8(utf8_base, match_startoff, STRING_ERROR_FSTRICT);
+	str = DeeString_NewUtf8Ex(utf8_base, match_startoff, Dee_STRING_ERROR_FSTRICT);
 	if unlikely(!str)
 		goto err_r_0;
 	DeeTuple_SET(result, 0, str);
-	str = DeeString_NewUtf8(utf8_base + match_startoff, match_endoff - match_startoff, STRING_ERROR_FSTRICT);
+	str = DeeString_NewUtf8Ex(utf8_base + match_startoff, match_endoff - match_startoff, Dee_STRING_ERROR_FSTRICT);
 	if unlikely(!str)
 		goto err_r_1;
 	DeeTuple_SET(result, 1, str);
-	str = DeeString_NewUtf8(utf8_base + match_endoff, str_endoff - match_endoff, STRING_ERROR_FSTRICT);
+	str = DeeString_NewUtf8Ex(utf8_base + match_endoff, str_endoff - match_endoff, Dee_STRING_ERROR_FSTRICT);
 	if unlikely(!str)
 		goto err_r_2;
 	DeeTuple_SET(result, 2, str);
@@ -10128,9 +10128,9 @@ string_relstrip(String *self, size_t argc, DeeObject *const *argv, DeeObject *kw
 	/* End-of-matching-area */
 	if unlikely(exec.rx_startoff >= exec.rx_endoff)
 		return_reference_((String *)Dee_EmptyString);
-	return (DREF String *)DeeString_NewUtf8((char const *)exec.rx_inbase + exec.rx_startoff,
-	                                        exec.rx_endoff - exec.rx_startoff,
-	                                        STRING_ERROR_FSTRICT);
+	return (DREF String *)DeeString_NewUtf8Ex((char const *)exec.rx_inbase + exec.rx_startoff,
+	                                          exec.rx_endoff - exec.rx_startoff,
+	                                          Dee_STRING_ERROR_FSTRICT);
 err:
 	return NULL;
 }
@@ -10162,9 +10162,9 @@ string_rerstrip(String *self, size_t argc, DeeObject *const *argv, DeeObject *kw
 	/* End-of-matching-area */
 	if unlikely(exec.rx_startoff >= exec.rx_endoff)
 		return_reference_((String *)Dee_EmptyString);
-	return (DREF String *)DeeString_NewUtf8((char const *)exec.rx_inbase + exec.rx_startoff,
-	                                        exec.rx_endoff - exec.rx_startoff,
-	                                        STRING_ERROR_FSTRICT);
+	return (DREF String *)DeeString_NewUtf8Ex((char const *)exec.rx_inbase + exec.rx_startoff,
+	                                          exec.rx_endoff - exec.rx_startoff,
+	                                          Dee_STRING_ERROR_FSTRICT);
 err:
 	return NULL;
 }
@@ -10212,9 +10212,9 @@ string_restrip(String *self, size_t argc, DeeObject *const *argv, DeeObject *kw)
 	/* End-of-matching-area */
 	if unlikely(exec.rx_startoff >= exec.rx_endoff)
 		return_reference_((String *)Dee_EmptyString);
-	return (DREF String *)DeeString_NewUtf8((char const *)exec.rx_inbase + exec.rx_startoff,
-	                                        exec.rx_endoff - exec.rx_startoff,
-	                                        STRING_ERROR_FSTRICT);
+	return (DREF String *)DeeString_NewUtf8Ex((char const *)exec.rx_inbase + exec.rx_startoff,
+	                                          exec.rx_endoff - exec.rx_startoff,
+	                                          Dee_STRING_ERROR_FSTRICT);
 err:
 	return NULL;
 }

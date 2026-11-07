@@ -184,7 +184,6 @@ PRIVATE WUNUSED NONNULL((1)) DREF RowFmt *DCALL
 _Query_TryNewRowFmtOrUnlock(Query *__restrict self) {
 	DREF RowFmt *result;
 	unsigned int i, ncol;
-	size_t badalloc_memsize;
 	ncol = (unsigned int)sqlite3_column_count(self->q_stmt);
 	result = RowFmt_TryAlloc(ncol);
 	if unlikely(!result) {
@@ -205,11 +204,10 @@ _Query_TryNewRowFmtOrUnlock(Query *__restrict self) {
 		/* >> If sqlite3_malloc() fails [...] then a NULL pointer is returned */
 		if unlikely(!name) {
 			bool collect_ok;
-			badalloc_memsize = 32; /* Guess required size */
 			nameob = NULL;
 err_nomem__unlock_r_i_nameopt:
 			Query_UnlockDB(self);
-			collect_ok = Dee_CollectMemory(badalloc_memsize);
+			collect_ok = Dee_CollectMemory(32); /* Guess required size */
 			while (i--) {
 				fmt = &result->rf_cols[i];
 				cellfmt_fini(fmt);
@@ -218,9 +216,7 @@ err_nomem__unlock_r_i_nameopt:
 			Dee_XDecref_unlikely(nameob);
 			return collect_ok ? (DREF RowFmt *)ITER_DONE : NULL;
 		}
-		badalloc_memsize = strlen(name);
-		nameob = (DREF DeeStringObject *)DeeString_TryNewUtf8(name, badalloc_memsize,
-		                                                      STRING_ERROR_FIGNORE);
+		nameob = (DREF DeeStringObject *)DeeString_TryNewUtf8(name);
 		if unlikely(!nameob)
 			goto err_nomem__unlock_r_i_nameopt;
 		fmt->cfmt_name = nameob; /* Inherit reference */
@@ -230,9 +226,7 @@ err_nomem__unlock_r_i_nameopt:
 		/* >> If the Nth column of the result set is an expression or subquery, then a NULL pointer is returned */
 		decltypeob = NULL;
 		if likely(decltype_) {
-			badalloc_memsize = strlen(decltype_);
-			decltypeob = (DREF DeeStringObject *)DeeString_TryNewUtf8(decltype_, badalloc_memsize,
-			                                                          STRING_ERROR_FIGNORE);
+			decltypeob = (DREF DeeStringObject *)DeeString_TryNewUtf8(decltype_);
 			if unlikely(!decltypeob)
 				goto err_nomem__unlock_r_i_nameopt;
 		}
@@ -387,8 +381,8 @@ unlock_and_collect_length_memory:
 						goto err_row;
 					goto decref_row_and_start_again;
 				}
-				string = DeeString_TryNewUtf8((char const *)text, length,
-				                              STRING_ERROR_FIGNORE);
+				string = DeeString_TryNewUtf8Ex((char const *)text, length,
+				                                Dee_STRING_ERROR_FREPLAC);
 				if unlikely(!string)
 					goto unlock_and_collect_length_memory;
 				c->c_type = CELLTYPE_OBJECT;
@@ -599,7 +593,7 @@ query_getsql(Query *__restrict self) {
 	char *sql_repr = query_get_expanded_sql(self);
 	if unlikely(!sql_repr)
 		goto err;
-	result = DeeString_NewUtf8(sql_repr, strlen(sql_repr), STRING_ERROR_FIGNORE);
+	result = DeeString_NewUtf8Ex(sql_repr, strlen(sql_repr), Dee_STRING_ERROR_FREPLAC);
 	sqlite3_free(sql_repr);
 	return result;
 err:

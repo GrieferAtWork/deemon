@@ -286,7 +286,7 @@ without_module:
 		char const *name = DeeCode_NAME(code);
 		if (name) {
 			/* Well... At least we got the name. - That's something. */
-			info->fi_name = (DREF DeeStringObject *)DeeString_New(name);
+			info->fi_name = (DREF DeeStringObject *)DeeString_NewUtf8(name);
 			if unlikely(!info->fi_name)
 				goto err_mod;
 			return 0;
@@ -724,7 +724,7 @@ function_get_operatorname(Function *__restrict self) {
 		op = DeeTypeType_GetOperatorById(info.fi_type ? Dee_TYPE(info.fi_type)
 		                                              : &DeeType_Type,
 		                                 info.fi_clsop->co_name);
-		result = op ? DeeString_New(op->oi_sname)
+		result = op ? DeeString_NewAscii(op->oi_sname)
 		            : DeeInt_NewUInt16(info.fi_clsop->co_name);
 		Dee_XDecref(info.fi_type);
 		return result;

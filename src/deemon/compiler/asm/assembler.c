@@ -1558,9 +1558,7 @@ INTERN WUNUSED DREF DeeCodeObject *DCALL asm_gencode(void) {
 				kwds[i] = (DREF DeeStringObject *)DeeString_NewEmpty();
 			} else {
 				DREF DeeStringObject *nameob;
-				nameob = (DREF DeeStringObject *)DeeString_NewUtf8(tpp_keyword_getcstr(name),
-				                                                   tpp_keyword_getlen(name),
-				                                                   STRING_ERROR_FIGNORE);
+				nameob = (DREF DeeStringObject *)DeeString_FromTppKeyword(name);
 				if unlikely(!nameob) {
 					Dee_Decrefv(kwds, i);
 					Dee_Free(kwds);
@@ -2625,7 +2623,7 @@ asm_newconst_string_utf8(/*utf-8*/ char const *__restrict str, size_t len) {
 	}
 	if unlikely(check_resize_constants())
 		goto err;
-	value = DeeString_NewUtf8(str, len, Dee_STRING_ERROR_FIGNORE);
+	value = DeeString_NewUtf8Ex(str, len, Dee_STRING_ERROR_FSTRICT);
 	if unlikely(!value)
 		goto err;
 	result = current_assembler.a_constc;

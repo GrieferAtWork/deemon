@@ -33,7 +33,7 @@
 #include <deemon/none.h>            /* return_none */
 #include <deemon/object.h>          /* DREF, DeeObject, DeeObject_AsInt */
 #include <deemon/objmethod.h>       /*  */
-#include <deemon/string.h>          /* DeeString_New, DeeString_NewUtf8, STRING_ERROR_FIGNORE */
+#include <deemon/string.h>          /* DeeString_New, DeeString_NewUtf8Ex, STRING_ERROR_FIGNORE */
 #include <deemon/system-features.h> /* CONFIG_HAVE_*, DeeSystem_GetErrno, DeeSystem_SetErrno, EOK, isdigit, isupper, strerror, strerrordesc_np, strerrorname_np, strlen, sys_errlist, sys_nerr */
 #include <deemon/type.h>            /* METHOD_FNORMAL, METHOD_FPURECALL */
 
@@ -541,7 +541,7 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_strerror_f_impl(int errnum)
 		char const *text;
 		text = strerrordesc_np(errnum);
 		if (text)
-			return DeeString_NewUtf8(text, strlen(text), STRING_ERROR_FIGNORE);
+			return DeeString_NewUtf8(text);
 	}
 #endif /* posix_strerror_USE_strerrordesc_np */
 
@@ -550,7 +550,7 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_strerror_f_impl(int errnum)
 		char const *text;
 		text = (char const *)sys_errlist[errnum];
 		if (text)
-			return DeeString_NewUtf8(text, strlen(text), STRING_ERROR_FIGNORE);
+			return DeeString_NewUtf8(text);
 	}
 #endif /* posix_strerror_USE_sys_errlist */
 
@@ -573,9 +573,7 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_strerror_f_impl(int errnum)
 				docstring = iter->ds_doc;
 				if (!docstring)
 					break;
-				return DeeString_NewUtf8(docstring,
-				                         strlen(docstring),
-				                         STRING_ERROR_FIGNORE);
+				return DeeString_NewUtf8(docstring);
 			}
 		}
 	}
@@ -586,7 +584,7 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_strerror_f_impl(int errnum)
 		char const *text;
 		text = strerror(errnum);
 		if (text)
-			return DeeString_NewUtf8(text, strlen(text), STRING_ERROR_FIGNORE);
+			return DeeString_NewUtf8(text);
 	}
 #endif /* posix_strerror_USE_strerror */
 
@@ -643,7 +641,7 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_strerrorname_f_impl(int errnum)
 		char const *text;
 		text = strerrorname_np(errnum);
 		if (text)
-			return DeeString_NewUtf8(text, strlen(text), STRING_ERROR_FIGNORE);
+			return DeeString_NewUtf8(text);
 	}
 #endif /* posix_strerrorname_USE_strerrorname_np */
 
@@ -662,7 +660,7 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_strerrorname_f_impl(int errnum)
 				break;
 			if (eval == errnum) {
 				/* Found it! Now to simply return the symbol's name */
-				return DeeString_New(iter->ds_name);
+				return DeeString_NewAscii(iter->ds_name);
 			}
 		}
 	}

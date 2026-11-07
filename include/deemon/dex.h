@@ -75,7 +75,7 @@ DECL_BEGIN
 #define Dee_DEXSYM_PROPERTY  Dee_MODSYM_FPROPERTY
 
 struct Dee_dex_symbol {
-	char const               *ds_name;   /* [1..1][SENTINEL(NULL)] Name of this symbol. */
+	/*ascii*/ char const     *ds_name;   /* [1..1][SENTINEL(NULL)] Name of this symbol. */
 	/*utf-8*/ char const     *ds_doc;    /* [0..1] An optional documentation string. */
 	DeeObject                *ds_obj;    /* [0..1] The initial value of this symbol. */
 	__UINTPTR_QUARTER_TYPE__  ds_flags;  /* Set of `Dee_DEXSYM_*`. */

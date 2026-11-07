@@ -333,7 +333,7 @@ INTDEF WUNUSED NONNULL((1)) DREF struct Dee_string_object *DCALL Dee_module_symb
 INTDEF WUNUSED NONNULL((1)) DREF struct Dee_string_object *DCALL Dee_module_symbol_getdocobj(struct Dee_module_symbol *__restrict self);
 #else /* CONFIG_BUILDING_DEEMON */
 #define Dee_module_symbol_getnameobj(x) ((DeeStringObject *)(((x)->ss_flags & Dee_MODSYM_FNAMEOBJ) ? DeeObject_NewRef(Dee_AsObject(COMPILER_CONTAINER_OF((x)->ss_name, DeeStringObject, s_str))) : DeeString_NewWithHash((x)->ss_name, (x)->ss_hash)))
-#define Dee_module_symbol_getdocobj(x)  ((DeeStringObject *)(((x)->ss_flags & Dee_MODSYM_FDOCOBJ) ? DeeObject_NewRef(Dee_AsObject(COMPILER_CONTAINER_OF((x)->ss_doc, DeeStringObject, s_str))) : DeeString_NewUtf8((x)->ss_doc, strlen((x)->ss_doc), Dee_STRING_ERROR_FIGNORE)))
+#define Dee_module_symbol_getdocobj(x)  ((DeeStringObject *)(((x)->ss_flags & Dee_MODSYM_FDOCOBJ) ? DeeObject_NewRef(Dee_AsObject(COMPILER_CONTAINER_OF((x)->ss_doc, DeeStringObject, s_str))) : DeeString_NewUtf8((x)->ss_doc)))
 #endif /* !CONFIG_BUILDING_DEEMON */
 
 
@@ -647,7 +647,8 @@ typedef struct Dee_module_object {
 	 *       be used to determine all dependent modules that needs to be initialized. Only
 	 *       problem with that is that dependent modules are part of relocation data that is
 	 *       freed when `DeeDec_Track()` calls `DeeDec_Ehdr_FreeRelocationData()`, which has
-	 *       already happened by the time `DeeModule_InitializeImports()` is called... */
+	 *       already happened by the time `DeeModule_InitializeImports()` is called...
+	 * Solution: `DeeDec_Ehdr_FreeRelocationData()` must be called by `DeeModule_InitializeImports()` */
 #endif
 	DREF struct Dee_module_object     *const *mo_importv;  /* [1..1][const][0..mo_importc][const][owned] Vector of other modules imported by this one. */
 	__BYTE_TYPE__ const                      *mo_minaddr;  /* [const] Min address of memory mapped by this module */

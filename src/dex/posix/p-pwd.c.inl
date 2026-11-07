@@ -303,9 +303,9 @@ err_printer:
 	Dee_Decref(file);
 	if unlikely(!bytes)
 		goto err;
-	result = DeeString_NewUtf8((char const *)DeeBytes_DATA(bytes),
-	                           DeeBytes_SIZE(bytes),
-	                           STRING_ERROR_FREPLAC);
+	result = DeeString_NewUtf8Ex((char const *)DeeBytes_DATA(bytes),
+	                             DeeBytes_SIZE(bytes),
+	                             Dee_STRING_ERROR_FREPLAC);
 	Dee_Decref(bytes);
 	return result;
 err:

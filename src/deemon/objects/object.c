@@ -276,7 +276,7 @@ object_str(DeeObject *__restrict self) {
 			Dee_Incref(result);
 			return Dee_AsObject(result);
 		}
-		return DeeString_New(tp_self->tp_name);
+		return DeeString_NewAscii(tp_self->tp_name);
 	}
 	return_reference(&str_Object);
 #else
@@ -292,7 +292,7 @@ err_noimp:
 DEFAULT_OPIMP WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 object_repr(DeeObject *__restrict self) {
 	if (Dee_TYPE(self) == &DeeObject_Type)
-		return DeeString_New("Object()");
+		return DeeString_NewAscii("Object()");
 	err_unimplemented_operator(Dee_TYPE(self), OPERATOR_REPR);
 	return NULL;
 }

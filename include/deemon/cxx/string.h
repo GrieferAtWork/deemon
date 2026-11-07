@@ -71,11 +71,11 @@ public:
 	}
 public:
 	static WUNUSED Ref<string> ofutf8(char const *__restrict str) {
-		return inherit(DeeString_NewUtf8(str, strlen(str), Dee_STRING_ERROR_FSTRICT));
+		return inherit(DeeString_NewUtf8(str));
 	}
 	static WUNUSED Ref<string> ofutf8(char const *__restrict str, size_t length,
 	                                  unsigned int error_mode = Dee_STRING_ERROR_FSTRICT) {
-		return inherit(DeeString_NewUtf8(str, length, error_mode));
+		return inherit(DeeString_NewUtf8Ex(str, length, error_mode));
 	}
 	static WUNUSED Ref<string> ofutf16(uint16_t const *__restrict str, size_t length,
 	                                   unsigned int error_mode = Dee_STRING_ERROR_FSTRICT) {
@@ -35269,11 +35269,11 @@ public:
 };
 
 inline WUNUSED Ref<string> of(char const *__restrict str) {
-	return inherit(DeeString_NewUtf8(str, strlen(str), Dee_STRING_ERROR_FSTRICT));
+	return inherit(DeeString_NewUtf8(str));
 }
 inline WUNUSED Ref<string> of(char const *__restrict str, size_t length,
                               unsigned int error_mode = Dee_STRING_ERROR_FSTRICT) {
-	return inherit(DeeString_NewUtf8(str, length, error_mode));
+	return inherit(DeeString_NewUtf8Ex(str, length, error_mode));
 }
 inline WUNUSED Ref<string> of(Dee_wchar_t const *__restrict str) {
 	return inherit(DeeString_NewWide(str, wcslen(str), Dee_STRING_ERROR_FSTRICT));

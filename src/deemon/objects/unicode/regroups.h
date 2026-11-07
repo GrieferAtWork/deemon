@@ -28,7 +28,7 @@
 #include <deemon/none.h>   /* DeeNone_NewRef */
 #include <deemon/object.h> /* DREF, DeeObject, DeeTypeObject, Dee_Incref, OBJECT_HEAD */
 #include <deemon/regex.h>  /* DeeRegexMatch */
-#include <deemon/string.h> /* DeeString_NewUtf8, Dee_STRING_ERROR_FSTRICT */
+#include <deemon/string.h> /* DeeString_NewUtf8Ex, Dee_STRING_ERROR_FSTRICT */
 #include <deemon/tuple.h>  /* DeeTuple_Newf */
 #include <deemon/type.h>   /* DeeObject_InitStatic */
 
@@ -72,12 +72,12 @@ typedef struct {
 	COMPILER_FLEXIBLE_ARRAY(struct DeeRegexMatch, rss_groups); /* [rss_ngroups] Array of groups */
 } ReSubStrings;
 
-#define DeeRegexMatch_AsSubString(self, baseobj, baseptr)           \
-	((self)->rm_so == (size_t)-1                                    \
-	 ? DeeNone_NewRef()                                             \
-	 : DeeString_NewUtf8((char const *)((baseptr) + (self)->rm_so), \
-	                     (self)->rm_eo - (self)->rm_so,             \
-	                     Dee_STRING_ERROR_FSTRICT))
+#define DeeRegexMatch_AsSubString(self, baseobj, baseptr)             \
+	((self)->rm_so == (size_t) - 1                                    \
+	 ? DeeNone_NewRef()                                               \
+	 : DeeString_NewUtf8Ex((char const *)((baseptr) + (self)->rm_so), \
+	                       (self)->rm_eo - (self)->rm_so,             \
+	                       Dee_STRING_ERROR_FSTRICT))
 #define DeeRegexMatch_AsSubBytes(self, baseobj, baseptr)        \
 	((self)->rm_so == (size_t)-1                                \
 	 ? DeeNone_NewRef()                                         \

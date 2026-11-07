@@ -64,27 +64,27 @@ err:
 	return Dee_HAS_ERR;
 }}
 %{$with__set_operator_sizeob = {
-	int result;
+	bool istrue;
 	DREF DeeObject *sizeob = CALL_DEPENDENCY(set_operator_sizeob, self);
 	if unlikely(!sizeob)
 		goto err;
 	if (DeeObject_AssertTypeExact(sizeob, &DeeInt_Type))
 		goto err;
-	result = Dee_HAS_FROMBOOL(!DeeInt_IsZero(sizeob));
+	istrue = !DeeInt_IsZero(sizeob);
 	Dee_Decref(sizeob);
-	return result;
+	return Dee_HAS_FROMBOOL(istrue);
 err:
 	return Dee_HAS_ERR;
 }} {
-	int retval;
+	bool istrue;
 	DREF DeeObject *result = LOCAL_CALLATTR(self, 0, NULL);
 	if unlikely(!result)
 		goto err;
 	if (DeeObject_AssertTypeExact(result, &DeeBool_Type))
 		goto err_r;
-	retval = Dee_HAS_FROMBOOL(DeeBool_IsTrue(result));
+	istrue = DeeBool_IsTrue(result);
 	DeeBool_Decref(result);
-	return retval;
+	return Dee_HAS_FROMBOOL(istrue);
 err_r:
 	Dee_Decref(result);
 err:

@@ -369,11 +369,11 @@ struct Dee_type_member;
 /* Throws an `DeeError_UnboundAttribute` indicating that some attribute isn't bound
  * @return: NULL: Always returns "NULL" (for easy chaining when called form getters) */
 DFUNDEF ATTR_COLD NONNULL((1, 2)) DeeObject *(DCALL DeeRT_ErrUnboundAttr)(DeeObject *ob, /*string*/ DeeObject *attr);
-DFUNDEF ATTR_COLD NONNULL((1, 2)) DeeObject *(DCALL DeeRT_ErrUnboundAttrCStr)(DeeObject *ob, /*static*/ char const *attr);
+DFUNDEF ATTR_COLD NONNULL((1, 2)) DeeObject *(DCALL DeeRT_ErrUnboundAttrCStr)(DeeObject *ob, /*static*/ /*ascii*/ char const *attr);
 DFUNDEF ATTR_COLD NONNULL((1, 2)) DeeObject *(DCALL DeeRT_ErrUnboundMember)(DeeObject *ob, struct Dee_type_member const *attr);
 DFUNDEF ATTR_COLD NONNULL((1, 2)) DeeObject *(DCALL DeeRT_ErrUnboundAttrEx)(DeeObject *ob, struct Dee_attrdesc const *attr);
 DFUNDEF ATTR_COLD NONNULL((1, 2, 3)) DeeObject *(DCALL DeeRT_ErrTUnboundAttr)(DeeObject *decl, DeeObject *ob, /*string*/ DeeObject *attr);
-DFUNDEF ATTR_COLD NONNULL((1, 2, 3)) DeeObject *(DCALL DeeRT_ErrTUnboundAttrCStr)(DeeObject *decl, DeeObject *ob, /*static*/ char const *attr);
+DFUNDEF ATTR_COLD NONNULL((1, 2, 3)) DeeObject *(DCALL DeeRT_ErrTUnboundAttrCStr)(DeeObject *decl, DeeObject *ob, /*static*/ /*ascii*/ char const *attr);
 DFUNDEF ATTR_COLD NONNULL((1, 2)) DeeObject *(DCALL DeeRT_ErrCUnboundAttrCA)(DeeObject *ob, struct Dee_class_attribute const *attr);
 DFUNDEF ATTR_COLD NONNULL((1, 2)) DeeObject *(DCALL DeeRT_ErrCUnboundInstanceMember)(DeeTypeObject *class_type, DeeObject *instance, uint16_t addr);
 DFUNDEF ATTR_COLD NONNULL((1)) DeeObject *(DCALL DeeRT_ErrCUnboundClassMember)(DeeTypeObject *class_type, uint16_t addr);
@@ -398,11 +398,11 @@ DFUNDEF ATTR_COLD NONNULL((1)) DeeObject *(DCALL DeeRT_ErrCUnboundClassMember)(D
 
 /* Throws an `DeeError_UnknownAttribute` indicating that some attribute doesn't exist */
 DFUNDEF ATTR_COLD NONNULL((2, 3)) int (DCALL DeeRT_ErrTUnknownAttr)(DeeObject *decl, DeeObject *ob, DeeObject *attr, unsigned int access);
-DFUNDEF ATTR_COLD NONNULL((2, 3)) int (DCALL DeeRT_ErrTUnknownAttrStr)(DeeObject *decl, DeeObject *ob, char const *attr, unsigned int access);
-DFUNDEF ATTR_COLD NONNULL((2, 3)) int (DCALL DeeRT_ErrTUnknownAttrStrLen)(DeeObject *decl, DeeObject *ob, char const *attr, size_t attrlen, unsigned int access);
+DFUNDEF ATTR_COLD NONNULL((2, 3)) int (DCALL DeeRT_ErrTUnknownAttrStr)(DeeObject *decl, DeeObject *ob, /*ascii*/ char const *attr, unsigned int access);
+DFUNDEF ATTR_COLD NONNULL((2, 3)) int (DCALL DeeRT_ErrTUnknownAttrStrLen)(DeeObject *decl, DeeObject *ob, /*ascii*/ char const *attr, size_t attrlen, unsigned int access);
 DFUNDEF ATTR_COLD NONNULL((2, 3, 5)) int (DCALL DeeRT_ErrTUnknownAttrWithCause)(DeeObject *decl, DeeObject *ob, DeeObject *attr, unsigned int access, /*inherit(always)*/ DREF DeeObject *cause);
-DFUNDEF ATTR_COLD NONNULL((2, 3, 5)) int (DCALL DeeRT_ErrTUnknownAttrStrWithCause)(DeeObject *decl, DeeObject *ob, char const *attr, unsigned int access, /*inherit(always)*/ DREF DeeObject *cause);
-DFUNDEF ATTR_COLD NONNULL((2, 3, 6)) int (DCALL DeeRT_ErrTUnknownAttrStrLenWithCause)(DeeObject *decl, DeeObject *ob, char const *attr, size_t attrlen, unsigned int access, /*inherit(always)*/ DREF DeeObject *cause);
+DFUNDEF ATTR_COLD NONNULL((2, 3, 5)) int (DCALL DeeRT_ErrTUnknownAttrStrWithCause)(DeeObject *decl, DeeObject *ob, /*ascii*/ char const *attr, unsigned int access, /*inherit(always)*/ DREF DeeObject *cause);
+DFUNDEF ATTR_COLD NONNULL((2, 3, 6)) int (DCALL DeeRT_ErrTUnknownAttrStrLenWithCause)(DeeObject *decl, DeeObject *ob, /*ascii*/ char const *attr, size_t attrlen, unsigned int access, /*inherit(always)*/ DREF DeeObject *cause);
 #define DeeRT_ErrTUnknownAttr(decl, ob, attr, access)                Dee_ASSUMED_VALUE((DeeRT_ErrTUnknownAttr)(Dee_AsObject(decl), Dee_AsObject(ob), Dee_AsObject(attr), access), -1)
 #define DeeRT_ErrTUnknownAttrStr(decl, ob, attr, access)             Dee_ASSUMED_VALUE((DeeRT_ErrTUnknownAttrStr)(Dee_AsObject(decl), Dee_AsObject(ob), attr, access), -1)
 #define DeeRT_ErrTUnknownAttrStrLen(decl, ob, attr, attrlen, access) Dee_ASSUMED_VALUE((DeeRT_ErrTUnknownAttrStrLen)(Dee_AsObject(decl), Dee_AsObject(ob), attr, attrlen, access), -1)
@@ -427,7 +427,7 @@ DFUNDEF ATTR_COLD NONNULL((2, 3, 6)) int (DCALL DeeRT_ErrTUnknownAttrStrLenWithC
 
 /* Throws an `DeeError_RestrictedAttribute` indicating that the specified attribute access is invalid */
 DFUNDEF ATTR_COLD NONNULL((2, 3)) int (DCALL DeeRT_ErrTRestrictedAttr)(DeeObject *decl, DeeObject *ob, DeeObject *attr, unsigned int access);
-DFUNDEF ATTR_COLD NONNULL((2, 3)) int (DCALL DeeRT_ErrTRestrictedAttrCStr)(DeeObject *decl, DeeObject *ob, char const *attr, unsigned int access);
+DFUNDEF ATTR_COLD NONNULL((2, 3)) int (DCALL DeeRT_ErrTRestrictedAttrCStr)(DeeObject *decl, DeeObject *ob, /*ascii*/ char const *attr, unsigned int access);
 DFUNDEF ATTR_COLD NONNULL((1, 2)) int (DCALL DeeRT_ErrCRestrictedAttrCA)(DeeObject *ob, struct Dee_class_attribute const *attr, unsigned int access);
 DFUNDEF ATTR_COLD NONNULL((1, 2)) int (DCALL DeeRT_ErrRestrictedAttrEx)(DeeObject *ob, struct Dee_attrdesc const *attr, unsigned int access);
 DFUNDEF ATTR_COLD NONNULL((1, 2)) int (DCALL DeeRT_ErrRestrictedMethod)(DeeObject *ob, struct Dee_type_method const *attr, unsigned int access);

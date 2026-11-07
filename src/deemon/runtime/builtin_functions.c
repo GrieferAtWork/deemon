@@ -470,7 +470,7 @@ PRIVATE WUNUSED DREF DeeObject *DCALL f_rt_assert(size_t argc, DeeObject *const 
 	} else {
 		if (DeeString_IsEmpty(message)) {
 			Dee_Decref_unlikely(message);
-			message = DeeString_New("Assertion failed");
+			message = DeeString_NewAscii("Assertion failed");
 		} else {
 			message = DeeString_Newf("Assertion failed - %K", message);
 		}

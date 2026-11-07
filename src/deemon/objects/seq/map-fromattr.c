@@ -160,7 +160,7 @@ mfaki_next(MapFromAttrIterator *__restrict self) {
 		result = Dee_attrdesc_nameobj(&desc);
 		_Dee_attrdesc_fini_WITHOUT_NAME(&desc);
 	} else {
-		result = (DREF DeeStringObject *)DeeString_New(desc.ad_name);
+		result = (DREF DeeStringObject *)DeeString_NewAscii(desc.ad_name);
 		Dee_attrdesc_fini(&desc);
 	}
 	return result;

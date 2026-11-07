@@ -712,7 +712,7 @@ handle_null_ob:
 
 	CASE(STRUCT_STRING): {
 		char const *str = &FIELD(char);
-		return DeeString_NewUtf8(str, strlen(str), STRING_ERROR_FIGNORE);
+		return DeeString_NewUtf8(str);
 	}
 
 	CASE(STRUCT_CHAR):

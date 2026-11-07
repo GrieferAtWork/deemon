@@ -1706,9 +1706,9 @@ DeeFileWriter_GetString(DeeObject *__restrict self) {
 	if likely(DeeString_Check(data))
 		return data;
 	ASSERT_OBJECT_TYPE_EXACT(data, &DeeBytes_Type);
-	result = DeeString_NewUtf8((char const *)DeeBytes_DATA(data),
-	                           DeeBytes_SIZE(data),
-	                           STRING_ERROR_FSTRICT);
+	result = DeeString_NewUtf8Ex((char const *)DeeBytes_DATA(data),
+	                             DeeBytes_SIZE(data),
+	                             STRING_ERROR_FSTRICT);
 	Dee_Decref_unlikely(data);
 	return result;
 }

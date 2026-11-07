@@ -199,7 +199,7 @@ attr_getname(Attr *__restrict self) {
 		Dee_Incref(result);
 		return result;
 	}
-	return (DREF DeeStringObject *)DeeString_New(namestr);
+	return (DREF DeeStringObject *)DeeString_NewAscii(namestr);
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeStringObject *DCALL
@@ -212,7 +212,7 @@ attr_getdoc(Attr *__restrict self) {
 		Dee_Incref(result);
 		return result;
 	}
-	return (DREF DeeStringObject *)DeeString_NewAutoUtf8(docstr);
+	return (DREF DeeStringObject *)DeeString_NewUtf8(docstr);
 }
 
 

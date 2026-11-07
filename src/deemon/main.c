@@ -1020,10 +1020,7 @@ fe_set_user_argv(int argc, char **argv) {
 	if unlikely(!result)
 		goto err;
 	for (i = 0; i < (unsigned int)argc; ++i) {
-		DREF DeeObject *arg;
-		char *argstr = argv[i];
-		arg = DeeString_NewUtf8(argstr, strlen(argstr),
-		                        STRING_ERROR_FIGNORE);
+		DREF DeeObject *arg = DeeString_NewUtf8(argv[i]);
 		if unlikely(!arg)
 			goto err_r_i;
 		DeeTuple_SET(result, i, arg); /* Inherit */
@@ -2781,7 +2778,7 @@ done:
 
 #ifdef CONFIG_HOST_WINDOWS
 PRIVATE NONNULL((1)) bool DCALL
-os_trychdir(char *__restrict path) {
+os_trychdir(/*utf-8*/ char *__restrict path) {
 	DREF DeeObject *pathob;
 	LPWSTR wpath;
 	DWORD dwError;
@@ -2795,8 +2792,7 @@ ok:
 	}
 	DBG_ALIGNMENT_ENABLE();
 	/* Try the wide-character version. */
-	pathob = DeeString_NewUtf8(path, strlen(path),
-	                           STRING_ERROR_FIGNORE);
+	pathob = DeeString_NewUtf8(path);
 	if unlikely(!pathob)
 		goto err;
 	wpath = (LPWSTR)DeeString_AsWide(pathob);
@@ -2847,7 +2843,7 @@ err:
 	    true)                                                 \
 	 : false)
 #else /* CONFIG_HAVE_chdir */
-PRIVATE bool DCALL os_trychdir(char const *path) {
+PRIVATE bool DCALL os_trychdir(/*utf-8*/ char const *path) {
 	/* Try to off-load the job to `posix.chdir()` (thus allowing the
 	 * user to override it if they know how we'd be able to do this) */
 	DREF DeeObject *result;
@@ -3301,15 +3297,13 @@ PRIVATE WUNUSED NONNULL((1)) int DCALL cmd_message_format(char *arg) {
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL cmdpp_name(char *arg) {
 	Dee_XDecref(script_options.co_filename);
-	script_options.co_filename = (DeeStringObject *)DeeString_NewUtf8(arg, strlen(arg),
-	                                                                  STRING_ERROR_FIGNORE);
+	script_options.co_filename = (DeeStringObject *)DeeString_NewUtf8(arg);
 	return script_options.co_filename ? 0 : -1;
 }
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL cmd_name(char *arg) {
 	Dee_XDecref(script_options.co_rootname);
-	script_options.co_rootname = (DeeStringObject *)DeeString_NewUtf8(arg, strlen(arg),
-	                                                                  STRING_ERROR_FIGNORE);
+	script_options.co_rootname = (DeeStringObject *)DeeString_NewUtf8(arg);
 	return script_options.co_rootname ? 0 : -1;
 }
 
@@ -3916,10 +3910,7 @@ int main(int argc, char *argv[]) {
 		if unlikely(!sys_argv)
 			goto err;
 		for (i = 0; i < (unsigned int)argc; ++i) {
-			DREF DeeObject *arg;
-			char *argstr = argv[i];
-			arg = DeeString_NewUtf8(argstr, strlen(argstr),
-			                        STRING_ERROR_FIGNORE);
+			DREF DeeObject *arg = DeeString_NewUtf8(argv[i]);
 			if unlikely(!arg) {
 				Dee_Decrefv(DeeTuple_ELEM(sys_argv), i);
 				DeeTuple_FreeUninitialized(sys_argv);
@@ -4848,9 +4839,7 @@ try_exec_format_impl(DeeObject *__restrict stream,
 		memcpy(&opt, &script_options, sizeof(struct Dee_compiler_options));
 		opt.co_compiler |= (COMPILER_FKEEPLEXER | COMPILER_FKEEPERROR); /* Keep using the same lexer and errors! */
 		if (ddi_filename && ddi_filename != filename) {
-			opt.co_filename = (DREF DeeStringObject *)DeeString_NewUtf8(ddi_filename,
-			                                                            strlen(ddi_filename),
-			                                                            STRING_ERROR_FIGNORE);
+			opt.co_filename = (DREF DeeStringObject *)DeeString_NewUtf8(ddi_filename);
 			if unlikely(!opt.co_filename)
 				goto err;
 		}
@@ -5225,7 +5214,7 @@ err_nofin:
 
 #ifdef CONFIG_HOST_WINDOWS
 PRIVATE NONNULL((1)) bool DCALL
-os_trychdir(char *__restrict path) {
+os_trychdir(/*utf-8*/ char *__restrict path) {
 	DREF DeeObject *pathob;
 	LPWSTR wpath;
 	DWORD dwError;
@@ -5239,8 +5228,7 @@ ok:
 	}
 	DBG_ALIGNMENT_ENABLE();
 	/* Try the wide-character version. */
-	pathob = DeeString_NewUtf8(path, strlen(path),
-	                           STRING_ERROR_FIGNORE);
+	pathob = DeeString_NewUtf8(path);
 	if unlikely(!pathob)
 		goto err;
 	wpath = (LPWSTR)DeeString_AsWide(pathob);
@@ -5291,7 +5279,7 @@ err:
 	    true)                                                 \
 	 : false)
 #else /* CONFIG_HAVE_chdir */
-PRIVATE bool DCALL os_trychdir(char const *path) {
+PRIVATE bool DCALL os_trychdir(/*utf-8*/ char const *path) {
 	/* Try to off-load the job to `posix.chdir()` (thus allowing the
 	 * user to override it if they know how we'd be able to do this) */
 	DREF DeeObject *result;

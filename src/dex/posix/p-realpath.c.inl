@@ -1073,7 +1073,7 @@ again:
 	DBG_ALIGNMENT_ENABLE();
 
 	/* Pack into a deemon string object. */
-	result = DeeString_NewUtf8(buffer, strlen(buffer), STRING_ERROR_FNORMAL);
+	result = DeeString_NewUtf8Ex(buffer, strlen(buffer), Dee_STRING_ERROR_FREPLAC);
 	free(buffer);
 	return result;
 err:

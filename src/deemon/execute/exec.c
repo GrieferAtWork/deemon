@@ -368,11 +368,6 @@ PRIVATE bool DCALL shutdown_globals(void) {
 	return result;
 }
 
-/* The max number of GC iterations yielding
- * no results before user-code is killed. */
-#define MAX_EMPTY_GC_ITERATIONS_BEFORE_KILL    16
-/* The total max number of GC iterations before user-code is killed. */
-#define MAX_NONEMPTY_GC_ITERATIONS_BEFORE_KILL 128
 
 #ifndef NDEBUG
 INTDEF void DCALL gc_dump_all_except_dex(void);

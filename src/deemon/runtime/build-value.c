@@ -28,7 +28,7 @@
 #include <deemon/int.h>             /* DeeInt_* */
 #include <deemon/none.h>            /* Dee_None */
 #include <deemon/object.h>          /* DREF, DeeObject, Dee_AsObject, Dee_Decref, Dee_Decrefv, Dee_Incref, Dee_XDecref, Dee_int128_t, Dee_uint128_t */
-#include <deemon/string.h>          /* DeeString_NewUtf8, STRING_ERROR_FIGNORE */
+#include <deemon/string.h>          /* DeeString_NewUtf8Ex, STRING_ERROR_FIGNORE */
 #include <deemon/system-features.h> /* CONFIG_HAVE_VA_LIST_IS_NOT_ARRAY, DeeSystem_DEFINE_strnlen, strlen */
 #include <deemon/tuple.h>           /* DeeTuple* */
 
@@ -472,7 +472,7 @@ do_string:
 		/* TODO: `%I8s` -- latin-1 string */
 		/* TODO: `%I16s` -- 2-byte string */
 		/* TODO: `%I32s` -- utf-32 string */
-		result = DeeString_NewUtf8(string, string_length, STRING_ERROR_FIGNORE);
+		result = DeeString_NewUtf8Ex(string, string_length, Dee_STRING_ERROR_FSTRICT);
 	}	break;
 
 
@@ -589,7 +589,7 @@ Dee_VPackf(char const *__restrict format, va_list args) {
  *                    | '.*'      // max = va_arg(unsigned int); str = va_arg(char const *); DeeString_NewSized(str, MIN(strlen(str), max));
  *                    | '.?'      // max = va_arg(size_t); str = va_arg(char const *); DeeString_NewSized(str, MIN(strlen(str), max));
  *                    | '$'       // len = va_arg(size_t); str = va_arg(char const *); DeeString_NewSized(str, len);
- *                    ] 's';      // DeeString_New(va_arg(char const *));
+ *                    ] 's';      // DeeString_NewUtf8(va_arg(char const *));
  *
  * Example:
  * >> Dee_Packf("(d<d>Os)", 10, 20, DeeInt_NewInt(42), "foobar");

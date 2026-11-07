@@ -305,7 +305,7 @@ Dee_attrdesc_callget(struct Dee_attrdesc const *self, DeeObject *thisarg) {
 				return (*tp_attr->tp_getattr)(thisarg, (DeeObject *)Dee_attrdesc_nameobj(self));
 			if (tp_attr->tp_getattr_string_hash)
 				return (*tp_attr->tp_getattr_string_hash)(thisarg, self->ad_name, Dee_HashStr(self->ad_name));
-			attrob = DeeString_New(self->ad_name);
+			attrob = DeeString_NewAscii(self->ad_name);
 			if unlikely(!attrob)
 				goto err;
 			result = (*tp_attr->tp_getattr)(thisarg, attrob);
@@ -404,7 +404,7 @@ Dee_attrdesc_callbound(struct Dee_attrdesc const *self, DeeObject *thisarg) {
 				result = (*tp_attr->tp_getattr_string_hash)(thisarg, self->ad_name, Dee_HashStr(self->ad_name));
 			} else {
 				DREF DeeObject *attrob;
-				attrob = DeeString_New(self->ad_name);
+				attrob = DeeString_NewAscii(self->ad_name);
 				if unlikely(!attrob)
 					goto err;
 				result = (*tp_attr->tp_getattr)(thisarg, attrob);
@@ -496,7 +496,7 @@ Dee_attrdesc_calldel(struct Dee_attrdesc const *self, DeeObject *thisarg) {
 				return (*tp_attr->tp_delattr)(thisarg, (DeeObject *)Dee_attrdesc_nameobj(self));
 			if (tp_attr->tp_delattr_string_hash)
 				return (*tp_attr->tp_delattr_string_hash)(thisarg, self->ad_name, Dee_HashStr(self->ad_name));
-			attrob = DeeString_New(self->ad_name);
+			attrob = DeeString_NewAscii(self->ad_name);
 			if unlikely(!attrob)
 				goto err;
 			result = (*tp_attr->tp_delattr)(thisarg, attrob);
@@ -582,7 +582,7 @@ Dee_attrdesc_callset(struct Dee_attrdesc const *self, DeeObject *thisarg, DeeObj
 				return (*tp_attr->tp_setattr)(thisarg, (DeeObject *)Dee_attrdesc_nameobj(self), value);
 			if (tp_attr->tp_setattr_string_hash)
 				return (*tp_attr->tp_setattr_string_hash)(thisarg, self->ad_name, Dee_HashStr(self->ad_name), value);
-			attrob = DeeString_New(self->ad_name);
+			attrob = DeeString_NewAscii(self->ad_name);
 			if unlikely(!attrob)
 				goto err;
 			result = (*tp_attr->tp_setattr)(thisarg, attrob, value);
@@ -688,7 +688,7 @@ again:
 				callable = (*tp_attr->tp_getattr_string_hash)(thisarg, self->ad_name, Dee_HashStr(self->ad_name));
 			} else {
 				DREF DeeObject *attrob;
-				attrob = DeeString_New(self->ad_name);
+				attrob = DeeString_NewAscii(self->ad_name);
 				if unlikely(!attrob)
 					goto err;
 				callable = (*tp_attr->tp_getattr)(thisarg, attrob);

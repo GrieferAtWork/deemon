@@ -2268,13 +2268,13 @@ DeeDec_Track(DREF /*untracked*/ struct Dee_module_object *__restrict self) {
 	module_byaddr_insert(&module_byaddr_tree, self);
 
 	/* Link in GC objects (if there are any) */
-#if __SIZEOF_SIZE_T__ == 4
+#if __SIZEOF_SIZE_T__ == Dee_SIZEOF_DEC_ADDR32
 #define IMAGE_GC_HEADTAIL_MATCH_RELOC                                                                                                  \
 	((offsetof(Dec_Ehdr, e_typedata.td_image.ei_offsetof_gchead) == DeeDec_Ehdr_OFFSETOF__e_typedata__td_reloc__er_offsetof_gchead) && \
 	 (offsetof(Dec_Ehdr, e_typedata.td_image.ei_offsetof_gctail) == DeeDec_Ehdr_OFFSETOF__e_typedata__td_reloc__er_offsetof_gctail))
-#else /* __SIZEOF_SIZE_T__ == 4 */
+#else /* __SIZEOF_SIZE_T__ == Dee_SIZEOF_DEC_ADDR32 */
 #define IMAGE_GC_HEADTAIL_MATCH_RELOC 0
-#endif /* __SIZEOF_SIZE_T__ == 4 */
+#endif /* __SIZEOF_SIZE_T__ == Dee_SIZEOF_DEC_ADDR32 */
 #ifndef CONFIG_NO_DEC
 	if (ehdr->e_type != Dee_DEC_TYPE_IMAGE || IMAGE_GC_HEADTAIL_MATCH_RELOC) {
 		DeeObject *gc_head = DeeDec_Ehdr_RELOC_GetGCHead(ehdr);
@@ -3239,7 +3239,7 @@ use_absolute_filename:
 			filename_ob = (DeeStringObject *)DeeSystem_MakeNormalAndAbsolute(Dee_AsObject(filename_ob));
 		} else {
 			DREF DeeObject *raw_filename;
-			raw_filename = DeeString_NewUtf8(filename, filename_size, STRING_ERROR_FSTRICT);
+			raw_filename = DeeString_NewUtf8Ex(filename, filename_size, Dee_STRING_ERROR_FSTRICT);
 			if unlikely(!raw_filename)
 				goto err;
 			filename_ob = (DeeStringObject *)DeeSystem_MakeNormalAndAbsolute(raw_filename);
@@ -3278,7 +3278,7 @@ use_absolute_filename:
 			context_absname_ob = (DeeStringObject *)DeeSystem_MakeNormalAndAbsolute(Dee_AsObject(context_absname_ob));
 		} else {
 			DREF DeeObject *raw_context_absname;
-			raw_context_absname = DeeString_NewUtf8(context_absname, context_absname_size, STRING_ERROR_FSTRICT);
+			raw_context_absname = DeeString_NewUtf8Ex(context_absname, context_absname_size, Dee_STRING_ERROR_FSTRICT);
 			if unlikely(!raw_context_absname)
 				goto err;
 			context_absname_ob = (DeeStringObject *)DeeSystem_MakeNormalAndAbsolute(raw_context_absname);
@@ -3362,7 +3362,7 @@ make_absolute_path:
 			pathname_ob = (DeeStringObject *)DeeSystem_MakeNormalAndAbsolute(Dee_AsObject(pathname_ob));
 		} else {
 			DREF DeeObject *raw_pathname;
-			raw_pathname = DeeString_NewUtf8(pathname, pathname_size, STRING_ERROR_FSTRICT);
+			raw_pathname = DeeString_NewUtf8Ex(pathname, pathname_size, Dee_STRING_ERROR_FSTRICT);
 			if unlikely(!raw_pathname)
 				goto err;
 			pathname_ob = (DeeStringObject *)DeeSystem_MakeNormalAndAbsolute(raw_pathname);
@@ -3600,7 +3600,7 @@ do_DeeModule_OpenGlobal(/*utf-8*/ char const *__restrict import_str, size_t impo
 	if (!(flags & DeeModule_IMPORT_F_ANONYM)) {
 		struct Dee_module_libentry *libentry;
 		if (!import_str_ob) {
-			import_str_ob = (DeeStringObject *)DeeString_NewUtf8(import_str, import_str_size, STRING_ERROR_FSTRICT);
+			import_str_ob = (DeeStringObject *)DeeString_NewUtf8Ex(import_str, import_str_size, Dee_STRING_ERROR_FSTRICT);
 			if unlikely(!import_str_ob)
 				goto err;
 			result = do_DeeModule_OpenGlobal(import_str, import_str_size, import_str_ob, flags, options);
@@ -4275,9 +4275,8 @@ DeeModule_GetFileName(DeeModuleObject *__restrict self) {
 	char *dst;
 	if (!absname)
 		return ITER_DONE;
-	abslen = strlen(absname);
 	if ((self->mo_flags & Dee_MODULE_FABSFILE) || Dee_TYPE(self) == &DeeModuleDir_Type)
-		return DeeString_NewUtf8(absname, abslen, STRING_ERROR_FIGNORE);
+		return DeeString_NewUtf8(absname);
 #ifndef CONFIG_NO_DEX
 	if (Dee_TYPE(self) == &DeeModuleDex_Type) {
 		extension = DeeSystem_SOEXT;
@@ -4285,9 +4284,11 @@ DeeModule_GetFileName(DeeModuleObject *__restrict self) {
 	} else
 #endif /* !CONFIG_NO_DEX */
 	{
-		extension = ".dee";
-		extension_len = 4;
+		static char const dee_extension[] = ".dee";
+		extension = dee_extension;
+		extension_len = COMPILER_STRLEN(dee_extension);
 	}
+	abslen = strlen(absname);
 	result = (DREF DeeStringObject *)DeeString_NewBuffer(abslen + extension_len);
 	if unlikely(!result)
 		goto err;
@@ -4506,9 +4507,9 @@ do_DeeModule_PrintRelNameEx_impl(DeeModuleObject *__restrict self,
 		context_absname_ob = (DREF DeeStringObject *)DeeSystem_MakeNormalAndAbsolute((DeeObject *)context_absname_ob);
 	} else {
 		DREF DeeObject *temp_string;
-		temp_string = DeeString_NewUtf8(context_absname,
-		                                context_absname_size,
-		                                STRING_ERROR_FSTRICT);
+		temp_string = DeeString_NewUtf8Ex(context_absname,
+		                                  context_absname_size,
+		                                  Dee_STRING_ERROR_FSTRICT);
 		if unlikely(!temp_string)
 			goto err;
 		context_absname_ob = (DREF DeeStringObject *)DeeSystem_MakeNormalAndAbsolute(temp_string);
@@ -4691,14 +4692,10 @@ module_try_add_missing_libname_string_or_unlock(DeeModuleObject *__restrict self
 	/* Create a new UTF-8 string for "libname_with_slash_for_dots".
 	 * Once that string has been created, we modify its contents to
 	 * replace '/' with '.' */
-	missing_libname = (DREF DeeStringObject *)DeeString_TryNewUtf8(libname_with_slash_for_dots,
-	                                                               strlen(libname_with_slash_for_dots),
-	                                                               STRING_ERROR_FIGNORE);
+	missing_libname = (DREF DeeStringObject *)DeeString_TryNewUtf8(libname_with_slash_for_dots);
 	if unlikely(!missing_libname) {
 		module_libtree_lock_endwrite();
-		missing_libname = (DREF DeeStringObject *)DeeString_NewUtf8(libname_with_slash_for_dots,
-		                                                            strlen(libname_with_slash_for_dots),
-		                                                            STRING_ERROR_FIGNORE);
+		missing_libname = (DREF DeeStringObject *)DeeString_NewUtf8(libname_with_slash_for_dots);
 		if (!missing_libname)
 			return MODULE_TRY_ADD_MISSING_LIBNAMES_OR_UNLOCK__ERROR;
 		Dee_DecrefDokill(missing_libname);
@@ -5040,8 +5037,8 @@ PRIVATE WUNUSED DREF DeeStringObject *DCALL get_default_home(void) {
 			DREF DeeStringObject *new_result;
 			while (len && DeeSystem_IsSep(env[len - 1]))
 				--len;
-			result = (DREF DeeStringObject *)DeeString_NewUtf8(env, len + 1,
-			                                                   STRING_ERROR_FIGNORE);
+			result = (DREF DeeStringObject *)DeeString_NewUtf8Ex(env, len + 1,
+			                                                     Dee_STRING_ERROR_FIGNORE);
 #define get_default_home_NEED_ERR 1
 			if unlikely(!result)
 				goto err;
@@ -5145,9 +5142,8 @@ err_buffer:
 			while (length >= 2 && filename[length - 2] == '/')
 				--length;
 		}
-		return (DREF DeeStringObject *)DeeString_NewUtf8(filename,
-		                                                 length,
-		                                                 STRING_ERROR_FIGNORE);
+		return (DREF DeeStringObject *)DeeString_NewUtf8Ex(filename, length,
+		                                                   Dee_STRING_ERROR_FIGNORE);
 	}
 #endif /* get_default_home_USE_dlmodulename */
 
@@ -5535,7 +5531,7 @@ PRIVATE WUNUSED NONNULL((1)) Dee_ssize_t DCALL
 DeeModule_AppendEnvironPathItem(struct Dee_tuple_builder *__restrict builder,
                                 /*utf-8*/ char const *item, size_t item_size) {
 	DREF DeeObject *raw, *normal;
-	raw = DeeString_NewUtf8(item, item_size, STRING_ERROR_FIGNORE);
+	raw = DeeString_NewUtf8Ex(item, item_size, STRING_ERROR_FIGNORE);
 	if unlikely(!raw)
 		goto err;
 	normal = DeeSystem_MakeNormalAndAbsolute(raw);
@@ -6021,7 +6017,7 @@ PUBLIC WUNUSED NONNULL((1)) int DCALL
 DeeModule_AddLibPathStringLen(/*utf-8*/ char const *__restrict path, size_t path_len) {
 	int result;
 	DREF DeeObject *pathob;
-	pathob = DeeString_NewUtf8(path, path_len, STRING_ERROR_FSTRICT);
+	pathob = DeeString_NewUtf8Ex(path, path_len, Dee_STRING_ERROR_FSTRICT);
 	if unlikely(!pathob)
 		goto err;
 	result = DeeModule_AddLibPath(pathob);
@@ -6040,7 +6036,7 @@ PUBLIC WUNUSED NONNULL((1)) int DCALL
 DeeModule_RemoveLibPathStringLen(/*utf-8*/ char const *__restrict path, size_t path_len) {
 	int result;
 	DREF DeeObject *pathob;
-	pathob = DeeString_NewUtf8(path, path_len, STRING_ERROR_FSTRICT);
+	pathob = DeeString_NewUtf8Ex(path, path_len, Dee_STRING_ERROR_FSTRICT);
 	if unlikely(!pathob)
 		goto err;
 	result = DeeModule_RemoveLibPath(pathob);

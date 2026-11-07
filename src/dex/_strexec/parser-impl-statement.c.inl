@@ -882,9 +882,9 @@ FUNC(ImportItem)(JITLexer *__restrict self,
 			JITLexer_Yield(self);
 			if (self->jl_tok == JIT_KEYWORD) {
 #ifdef JIT_EVAL
-				result->ii_import_name = (DREF DeeStringObject *)DeeString_NewUtf8(result->ii_symbol_name,
-				                                                                   result->ii_symbol_size,
-				                                                                   STRING_ERROR_FSTRICT);
+				result->ii_import_name = (DREF DeeStringObject *)DeeString_NewUtf8Ex(result->ii_symbol_name,
+				                                                                     result->ii_symbol_size,
+				                                                                     STRING_ERROR_FSTRICT);
 				if unlikely(!result->ii_import_name)
 					goto err;
 				result->ii_symbol_name = JITLexer_TokPtr(self);

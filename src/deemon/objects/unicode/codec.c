@@ -654,7 +654,7 @@ decode_utf8(DeeObject *__restrict self,
 err:
 		return NULL;
 	}
-	return DeeString_NewUtf8((char *)data, size, error_mode);
+	return DeeString_NewUtf8Ex((char *)data, size, error_mode);
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL

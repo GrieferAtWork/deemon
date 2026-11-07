@@ -926,8 +926,8 @@ DeeString_DecodeBackslashEscaped(struct Dee_unicode_printer *__restrict printer,
  * interpreted as part of the unicode character-range U+0080...U+00FF. */
 #undef DeeString_New
 #undef DeeDbgString_New
-DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *(DCALL DeeString_New)(/*unsigned latin-1*/ char const *__restrict str);
-DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *(DCALL DeeDbgString_New)(/*unsigned latin-1*/ char const *__restrict str, char const *file, int line);
+DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *(DCALL DeeString_New)(/*unsigned latin-1*/ char const *__restrict str); /* TODO: Rename to `DeeString_NewLatin1` */
+DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *(DCALL DeeDbgString_New)(/*unsigned latin-1*/ char const *__restrict str, char const *file, int line); /* TODO: Rename to `DeeDbgString_NewLatin1` */
 #define DeeString_NewWithHash(str, hash)                ((void)(hash), DeeString_New(str))                /* XXX: Take advantage of this? */
 #define DeeDbgString_NewWithHash(str, hash, file, line) ((void)(hash), DeeDbgString_New(str, file, line)) /* XXX: Take advantage of this? */
 #ifdef NDEBUG
@@ -935,6 +935,9 @@ DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *(DCALL DeeDbgString_New)(/*unsigned
 #else /* NDEBUG */
 #define DeeString_New(str) DeeDbgString_New(str, __FILE__, __LINE__)
 #endif /* !NDEBUG */
+
+#define DeeString_NewAscii    DeeString_New
+#define DeeDbgString_NewAscii DeeDbgString_New
 
 
 #ifndef __ARCH_PAGESIZE_MIN
@@ -1064,10 +1067,10 @@ DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeString_VNewf(/*utf-8*/ cha
 #undef DeeDbgString_NewSized
 #undef DeeDbgString_New2Byte
 #undef DeeDbgString_New4Byte
-DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *(DCALL DeeString_NewSized)(/*unsigned latin-1*/ char const *__restrict str, size_t length);
+DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *(DCALL DeeString_NewSized)(/*unsigned latin-1*/ char const *__restrict str, size_t length); /* TODO: Rename to `DeeString_New1Byte` */
 DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *(DCALL DeeString_New2Byte)(uint16_t const *__restrict str, size_t length);
 DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *(DCALL DeeString_New4Byte)(uint32_t const *__restrict str, size_t length);
-DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *(DCALL DeeDbgString_NewSized)(/*unsigned latin-1*/ char const *__restrict str, size_t length, char const *file, int line);
+DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *(DCALL DeeDbgString_NewSized)(/*unsigned latin-1*/ char const *__restrict str, size_t length, char const *file, int line); /* TODO: Rename to `DeeDbgString_New1Byte` */
 DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *(DCALL DeeDbgString_New2Byte)(uint16_t const *__restrict str, size_t length, char const *file, int line);
 DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *(DCALL DeeDbgString_New4Byte)(uint32_t const *__restrict str, size_t length, char const *file, int line);
 #define DeeString_NewSizedWithHash(str, length, hash) \
@@ -1075,11 +1078,11 @@ DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *(DCALL DeeDbgString_New4Byte)(uint3
 #define DeeDbgString_NewSizedWithHash(str, length, hash, file, line) \
 	((void)(hash), DeeDbgString_NewSized(str, length, file, line)) /* XXX: Take advantage of this? */
 #ifdef NDEBUG
-#define DeeDbgString_NewSized(str, length, file, line) DeeString_NewSized(str, length)
+#define DeeDbgString_NewSized(str, length, file, line) DeeString_NewSized(str, length) /* TODO: Rename to `DeeDbgString_New1Byte` */
 #define DeeDbgString_New2Byte(str, length, file, line) DeeString_New2Byte(str, length)
 #define DeeDbgString_New4Byte(str, length, file, line) DeeString_New4Byte(str, length)
 #else /* !NDEBUG */
-#define DeeString_NewSized(str, length) DeeDbgString_NewSized(str, length, __FILE__, __LINE__)
+#define DeeString_NewSized(str, length) DeeDbgString_NewSized(str, length, __FILE__, __LINE__) /* TODO: Rename to `DeeString_New1Byte` */
 #define DeeString_New2Byte(str, length) DeeDbgString_New2Byte(str, length, __FILE__, __LINE__)
 #define DeeString_New4Byte(str, length) DeeDbgString_New4Byte(str, length, __FILE__, __LINE__)
 #endif /* !NDEBUG */
@@ -1096,25 +1099,37 @@ DREF DeeObject *DeeDbgString_New1Byte(uint8_t const *__restrict str, size_t leng
 
 /* Construct a string from a UTF-8 character sequence. */
 #undef DeeString_NewUtf8
+#undef DeeString_NewUtf8Ex
 #undef DeeDbgString_NewUtf8
-DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *(DCALL DeeString_NewUtf8)(/*utf-8*/ char const *__restrict str, size_t length, unsigned int error_mode);
-DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *(DCALL DeeDbgString_NewUtf8)(/*utf-8*/ char const *__restrict str, size_t length, unsigned int error_mode, char const *file, int line);
+#undef DeeDbgString_NewUtf8Ex
+DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *(DCALL DeeString_NewUtf8)(/*utf-8*/ char const *__restrict str);
+DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *(DCALL DeeString_NewUtf8Ex)(/*utf-8*/ char const *__restrict str, size_t length, unsigned int error_mode);
+DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *(DCALL DeeDbgString_NewUtf8)(/*utf-8*/ char const *__restrict str, char const *file, int line);
+DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *(DCALL DeeDbgString_NewUtf8Ex)(/*utf-8*/ char const *__restrict str, size_t length, unsigned int error_mode, char const *file, int line);
 #ifdef NDEBUG
-#define DeeDbgString_NewUtf8(str, length, error_mode, file, line) DeeString_NewUtf8(str, length, error_mode)
+#define DeeDbgString_NewUtf8(str, file, line)                       DeeString_NewUtf8(str)
+#define DeeDbgString_NewUtf8Ex(str, length, error_mode, file, line) DeeString_NewUtf8Ex(str, length, error_mode)
 #else /* NDEBUG */
-#define DeeString_NewUtf8(str, length, error_mode) DeeDbgString_NewUtf8(str, length, error_mode, __FILE__, __LINE__)
+#define DeeString_NewUtf8(str)                       DeeDbgString_NewUtf8(str, __FILE__, __LINE__)
+#define DeeString_NewUtf8Ex(str, length, error_mode) DeeDbgString_NewUtf8Ex(str, length, error_mode, __FILE__, __LINE__)
 #endif /* !NDEBUG */
 
-/* Same as `DeeString_NewUtf8()`, but uses `DeeObject_TryMalloc` & friends
+/* Same as `DeeString_NewUtf8Ex()`, but uses `DeeObject_TryMalloc` & friends
  * Given `error_mode` _MUST_ be `Dee_STRING_ERROR_FREPLAC` or `Dee_STRING_ERROR_FIGNORE` */
 #undef DeeString_TryNewUtf8
+#undef DeeString_TryNewUtf8Ex
 #undef DeeDbgString_TryNewUtf8
-DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *(DCALL DeeString_TryNewUtf8)(/*utf-8*/ char const *__restrict str, size_t length, unsigned int error_mode);
-DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *(DCALL DeeDbgString_TryNewUtf8)(/*utf-8*/ char const *__restrict str, size_t length, unsigned int error_mode, char const *file, int line);
+#undef DeeDbgString_TryNewUtf8Ex
+DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *(DCALL DeeString_TryNewUtf8)(/*utf-8*/ char const *__restrict str);
+DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *(DCALL DeeString_TryNewUtf8Ex)(/*utf-8*/ char const *__restrict str, size_t length, unsigned int error_mode);
+DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *(DCALL DeeDbgString_TryNewUtf8)(/*utf-8*/ char const *__restrict str, char const *file, int line);
+DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *(DCALL DeeDbgString_TryNewUtf8Ex)(/*utf-8*/ char const *__restrict str, size_t length, unsigned int error_mode, char const *file, int line);
 #ifdef NDEBUG
-#define DeeDbgString_TryNewUtf8(str, length, error_mode, file, line) DeeString_TryNewUtf8(str, length, error_mode)
+#define DeeDbgString_TryNewUtf8(str, file, line)                       DeeString_TryNewUtf8(str)
+#define DeeDbgString_TryNewUtf8Ex(str, length, error_mode, file, line) DeeString_TryNewUtf8Ex(str, length, error_mode)
 #else /* NDEBUG */
-#define DeeString_TryNewUtf8(str, length, error_mode) DeeDbgString_TryNewUtf8(str, length, error_mode, __FILE__, __LINE__)
+#define DeeString_TryNewUtf8(str)                       DeeDbgString_TryNewUtf8(str, __FILE__, __LINE__)
+#define DeeString_TryNewUtf8Ex(str, length, error_mode) DeeDbgString_TryNewUtf8Ex(str, length, error_mode, __FILE__, __LINE__)
 #endif /* !NDEBUG */
 
 /* Given a string `self` that has previously been allocated as a byte-buffer
@@ -1139,13 +1154,12 @@ DeeString_NewAutoUtf8(/*unsigned*/ char const *__restrict str) {
 		Dee_Incref(result);
 #endif /* !__INTELLISENSE__ */
 	} else {
-		result = DeeString_NewUtf8(str, strlen(str), Dee_STRING_ERROR_FIGNORE);
+		result = DeeString_NewUtf8(str);
 	}
 	return result;
 }
 #else /* !DeeString_IsObject_IS_NOOP */
-#define DeeString_NewAutoUtf8(str) \
-	DeeString_NewUtf8(str, strlen(str), Dee_STRING_ERROR_FIGNORE)
+#define DeeString_NewAutoUtf8(str) DeeString_NewUtf8(str)
 #endif /* DeeString_IsObject_IS_NOOP */
 
 

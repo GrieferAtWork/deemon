@@ -975,8 +975,8 @@ again_prepare:
 				rc = err_sql_throwerror(rc, ERR_SQL_THROWERROR_F_UNLOCK_DB, self, sql);
 			} else {
 				DREF DeeStringObject *sql_rem;
-				sql_rem = (DREF DeeStringObject *)DeeString_TryNewUtf8(utf8_sql, utf8_sql_length,
-				                                                       STRING_ERROR_FIGNORE);
+				sql_rem = (DREF DeeStringObject *)DeeString_TryNewUtf8Ex(utf8_sql, utf8_sql_length,
+				                                                         STRING_ERROR_FIGNORE);
 				if unlikely(!sql_rem) {
 					DB_Unlock(self);
 					if (Dee_CollectMemory(utf8_sql_length))

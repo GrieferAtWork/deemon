@@ -823,8 +823,7 @@ DeeSystem_DlOpenString(/*utf-8*/ char const *filename) {
 		/* Try to convert `filename` into its wide-character form,
 		 * then use `DeeSystem_DlOpen()` to load the library. */
 		DREF DeeStringObject *filename_ob;
-		filename_ob = (DREF DeeStringObject *)DeeString_NewUtf8(filename, strlen(filename),
-		                                                        STRING_ERROR_FSTRICT);
+		filename_ob = (DREF DeeStringObject *)DeeString_NewUtf8(filename);
 		if unlikely(!filename_ob)
 			goto done;
 		hResult = (HMODULE)DeeSystem_DlOpen((DeeObject *)filename_ob);
@@ -880,8 +879,7 @@ PUBLIC WUNUSED DREF /*String*/ DeeObject *DCALL DeeSystem_DlError(void) {
 	DBG_ALIGNMENT_ENABLE();
 	if (!message)
 		return ITER_DONE;
-	result = DeeString_NewUtf8(message, strlen(message),
-	                           STRING_ERROR_FIGNORE);
+	result = DeeString_NewUtf8(message);
 	return result;
 #else /* CONFIG_HAVE_dlerror */
 	COMPILER_IMPURE();
@@ -1145,7 +1143,7 @@ DeeSystem_GetLastModifiedString(/*utf-8*/ char const *__restrict filename) {
 			result = (uint64_t)-2;
 		return result;
 	}
-	filename_obj = DeeString_NewUtf8(filename, strlen(filename), STRING_ERROR_FSTRICT);
+	filename_obj = DeeString_NewUtf8(filename);
 	if unlikely(!filename_obj)
 		goto err;
 	result = DeeSystem_GetLastModified(filename_obj);
@@ -1297,7 +1295,7 @@ DeeSystem_GetFileTypeString(/*utf-8*/ char const *__restrict filename) {
 		return DeeSystem_GetFileType_T_NONE;
 	}
 	DBG_ALIGNMENT_ENABLE();
-	filename_obj = DeeString_NewUtf8(filename, strlen(filename), STRING_ERROR_FSTRICT);
+	filename_obj = DeeString_NewUtf8(filename);
 	if unlikely(!filename_obj)
 		goto err;
 	result = DeeSystem_GetFileType(filename_obj);
@@ -1766,7 +1764,7 @@ DeeSystem_UnlinkString(/*utf-8*/ char const *__restrict filename,
 		return 0;
 	}
 	DBG_ALIGNMENT_ENABLE();
-	filename_ob = DeeString_NewUtf8(filename, strlen(filename), STRING_ERROR_FIGNORE);
+	filename_ob = DeeString_NewUtf8(filename);
 	if unlikely(!filename_ob)
 		return -1;
 	result = DeeSystem_Unlink(filename_ob, throw_exception_on_error);
@@ -1793,7 +1791,7 @@ DeeSystem_UnlinkString(/*utf-8*/ char const *__restrict filename,
 	}
 	DBG_ALIGNMENT_ENABLE();
 #endif /* CONFIG_HAVE_remove */
-	filename_ob = DeeString_NewUtf8(filename, strlen(filename), STRING_ERROR_FIGNORE);
+	filename_ob = DeeString_NewUtf8(filename);
 	if unlikely(!filename_ob)
 		return -1;
 	result = DeeSystem_Unlink(filename_ob, throw_exception_on_error);

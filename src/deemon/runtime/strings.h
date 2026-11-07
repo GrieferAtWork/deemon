@@ -207,6 +207,9 @@ local STRINGS = List {
 	"ambig",
 	"fwd",
 	"const",
+	"varargs",
+	"varkwds",
+	("str_dollar_0", "$0"),
 
 	// Messages
 	"No active exception",
@@ -661,6 +664,15 @@ DEF_STRING(str_fwd, "fwd", 0x4d05936a, 0x468b9d355ef7e041)
 #define Dee_HashStr__const _Dee_HashSelectC(0x95daec48, 0x2e9cb1cd0ec552da)
 DEF_STRING(str_const, "const", 0x95daec48, 0x2e9cb1cd0ec552da)
 #define STR_const DeeString_STR(&str_const)
+#define Dee_HashStr__varargs _Dee_HashSelectC(0x6c118017, 0x68e4653247602674)
+DEF_STRING(str_varargs, "varargs", 0x6c118017, 0x68e4653247602674)
+#define STR_varargs DeeString_STR(&str_varargs)
+#define Dee_HashStr__varkwds _Dee_HashSelectC(0x7d57fdb7, 0xe1416fd71185a85c)
+DEF_STRING(str_varkwds, "varkwds", 0x7d57fdb7, 0xe1416fd71185a85c)
+#define STR_varkwds DeeString_STR(&str_varkwds)
+#define Dee_HashStr__dollar_0 _Dee_HashSelectC(0xcaf4a934, 0xa524866e15e45f73)
+DEF_STRING(str_dollar_0, "$0", 0xcaf4a934, 0xa524866e15e45f73)
+#define STR_dollar_0 DeeString_STR(&str_dollar_0)
 #define Dee_HashStr__No_active_exception _Dee_HashSelectC(0xa6c0d0c8, 0x132615532aa858b6)
 DEF_STRING(str_No_active_exception, "No active exception", 0xa6c0d0c8, 0x132615532aa858b6)
 #define STR_No_active_exception DeeString_STR(&str_No_active_exception)

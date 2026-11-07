@@ -1398,9 +1398,9 @@ decl_ast_parse_unary(DeeLexer *lexer, struct decl_ast *__restrict self) {
 		} else {
 			struct decl_ast *inner_ast;
 			DREF DeeStringObject *attr_name;
-			attr_name = (DREF DeeStringObject *)DeeString_NewUtf8(DeeLexer_GetTokenKwdCStr(lexer),
-			                                                      DeeLexer_GetTokenKwdLen(lexer),
-			                                                      STRING_ERROR_FIGNORE);
+			attr_name = (DREF DeeStringObject *)DeeString_NewUtf8Ex(DeeLexer_GetTokenKwdCStr(lexer),
+			                                                        DeeLexer_GetTokenKwdLen(lexer),
+			                                                        Dee_STRING_ERROR_FREPLAC);
 			if unlikely(!attr_name)
 				goto err_r;
 			inner_ast = (struct decl_ast *)Dee_Malloc(sizeof(struct decl_ast));

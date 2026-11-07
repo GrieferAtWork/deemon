@@ -916,7 +916,7 @@ err:
 }
 
 PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-DeeFile_OpenString(char const *__restrict filename,
+DeeFile_OpenString(/*utf-8*/ char const *__restrict filename,
                    int oflags, int mode) {
 #ifdef DeeSystem_FILE_USE_STUB
 	(void)filename;
@@ -926,7 +926,7 @@ DeeFile_OpenString(char const *__restrict filename,
 	return NULL;
 #else /* DeeSystem_FILE_USE_STUB */
 	DREF DeeObject *result, *nameob;
-	nameob = DeeString_New(filename);
+	nameob = DeeString_NewUtf8(filename);
 	if unlikely(!nameob)
 		goto err;
 	result = DeeFile_Open(nameob, oflags, mode);

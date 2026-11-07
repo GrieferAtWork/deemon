@@ -1703,7 +1703,7 @@ AttributeError_get_name(AttributeError *__restrict self) {
 		Dee_Incref(result);
 		return Dee_AsObject(result);
 	}
-	return DeeString_New(self->ae_desc.ad_name);
+	return DeeString_NewAscii(self->ae_desc.ad_name);
 err_unbound:
 	return DeeRT_ErrTUnboundAttrCStr(&DeeError_AttributeError, self, "name");
 }
@@ -1920,7 +1920,7 @@ err:
 
 PRIVATE ATTR_COLD NONNULL((1, 3, 4)) int DCALL
 DeeRT_ErrAttributeErrorCStr_impl(DeeTypeObject *error_type, DeeObject *decl,
-                                 DeeObject *ob, /*static*/ char const *attr, unsigned int flags,
+                                 DeeObject *ob, /*static*/ /*ascii*/ char const *attr, unsigned int flags,
                                  /*inherit(always)*/ DREF DeeObject *cause) {
 	DREF AttributeError *result = DeeObject_MALLOC(AttributeError);
 	if unlikely(!result)
@@ -2115,7 +2115,7 @@ PUBLIC ATTR_COLD NONNULL((1, 2)) DeeObject *
 }
 
 PUBLIC ATTR_COLD NONNULL((1, 2)) DeeObject *
-(DCALL DeeRT_ErrUnboundAttrCStr)(DeeObject *ob, /*static*/ char const *attr) {
+(DCALL DeeRT_ErrUnboundAttrCStr)(DeeObject *ob, /*static*/ /*ascii*/ char const *attr) {
 	DeeRT_ErrAttributeErrorCStr_impl(&DeeError_UnboundAttribute, NULL,
 	                                 ob, attr, AttributeError_F_GET,
 	                                 NULL);
@@ -2145,7 +2145,7 @@ PUBLIC ATTR_COLD NONNULL((1, 2, 3)) DeeObject *
 }
 
 PUBLIC ATTR_COLD NONNULL((1, 2, 3)) DeeObject *
-(DCALL DeeRT_ErrTUnboundAttrCStr)(DeeObject *decl, DeeObject *ob, /*static*/ char const *attr) {
+(DCALL DeeRT_ErrTUnboundAttrCStr)(DeeObject *decl, DeeObject *ob, /*static*/ /*ascii*/ char const *attr) {
 	DeeRT_ErrAttributeErrorCStr_impl(&DeeError_UnboundAttribute, decl,
 	                                 ob, attr, AttributeError_F_GET,
 	                                 NULL);
@@ -2242,14 +2242,14 @@ PUBLIC ATTR_COLD NONNULL((2, 3)) int
 
 PUBLIC ATTR_COLD NONNULL((2, 3)) int
 (DCALL DeeRT_ErrTUnknownAttrStr)(DeeObject *decl, DeeObject *ob,
-                                 char const *attr, unsigned int access) {
+                                 /*ascii*/ char const *attr, unsigned int access) {
 	int result;
 	DREF DeeObject *attr_ob;
 	if (DeeSystem_IsStaticPointer(attr)) {
 		return DeeRT_ErrAttributeErrorCStr_impl(&DeeError_UnknownAttribute, decl,
 		                                        ob, attr, access, NULL);
 	}
-	attr_ob = DeeString_New(attr);
+	attr_ob = DeeString_NewAscii(attr);
 	if unlikely(!attr_ob)
 		goto err;
 	result = DeeRT_ErrAttributeError_impl(&DeeError_UnknownAttribute, decl,
@@ -2262,13 +2262,13 @@ err:
 
 PUBLIC ATTR_COLD NONNULL((2, 3)) int
 (DCALL DeeRT_ErrTUnknownAttrStrLen)(DeeObject *decl, DeeObject *ob,
-                                    char const *attr, size_t attrlen,
+                                    /*ascii*/ char const *attr, size_t attrlen,
                                     unsigned int access) {
 	int result;
 	DREF DeeObject *attr_ob;
 #ifdef __ARCH_PAGESIZE
 	if (DeeSystem_IsStaticPointer(attr)) {
-		char const *attr_end = attr + attrlen;
+		/*ascii*/ char const *attr_end = attr + attrlen;
 		uintptr_t attr_startpage = (uintptr_t)attr & (__ARCH_PAGESIZE - 1);
 		uintptr_t attr_endpage = (uintptr_t)attr_end & (__ARCH_PAGESIZE - 1);
 		if (attr_startpage == attr_endpage && *attr_end == '\0') {
@@ -2299,7 +2299,7 @@ PUBLIC ATTR_COLD NONNULL((2, 3, 5)) int
 
 PUBLIC ATTR_COLD NONNULL((2, 3, 5)) int
 (DCALL DeeRT_ErrTUnknownAttrStrWithCause)(DeeObject *decl, DeeObject *ob,
-                                          char const *attr, unsigned int access,
+                                          /*ascii*/ char const *attr, unsigned int access,
                                           /*inherit(always)*/ DREF DeeObject *cause) {
 	int result;
 	DREF DeeObject *attr_ob;
@@ -2308,7 +2308,7 @@ PUBLIC ATTR_COLD NONNULL((2, 3, 5)) int
 		return DeeRT_ErrAttributeErrorCStr_impl(&DeeError_UnknownAttribute, decl,
 		                                        ob, attr, access, cause);
 	}
-	attr_ob = DeeString_New(attr);
+	attr_ob = DeeString_NewAscii(attr);
 	if unlikely(!attr_ob)
 		goto err;
 	result = DeeRT_ErrAttributeError_impl(&DeeError_UnknownAttribute, decl,
@@ -2321,14 +2321,14 @@ err:
 
 PUBLIC ATTR_COLD NONNULL((2, 3, 6)) int
 (DCALL DeeRT_ErrTUnknownAttrStrLenWithCause)(DeeObject *decl, DeeObject *ob,
-                                             char const *attr, size_t attrlen, unsigned int access,
+                                             /*ascii*/ char const *attr, size_t attrlen, unsigned int access,
                                              /*inherit(always)*/ DREF DeeObject *cause) {
 	int result;
 	DREF DeeObject *attr_ob;
 	ASSERT_OBJECT(cause);
 #ifdef __ARCH_PAGESIZE
 	if (DeeSystem_IsStaticPointer(attr)) {
-		char const *attr_end = attr + attrlen;
+		/*ascii*/ char const *attr_end = attr + attrlen;
 		uintptr_t attr_startpage = (uintptr_t)attr & (__ARCH_PAGESIZE - 1);
 		uintptr_t attr_endpage = (uintptr_t)attr_end & (__ARCH_PAGESIZE - 1);
 		if (attr_startpage == attr_endpage && *attr_end == '\0') {
@@ -2404,7 +2404,7 @@ PUBLIC ATTR_COLD NONNULL((2, 3)) int
 }
 
 PUBLIC ATTR_COLD NONNULL((2, 3)) int
-(DCALL DeeRT_ErrTRestrictedAttrCStr)(DeeObject *decl, DeeObject *ob, char const *attr, unsigned int access) {
+(DCALL DeeRT_ErrTRestrictedAttrCStr)(DeeObject *decl, DeeObject *ob, /*ascii*/ char const *attr, unsigned int access) {
 	return DeeRT_ErrAttributeErrorCStr_impl(&DeeError_RestrictedAttribute, decl,
 	                                        ob, attr, access, NULL);
 }

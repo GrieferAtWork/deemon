@@ -1306,13 +1306,13 @@ diriter_get_d_name(DeeDirIteratorObject *__restrict self) {
 	if (self->odi_hnd != INVALID_HANDLE_VALUE) {
 		return DeeString_NewWide(self->odi_data.cFileName,
 		                         wcslen(self->odi_data.cFileName),
-		                         STRING_ERROR_FREPLAC);
+		                         Dee_STRING_ERROR_FREPLAC);
 	}
 #elif defined(posix_opendir_USE_opendir)
 	if (self->odi_ent != NULL) {
-		return DeeString_NewUtf8(self->odi_ent->d_name,
-		                         dirent_namelen(self->odi_ent),
-		                         STRING_ERROR_FREPLAC);
+		return DeeString_NewUtf8Ex(self->odi_ent->d_name,
+		                           dirent_namelen(self->odi_ent),
+		                           Dee_STRING_ERROR_FREPLAC);
 	}
 #else /* ... */
 #define diriter_get_d_name_IS_STUB

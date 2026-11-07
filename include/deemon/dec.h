@@ -116,6 +116,14 @@ struct Dee_string_object;
 struct Dee_compiler_options;
 struct Dee_dec_writer;
 
+#ifdef UINT32_MAX
+#define Dee_DEC_ADDR32_MAX UINT32_MAX
+#else /* UINT32_MAX */
+#define Dee_DEC_ADDR32_MAX __UINT32_MAX__
+#endif /* !UINT32_MAX */
+
+#define Dee_SIZEOF_DEC_ADDR32 4
+#define Dee_SIZEOF_DEC_OFF32  4
 typedef uint32_t Dee_dec_addr32_t; /* Offset from start of `Dec_Ehdr` to some other structure. */
 typedef int32_t Dee_dec_off32_t;
 

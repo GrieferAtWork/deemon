@@ -64,6 +64,11 @@
 
 DECL_BEGIN
 
+STATIC_ASSERT(sizeof(Dee_dec_addr32_t) == Dee_SIZEOF_DEC_ADDR32);
+STATIC_ASSERT(Dee_SIZEOF_DEC_ADDR32 == 4);
+STATIC_ASSERT(sizeof(Dee_dec_off32_t) == Dee_SIZEOF_DEC_OFF32);
+STATIC_ASSERT(Dee_SIZEOF_DEC_OFF32 == 4);
+
 #define ASSERT_FIELD(T, field, offset, size)       \
 	STATIC_ASSERT(offsetof(T, field) == (offset)); \
 	STATIC_ASSERT(sizeof(((T *)0)->field) == (size));
@@ -134,15 +139,11 @@ DeeDec_heapregion_destroy(struct Dee_heapregion *__restrict self) {
 /************************************************************************/
 /************************************************************************/
 
-#ifndef UINT32_MAX
-#define UINT32_MAX __UINT32_MAX__
-#endif /* !UINT32_MAX */
-
-#if __SIZEOF_POINTER__ <= 4
+#if __SIZEOF_POINTER__ <= Dee_SIZEOF_DEC_ADDR32
 #define seraddr32(seraddr) ((Dee_dec_addr32_t)(seraddr))
-#else /* __SIZEOF_POINTER__ <= 4 */
-#define seraddr32(seraddr) (ASSERT((seraddr) <= UINT32_MAX), (Dee_dec_addr32_t)(seraddr))
-#endif /* __SIZEOF_POINTER__ > 4 */
+#else /* __SIZEOF_POINTER__ <= Dee_SIZEOF_DEC_ADDR32 */
+#define seraddr32(seraddr) (ASSERT((seraddr) <= Dee_DEC_ADDR32_MAX), (Dee_dec_addr32_t)(seraddr))
+#endif /* __SIZEOF_POINTER__ > Dee_SIZEOF_DEC_ADDR32 */
 
 
 

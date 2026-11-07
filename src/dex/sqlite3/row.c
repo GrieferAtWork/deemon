@@ -857,8 +857,8 @@ unlock_and_collect_length_memory:
 				goto err;
 			goto again;
 		}
-		result = DeeString_TryNewUtf8((char const *)text, data_length,
-		                              STRING_ERROR_FIGNORE);
+		result = DeeString_TryNewUtf8Ex((char const *)text, data_length,
+		                                Dee_STRING_ERROR_FIGNORE);
 		if unlikely(!result)
 			goto unlock_and_collect_length_memory;
 		Query_UnlockDB(query);

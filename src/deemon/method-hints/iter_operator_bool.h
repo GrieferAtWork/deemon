@@ -23,9 +23,9 @@
 /************************************************************************/
 __iter_bool__()->?Dbool {
 	int result = CALL_DEPENDENCY(iter_operator_bool, self);
-	if unlikely(result < 0)
+	if unlikely(Dee_HAS_ISERR(result))
 		goto err;
-	return_bool(result);
+	return_bool(Dee_HAS_ISYES_NO_ERR(result));
 err:
 	return NULL;
 }
@@ -34,7 +34,7 @@ err:
 [[operator([Iterator]: tp_cast.tp_bool)]]
 int __iter_bool__.iter_operator_bool([[nonnull]] DeeObject *__restrict self)
 %{unsupported(err_iter_unsupportedf(self, "operator bool"))}
-%{$empty = 0}
+%{$empty = Dee_HAS_NO}
 %{$with__iter_peek = {
 	DREF DeeObject *next = CALL_DEPENDENCY(iter_peek, self);
 	if unlikely(!next)
@@ -42,23 +42,23 @@ int __iter_bool__.iter_operator_bool([[nonnull]] DeeObject *__restrict self)
 	if (!ITER_ISOK(next))
 		return Dee_HAS_FROMITERNOK(next);
 	Dee_Decref_unlikely(next);
-	return 1;
+	return Dee_HAS_YES;
 err:
-	return -1;
+	return Dee_HAS_ERR;
 }} {
-	int retval;
+	bool istrue;
 	DREF DeeObject *result = LOCAL_CALLATTR(self, 0, NULL);
 	if unlikely(!result)
 		goto err;
 	if (DeeObject_AssertTypeExact(result, &DeeBool_Type))
 		goto err_r;
-	retval = DeeBool_IsTrue(result) ? 1 : 0;
+	istrue = DeeBool_IsTrue(result);
 	DeeBool_Decref(result);
-	return retval;
+	return Dee_HAS_FROMBOOL(istrue);
 err_r:
 	Dee_Decref(result);
 err:
-	return -1;
+	return Dee_HAS_ERR;
 }
 
 iter_operator_bool = {

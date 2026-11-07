@@ -40,7 +40,7 @@
 #include <deemon/none.h>            /* DeeNone* */
 #include <deemon/object.h>          /* DREF, DeeObject, DeeObject_*, DeeTypeObject, DeeType_Implements, Dee_AsObject, Dee_Decref, Dee_DecrefNokill, Dee_HAS_*, Dee_Incref, Dee_Incref_n, Dee_TYPE, Dee_XDecref, Dee_hash_t */
 #include <deemon/seq.h>             /* DeeRange_New, DeeSeq_* */
-#include <deemon/string.h>          /* DeeString_FromBackslashEscaped, DeeString_NewUtf8, DeeUni_IsSpace, STRING_ERROR_FSTRICT */
+#include <deemon/string.h>          /* DeeString_FromBackslashEscaped, DeeString_NewUtf8Ex, DeeUni_IsSpace, Dee_STRING_ERROR_FSTRICT */
 #include <deemon/stringutils.h>     /* Dee_unicode_readutf8_rev_n */
 #include <deemon/super.h>           /* DeeSuper* */
 #include <deemon/system-features.h> /* CONFIG_HAVE_FPU, memcpy* */
@@ -591,9 +591,9 @@ FUNC(BraceItems)(JITLexer *__restrict self) {
 			goto err;
 		}
 #ifdef JIT_EVAL
-		first_key = DeeString_NewUtf8(JITLexer_TokPtr(self),
-		                              JITLexer_TokLen(self),
-		                              STRING_ERROR_FSTRICT);
+		first_key = DeeString_NewUtf8Ex(JITLexer_TokPtr(self),
+		                                JITLexer_TokLen(self),
+		                                Dee_STRING_ERROR_FSTRICT);
 		if unlikely(!first_key)
 			goto err;
 #endif /* JIT_EVAL */
@@ -657,7 +657,7 @@ done_y1:
 #ifdef JIT_EVAL
 		result = DeeString_FromBackslashEscaped(JITLexer_TokPtr(self) + 1,
 		                                        JITLexer_TokLen(self) - 2,
-		                                        STRING_ERROR_FSTRICT);
+		                                        Dee_STRING_ERROR_FSTRICT);
 #else /* JIT_EVAL */
 		result = 0;
 #endif /* !JIT_EVAL */
@@ -666,9 +666,9 @@ done_y1:
 	case JIT_RAWSTRING:
 		/* Raw string literal */
 #ifdef JIT_EVAL
-		result = DeeString_NewUtf8(JITLexer_TokPtr(self) + 2,
-		                           JITLexer_TokLen(self) - 3,
-		                           STRING_ERROR_FSTRICT);
+		result = DeeString_NewUtf8Ex(JITLexer_TokPtr(self) + 2,
+		                             JITLexer_TokLen(self) - 3,
+		                             Dee_STRING_ERROR_FSTRICT);
 #else /* JIT_EVAL */
 		result = 0;
 #endif /* !JIT_EVAL */
@@ -3754,9 +3754,9 @@ again:
 			goto err_r;
 		}
 #ifdef JIT_EVAL
-		lhs = DeeString_NewUtf8((char const *)self->jl_tokstart,
-		                        JITLexer_TokLen(self),
-		                        STRING_ERROR_FSTRICT);
+		lhs = DeeString_NewUtf8Ex((char const *)self->jl_tokstart,
+		                          JITLexer_TokLen(self),
+		                          Dee_STRING_ERROR_FSTRICT);
 		if unlikely(!lhs)
 			goto err_r;
 #endif /* JIT_EVAL */

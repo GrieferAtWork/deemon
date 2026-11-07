@@ -152,7 +152,7 @@ coti_nextpair(ClassOperatorTableIterator *__restrict self,
 		return 1;
 	info = DeeTypeType_GetOperatorById(&DeeType_Type, ent->co_name);
 	if (info) {
-		key_and_value[0] = DeeString_New(info->oi_sname);
+		key_and_value[0] = DeeString_NewAscii(info->oi_sname);
 	} else {
 		key_and_value[0] = DeeInt_NewUInt16(ent->co_name);
 	}
@@ -177,7 +177,7 @@ coti_nextkey(ClassOperatorTableIterator *__restrict self) {
 		return ITER_DONE;
 	info = DeeTypeType_GetOperatorById(&DeeType_Type, ent->co_name);
 	if (info)
-		return DeeString_New(info->oi_sname);
+		return DeeString_NewAscii(info->oi_sname);
 	return DeeInt_NewUInt16(ent->co_name);
 }
 
@@ -499,7 +499,8 @@ cot_foreach_pair(ClassOperatorTable *self, Dee_foreach_pair_t proc, void *arg) {
 		if unlikely(!addr)
 			goto err;
 		info = DeeTypeType_GetOperatorById(&DeeType_Type, op->co_name);
-		name = info ? DeeString_New(info->oi_sname) : DeeInt_NEWU(op->co_name);
+		name = info ? DeeString_NewAscii(info->oi_sname)
+		            : DeeInt_NEWU(op->co_name);
 		if unlikely(!name) {
 			Dee_Decref(addr);
 			goto err;

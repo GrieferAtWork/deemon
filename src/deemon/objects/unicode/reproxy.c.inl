@@ -1116,8 +1116,8 @@ again:
 	}
 	self->rsi_exec.rx_startoff = (size_t)result + match_size;
 	ReSequenceIterator_LockEndWrite(self);
-	return DeeString_NewUtf8((char const *)exec.rx_inbase + (size_t)result,
-	                         match_size, STRING_ERROR_FSTRICT);
+	return DeeString_NewUtf8Ex((char const *)exec.rx_inbase + (size_t)result,
+	                           match_size, Dee_STRING_ERROR_FSTRICT);
 err:
 	return NULL;
 }
@@ -1346,9 +1346,9 @@ again:
 		self->rsi_exec.rx_startoff = (size_t)result + match_size;
 	}
 	ReSequenceIterator_LockEndWrite(self);
-	return DeeString_NewUtf8((char const *)exec.rx_inbase + exec.rx_startoff,
-	                         (size_t)result - exec.rx_startoff,
-	                         STRING_ERROR_FSTRICT);
+	return DeeString_NewUtf8Ex((char const *)exec.rx_inbase + exec.rx_startoff,
+	                           (size_t)result - exec.rx_startoff,
+	                           Dee_STRING_ERROR_FSTRICT);
 err:
 	return NULL;
 }

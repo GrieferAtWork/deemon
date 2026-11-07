@@ -33,7 +33,7 @@
 #include <deemon/format.h>          /* DeeFormat_PRINT, DeeFormat_Printf */
 #include <deemon/object.h>          /* DREF, DeeObject, DeeTypeObject, DeeType_Extends, Dee_AsObject, Dee_TYPE, Dee_XDecref, Dee_XIncref, Dee_formatprinter_t, Dee_ssize_t, OBJECT_HEAD_INIT */
 #include <deemon/serial.h>          /* DeeSerial*, Dee_seraddr_t */
-#include <deemon/string.h>          /* DeeStringObject, DeeString_TryNewUtf8, STRING_ERROR_FIGNORE */
+#include <deemon/string.h>          /* DeeStringObject, DeeString_TryNewUtf8Ex, STRING_ERROR_FIGNORE */
 #include <deemon/system-features.h> /* DeeSystem_DEFINE_memcasecmp, DeeSystem_DEFINE_memcasemem, strlen */
 #include <deemon/system.h>          /* DeeNTSystem_TranslateErrno, Dee_SYSTEM_ERROR_UNKNOWN */
 #include <deemon/thread.h>          /* DeeThread_CheckInterrupt */
@@ -437,10 +437,9 @@ handle_nomem:
 	}
 	errmsg_ob = NULL;
 	if (errmsg) {
-		size_t msglen = strlen(errmsg);
-		errmsg_ob = (DREF DeeStringObject *)DeeString_TryNewUtf8(errmsg, msglen,
-		                                                         STRING_ERROR_FIGNORE);
+		errmsg_ob = (DREF DeeStringObject *)DeeString_TryNewUtf8(errmsg);
 		if unlikely(!errmsg_ob) {
+			size_t msglen = strlen(errmsg);
 			LOCAL_UNLOCK();
 			return Dee_CollectMemory(msglen) ? 0 : -1;
 		}

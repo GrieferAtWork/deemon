@@ -35,7 +35,7 @@
 #include <deemon/dex.h>             /* DEXSYM_READONLY, DEX_MEMBER, DEX_MEMBER_F */
 #include <deemon/object.h>          /* ASSERT_OBJECT_TYPE_EXACT, ASSERT_OBJECT_TYPE_EXACT_OPT, DREF, DeeObject, DeeObject_Add, DeeObject_AssertTypeExact, Dee_AsObject, Dee_Decref, Dee_Incref, return_reference_ */
 #include <deemon/objmethod.h>       /*  */
-#include <deemon/string.h>          /* DeeString*, DeeUni_IsSpace, DeeUni_ToUpper, Dee_EmptyString, Dee_UNICODE_PRINTER_*, Dee_unicode_printer*, STRING_ERROR_FIGNORE, STRING_ERROR_FSTRICT, WSTR_LENGTH */
+#include <deemon/string.h>          /* DeeString*, DeeUni_IsSpace, DeeUni_ToUpper, Dee_EmptyString, Dee_UNICODE_PRINTER_*, Dee_unicode_printer*, Dee_STRING_ERROR_FREPLAC, STRING_ERROR_FSTRICT, WSTR_LENGTH */
 #include <deemon/stringutils.h>     /* DeeString_GetChar, Dee_unicode_* */
 #include <deemon/system-features.h> /* DeeSystem_DEFINE_memrchr, link, memchr, memcpyc, mempcpyc */
 #include <deemon/system.h>          /* CONFIG_WANT_WINDOWS_STD_FILES, DeeSystem_* */
@@ -100,9 +100,9 @@ posix_path_headof_f(DeeStringObject *__restrict path) {
 	if (tailsep <= pathstr)
 		return_reference_((DeeStringObject *)Dee_EmptyString);
 	/* Note that we *do* include the trailing slash! */
-	return (DREF DeeStringObject *)DeeString_NewUtf8(pathstr,
-	                                                 (size_t)(tailsep - pathstr),
-	                                                 STRING_ERROR_FIGNORE);
+	return (DREF DeeStringObject *)DeeString_NewUtf8Ex(pathstr,
+	                                                   (size_t)(tailsep - pathstr),
+	                                                   Dee_STRING_ERROR_FREPLAC);
 err:
 	return NULL;
 }
@@ -118,9 +118,9 @@ posix_path_tailof_f(DeeStringObject *__restrict path) {
 	ASSERT(tailsep >= pathstr);
 	if (tailsep <= pathstr)
 		return_reference_(path);
-	return (DREF DeeStringObject *)DeeString_NewUtf8(tailsep,
-	                                                 (size_t)((pathstr + WSTR_LENGTH(pathstr)) - tailsep),
-	                                                 STRING_ERROR_FIGNORE);
+	return (DREF DeeStringObject *)DeeString_NewUtf8Ex(tailsep,
+	                                                   (size_t)((pathstr + WSTR_LENGTH(pathstr)) - tailsep),
+	                                                   Dee_STRING_ERROR_FREPLAC);
 err:
 	return NULL;
 }
@@ -156,7 +156,7 @@ posix_path_driveof_f(DeeStringObject *__restrict path) {
 #else /* DeeSystem_ALTSEP */
 		*dst = DeeSystem_SEP;
 #endif /* !DeeSystem_ALTSEP */
-		return (DREF DeeStringObject *)DeeString_SetUtf8(Dee_AsObject(result), STRING_ERROR_FIGNORE);
+		return (DREF DeeStringObject *)DeeString_SetUtf8(Dee_AsObject(result), Dee_STRING_ERROR_FREPLAC);
 	}
 	return_reference_((DeeStringObject *)Dee_EmptyString);
 err:
@@ -443,7 +443,7 @@ posix_path_walklink_f(DeeStringObject *link, DeeStringObject *linkname) {
 
 	/* Set the resulting string as UTF-8 */
 	result = (DREF DeeStringObject *)DeeString_SetUtf8(Dee_AsObject(result),
-	                                                   STRING_ERROR_FIGNORE);
+	                                                   Dee_STRING_ERROR_FREPLAC);
 	return result;
 return_link:
 	return_reference_(link);
@@ -537,7 +537,7 @@ return_unmodified:
 			dst = DeeString_GetBuffer(result);
 			dst = (char *)mempcpyc(dst, pwd_begin, pwd_drive_len, sizeof(char));
 			memcpyc(dst, pth_begin, pth_len, sizeof(char));
-			result = (DREF DeeStringObject *)DeeString_SetUtf8((DeeObject *)result, STRING_ERROR_FIGNORE);
+			result = (DREF DeeStringObject *)DeeString_SetUtf8((DeeObject *)result, Dee_STRING_ERROR_FREPLAC);
 			goto done_decref_pwd;
 		}
 #endif /* DeeSystem_HAVE_FS_DRIVES */
@@ -600,8 +600,8 @@ done_merge_paths:
 				result = path;
 				Dee_Incref(result);
 			} else {
-				result = (DREF DeeStringObject *)DeeString_NewUtf8(pth_begin, pth_end - pth_begin,
-				                                                   STRING_ERROR_FIGNORE);
+				result = (DREF DeeStringObject *)DeeString_NewUtf8Ex(pth_begin, pth_end - pth_begin,
+				                                                     Dee_STRING_ERROR_FREPLAC);
 			}
 		} else if (pth_begin >= pth_end) {
 			if (pwd_begin == pwd_base &&
@@ -609,8 +609,8 @@ done_merge_paths:
 				result = pwd;
 				Dee_Incref(result);
 			} else {
-				result = (DREF DeeStringObject *)DeeString_NewUtf8(pwd_begin, pwd_end - pwd_begin,
-				                                                   STRING_ERROR_FIGNORE);
+				result = (DREF DeeStringObject *)DeeString_NewUtf8Ex(pwd_begin, pwd_end - pwd_begin,
+				                                                     Dee_STRING_ERROR_FREPLAC);
 			}
 		} else {
 			/* Create the result buffer. */
@@ -624,7 +624,7 @@ done_merge_paths:
 			dst = (char *)mempcpyc(dst, pwd_begin, pwd_length, sizeof(char));
 			*dst++ = DeeSystem_SEP;
 			memcpyc(dst, pth_begin, pth_length, sizeof(char));
-			result = (DREF DeeStringObject *)DeeString_SetUtf8(Dee_AsObject(result), STRING_ERROR_FIGNORE);
+			result = (DREF DeeStringObject *)DeeString_SetUtf8(Dee_AsObject(result), Dee_STRING_ERROR_FREPLAC);
 		}
 	}
 #ifdef DeeSystem_HAVE_FS_DRIVES

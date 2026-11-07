@@ -39,13 +39,13 @@ DECL_BEGIN
 
 typedef struct {
 	Dee_OBJECT_HEAD
-	char const *snai_iter; /* [1..1][lock(ATOMIC)] Pointer to next string, or
-	                        * pointer to a \0-character if enumeration finished */
+	/*utf-8*/ char const *snai_iter; /* [1..1][lock(ATOMIC)] Pointer to next string, or
+	                                  * pointer to a \0-character if enumeration finished */
 } StrNulArrayIterator;
 
 typedef struct {
 	Dee_OBJECT_HEAD
-	char const *sna_base; /* [1..1][const] Pointer to start of \0-separated and \0\0-terminated array of strings */
+	/*utf-8*/ char const *sna_base; /* [1..1][const] Pointer to start of \0-separated and \0\0-terminated array of strings */
 } StrNulArray;
 
 INTDEF DeeTypeObject StrNulArrayIterator_Type;

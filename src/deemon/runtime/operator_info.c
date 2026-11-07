@@ -1985,7 +1985,7 @@ toi_next(TypeOperatorsIterator *__restrict self) {
 			break;
 	}
 	if (self->toi_name && *info->oi_sname)
-		return DeeString_New(info->oi_sname);
+		return DeeString_NewAscii(info->oi_sname);
 	return DeeInt_NewUInt16(result);
 }
 

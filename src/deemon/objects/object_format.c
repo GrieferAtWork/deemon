@@ -320,7 +320,7 @@ call_format_function:
 			if (format_str_obj) {
 				callback_result = DeeObject_CallInherited(format_function, 1, &format_str_obj);
 			} else {
-				format_str_obj = DeeString_NewUtf8(format_str, format_len, STRING_ERROR_FIGNORE);
+				format_str_obj = DeeString_NewUtf8Ex(format_str, format_len, Dee_STRING_ERROR_FSTRICT);
 				if unlikely(!format_str_obj) {
 					callback_result = NULL;
 					Dee_Decref(format_function);

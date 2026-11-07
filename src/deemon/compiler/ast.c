@@ -551,9 +551,9 @@ INTERN WUNUSED NONNULL((1)) DeeAst *DCALL
 DeeAst_NewConstString_(/*utf-8*/ char const *__restrict value,
                        size_t value_len DeeAst__DBG_PARAMS) {
 	DREF DeeStringObject *string_value;
-	string_value = (DREF DeeStringObject *)DeeDbgString_NewUtf8(value, value_len,
-	                                                            STRING_ERROR_FIGNORE,
-	                                                            DBG_file, DBG_line);
+	string_value = (DREF DeeStringObject *)DeeDbgString_NewUtf8Ex(value, value_len,
+	                                                              STRING_ERROR_FIGNORE,
+	                                                              DBG_file, DBG_line);
 	if unlikely(!string_value)
 		goto err;
 	return DeeAst_NewConst_(Dee_AsObject(string_value) DBG__args);

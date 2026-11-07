@@ -184,7 +184,7 @@ Dee_variant_getobject(struct Dee_variant *__restrict self) {
 		result = DeeInt_NewUInt128(_Dee_variant_get_uint128(&copy));
 		break;
 	case Dee_VARIANT_CSTR:
-		result = DeeString_New(_Dee_variant_get_cstr(&copy));
+		result = DeeString_NewUtf8(_Dee_variant_get_cstr(&copy));
 		break;
 	case Dee_VARIANT_CSTRLEN:
 		result = DeeString_NewSized(_Dee_variant_get_cstr(&copy),
@@ -311,13 +311,13 @@ Dee_variant_setuint128(struct Dee_variant *__restrict self, Dee_uint128_t value)
 }
 
 PUBLIC NONNULL((1, 2)) void DCALL
-Dee_variant_setcstr(struct Dee_variant *__restrict self, char const *str) {
+Dee_variant_setcstr(struct Dee_variant *__restrict self, /*utf-8*/ char const *str) {
 	VARIANT_SETVALUE(self, _Dee_variant_set_cstr, str, Dee_VARIANT_CSTR);
 }
 
 PUBLIC NONNULL((1)) void DCALL
 Dee_variant_setcstrlen(struct Dee_variant *__restrict self,
-                       char const *str, size_t len) {
+                       /*utf-8*/ char const *str, size_t len) {
 #define _setpair(a, v) (_Dee_variant_set_cstr(a, str), _Dee_variant_set_cstrlen(a, len))
 	VARIANT_SETVALUE(self, _setpair, ~, Dee_VARIANT_CSTRLEN);
 #undef _setpair
@@ -326,15 +326,15 @@ Dee_variant_setcstrlen(struct Dee_variant *__restrict self,
 
 /* Same as `Dee_variant_init_cstr()`, but check at runtime if "str" is guarantied
  * to point into statically allocated memory. If it does, use "Dee_VARIANT_CSTR"
- * as variant typing, else use "Dee_VARIANT_OBJECT" and "DeeString_New()".
+ * as variant typing, else use "Dee_VARIANT_OBJECT" and "DeeString_NewUtf8()".
  *
  * When there is doubt regarding "str" being static, these functions always go the
  * safe route by assuming that it isn't, and turning them into string objects. */
 PUBLIC WUNUSED NONNULL((1, 2)) int DCALL
 Dee_variant_init_cstr_maybe(struct Dee_variant *__restrict self,
-                            char const *str) {
+                            /*utf-8*/ char const *str) {
 	if (!DeeSystem_IsStaticPointer(str)) {
-		DREF DeeObject *obj = DeeString_New(str);
+		DREF DeeObject *obj = DeeString_NewUtf8(str);
 		if unlikely(!obj)
 			goto err;
 		Dee_variant_init_object_inherited(self, obj);
@@ -349,9 +349,9 @@ err:
 
 PUBLIC WUNUSED NONNULL((1)) ATTR_INS(2, 3) int DCALL
 Dee_variant_init_cstrlen_maybe(struct Dee_variant *__restrict self,
-                               char const *str, size_t len) {
+                               /*utf-8*/ char const *str, size_t len) {
 	if (!DeeSystem_IsStaticPointer(str)) {
-		DREF DeeObject *obj = DeeString_NewSized(str, len);
+		DREF DeeObject *obj = DeeString_NewUtf8Ex(str, len, Dee_STRING_ERROR_FSTRICT);
 		if unlikely(!obj)
 			goto err;
 		Dee_variant_init_object_inherited(self, obj);

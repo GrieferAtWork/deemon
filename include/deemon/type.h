@@ -1657,7 +1657,7 @@ DFUNDEF ATTR_PURE WUNUSED ATTR_INS(4, 3) bool
 #endif /* DEE_SOURCE */
 
 struct Dee_type_method {
-	char const           *m_name;   /* [1..1][SENTINAL(NULL)] Method name. */
+	/*ascii*/ char const *m_name;   /* [1..1][SENTINAL(NULL)] Method name. */
 	Dee_objmethod_t       m_func;   /* [1..1] The method that is getting invoked. */
 	/*utf-8*/ char const *m_doc;    /* [0..1] Documentation string. */
 	uintptr_t             m_flag;   /* Method flags (Set of `Dee_TYPE_METHOD_F*`). */
@@ -1690,7 +1690,7 @@ struct Dee_type_method {
 #endif /* DEE_SOURCE */
 
 struct Dee_type_getset {
-	char const           *gs_name;  /* [1..1][SENTINAL(NULL)] Member name. */
+	/*ascii*/ char const *gs_name;  /* [1..1][SENTINAL(NULL)] Member name. */
 	/* Getset callbacks (NULL callbacks will result in `Error.AttributeError` being raised) */
 	Dee_getmethod_t       gs_get;   /* [0..1] Getter callback. */
 	Dee_delmethod_t       gs_del;   /* [0..1] Delete callback. */
@@ -1915,7 +1915,7 @@ union Dee_type_member_desc {
 #endif /* __SIZEOF_POINTER__ != ... */
 
 struct Dee_type_member {
-	char const                *m_name; /* [1..1][SENTINAL(NULL)] Member name. */
+	/*ascii*/ char const      *m_name; /* [1..1][SENTINAL(NULL)] Member name. */
 	union Dee_type_member_desc m_desc; /* Type member descriptor */
 	/*utf-8*/ char const      *m_doc;  /* [0..1] Documentation string. */
 };
@@ -2352,9 +2352,9 @@ struct Dee_opinfo {
 	uint16_t                                oi_class;     /* Offset into the type for where to find a `0..1` struct that contains more  */
 	uint16_t                                oi_offset;    /* Offset from `oi_class` to where the c-function of this operator can be found. */
 	uint16_t                                oi_cc;        /* The operator calling convention (s.a. `OPCC_*`). */
-	char                                    oi_uname[12]; /* `+` */
-	char                                    oi_sname[12]; /* `add` */
-	char                                    oi_iname[16]; /* `tp_add` */
+	/*ascii*/ char                          oi_uname[12]; /* `+` */
+	/*ascii*/ char                          oi_sname[12]; /* `add` */
+	/*ascii*/ char                          oi_iname[16]; /* `tp_add` */
 	struct Dee_operator_invoke Dee_tpconst *oi_invoke;    /* [1..1] Generic info on how to invoke/hook this operator. */
 };
 
@@ -2539,7 +2539,7 @@ struct Dee_type_object {
 #ifdef __INTELLISENSE__
 		;
 #endif /* __INTELLISENSE__ */
-	char const                         *tp_name;     /* [0..1] Name of this type. */
+	/*ascii*/ char const               *tp_name;     /* [0..1] Name of this type (when `TP_FNAMEOBJECT` is set, might also be utf-8 or latin-1) */
 	/*utf-8*/ char const               *tp_doc;      /* [0..1] Documentation string of this type and its operators. */
 	uint16_t                            tp_flags;    /* Type flags (Set of `TP_F*`). */
 	uint16_t                            tp_weakrefs; /* Offset to `offsetof(Dee?Object, ob_weakrefs)`, or 0 when not supported.
@@ -3023,7 +3023,7 @@ DeeType_GetModule(DeeTypeObject *__restrict self);
  * "<anonymous type>" when `self` doesn't have a
  * type name set. */
 DFUNDEF ATTR_RETNONNULL ATTR_PURE WUNUSED NONNULL((1)) char const *DCALL
-DeeType_GetName(DeeTypeObject const *__restrict self);
+DeeType_GetName(DeeTypeObject const *__restrict self); /* TODO: Should return utf-8, but currently returns the weird latin-1/utf-8 hybrid of strings */
 
 
 

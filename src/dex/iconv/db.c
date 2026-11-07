@@ -64,7 +64,7 @@ do_iconv_normalize_codec_name(DeeStringObject *__restrict str) {
 	char buf[CODE_NAME_MAXLEN + 1];
 	if (!libiconv_normalize_codec_name(buf, DeeString_STR(str), DeeString_SIZE(str)))
 		return_none;
-	return DeeString_New(buf);
+	return DeeString_NewAscii(buf);
 }
 
 DECL_END

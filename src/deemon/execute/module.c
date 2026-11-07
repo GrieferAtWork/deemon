@@ -122,9 +122,7 @@ again:
 		Dee_Incref(result);
 	} else {
 		/* Wrap the doc string into a string object. */
-		result = (DREF DeeStringObject *)DeeString_NewUtf8(doc_str,
-		                                                   strlen(doc_str),
-		                                                   STRING_ERROR_FIGNORE);
+		result = (DREF DeeStringObject *)DeeString_NewUtf8(doc_str);
 		if unlikely(!result)
 			goto done;
 
@@ -1246,9 +1244,9 @@ module_str(DeeObject *__restrict self) { /* TODO: Refactor to "tp_print" */
 		return libname;
 	name = me->mo_absname;
 	if (!name)
-		return DeeString_New("<Anonymous module>");
+		return DeeString_NewAscii("<Anonymous module>");
 	if (!*name)
-		return DeeString_New("<Filesystem root module>");
+		return DeeString_NewAscii("<Filesystem root module>");
 	return DeeString_Newf("<Module %q>", name);
 }
 
@@ -1598,7 +1596,7 @@ module_get_name(DeeModuleObject *__restrict self) {
 	name = DeeModule_GetShortName(self);
 	if unlikely(!name)
 		goto unbound;
-	return DeeString_NewUtf8(name, strlen(name), STRING_ERROR_FIGNORE);
+	return DeeString_NewUtf8(name);
 unbound:
 	return DeeRT_ErrUnboundAttrCStr(self, "__name__");
 }

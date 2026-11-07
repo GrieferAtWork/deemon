@@ -2416,14 +2416,12 @@ FORCELOCAL WUNUSED NONNULL((1)) DREF DeeObject *DCALL posix_putenv_f_impl(DeeObj
 	if (eq) {
 		/* Add to environ */
 		DREF DeeStringObject *name, *value;
-		name = (DREF DeeStringObject *)DeeString_NewUtf8(utf8_envline,
-		                                                 (size_t)(eq - utf8_envline),
-		                                                 STRING_ERROR_FSTRICT);
+		name = (DREF DeeStringObject *)DeeString_NewUtf8Ex(utf8_envline,
+		                                                   (size_t)(eq - utf8_envline),
+		                                                   STRING_ERROR_FSTRICT);
 		if unlikely(!name)
 			goto err;
-		value = (DREF DeeStringObject *)DeeString_NewUtf8(eq + 1,
-		                                                  strlen(eq + 1),
-		                                                  STRING_ERROR_FSTRICT);
+		value = (DREF DeeStringObject *)DeeString_NewUtf8(eq + 1);
 		if (!value) {
 			Dee_Decref_likely(name);
 			goto err;

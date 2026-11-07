@@ -293,7 +293,7 @@ typedef uint16_t Dee_attrperm_t;
 
 struct Dee_attrdesc {
 	/*ascii*/ char const *ad_name; /* [if(a_perm & Dee_ATTRPERM_F_NAMEOBJ, DREF(COMPILER_CONTAINER_OF(., DeeStringObject, s_str)))]
-	                                * [1..1] Name of the attribute. */
+	                                * [1..1] Name of the attribute. (when `Dee_ATTRPERM_F_NAMEOBJ` is set, might also be utf-8 or latin-1) */
 	/*utf-8*/ char const *ad_doc;  /* [if(a_perm & Dee_ATTRPERM_F_DOCOBJ, DREF(COMPILER_CONTAINER_OF(., DeeStringObject, s_str)))]
 	                                * [0..1] The documentation string of the attribute (when known). */
 	struct Dee_attrinfo   ad_info; /* Info about this attribute in particular */
@@ -2178,7 +2178,7 @@ INTDEF WUNUSED NONNULL((1)) size_t DCALL type_obmemb_iterattr(DeeTypeObject *__r
 #define type_method_call_kw(desc, self, argc, argv, kw) ((void)(self), (void)(argc), (void)(argv), (void)(kw), (DeeObject *)(desc)->m_func)
 #define type_obmeth_get(cls_type, desc)                 (Dee_REQUIRES_TYPE(DeeTypeObject *, cls_type), (DeeObject *)(desc)->m_func)
 #else /* __INTELLISENSE__ */
-#define type_method_doc(desc) DeeString_NewUtf8((desc)->m_doc, strlen((desc)->m_doc), STRING_ERROR_FIGNORE)
+#define type_method_doc(desc) DeeString_NewUtf8((desc)->m_doc)
 #define type_method_get(desc, self)                                                                  \
 	(((desc)->m_flag & TYPE_METHOD_FKWDS) ? DeeKwObjMethod_New((Dee_kwobjmethod_t)(desc)->m_func, self) \
 	                                      : DeeObjMethod_New((desc)->m_func, self))
@@ -2196,7 +2196,7 @@ INTDEF WUNUSED NONNULL((1)) size_t DCALL type_obmemb_iterattr(DeeTypeObject *__r
 	                                      : DeeClsMethod_New(cls_type, (desc)->m_func))
 #endif /* !__INTELLISENSE__ */
 INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL type_method_call_kw_normal(struct type_method const *desc, DeeObject *self, size_t argc, DeeObject *const *argv, DeeObject *kw);
-#define type_obmeth_doc(desc) DeeString_NewUtf8((desc)->m_doc, strlen((desc)->m_doc), STRING_ERROR_FIGNORE)
+#define type_obmeth_doc(desc) DeeString_NewUtf8((desc)->m_doc)
 INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL type_obmeth_call(DeeTypeObject *cls_type, struct type_method const *desc, size_t argc, DeeObject *const *argv);
 INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL type_obmeth_call_kw(DeeTypeObject *cls_type, struct type_method const *desc, size_t argc, DeeObject *const *argv, DeeObject *kw);
 INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL type_obmeth_vcallf(DeeTypeObject *cls_type, struct type_method const *desc, char const *__restrict format, va_list args);
@@ -2205,16 +2205,16 @@ INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL type_getset_get(struct type
 INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL type_obprop_call(DeeTypeObject *cls_type, struct type_getset const *desc, size_t argc, DeeObject *const *argv);
 INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL type_obprop_call_kw(DeeTypeObject *cls_type, struct type_getset const *desc, size_t argc, DeeObject *const *argv, DeeObject *kw);
 INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL type_obprop_vcallf(DeeTypeObject *cls_type, struct type_getset const *desc, char const *__restrict format, va_list args);
-#define type_obprop_doc(desc)           DeeString_NewUtf8((desc)->gs_doc, strlen((desc)->gs_doc), STRING_ERROR_FIGNORE)
+#define type_obprop_doc(desc)           DeeString_NewUtf8((desc)->gs_doc)
 #define type_obmemb_get(cls_type, desc) DeeClsMember_New(cls_type, desc)
-#define type_obmemb_doc(desc)           DeeString_NewUtf8((desc)->m_doc, strlen((desc)->m_doc), STRING_ERROR_FIGNORE)
+#define type_obmemb_doc(desc)           DeeString_NewUtf8((desc)->m_doc)
 INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL type_obmemb_call(DeeTypeObject *cls_type, struct type_member const *desc, size_t argc, DeeObject *const *argv);
 INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL type_obmemb_call_kw(DeeTypeObject *cls_type, struct type_member const *desc, size_t argc, DeeObject *const *argv, DeeObject *kw);
 INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL type_obmemb_vcallf(DeeTypeObject *cls_type, struct type_member const *desc, char const *__restrict format, va_list args);
-#define type_getset_doc(desc) DeeString_NewUtf8((desc)->gs_doc, strlen((desc)->gs_doc), STRING_ERROR_FIGNORE)
+#define type_getset_doc(desc) DeeString_NewUtf8((desc)->gs_doc)
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL type_getset_del(struct type_getset const *desc, DeeObject *__restrict self);
 INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL type_getset_set(struct type_getset const *desc, DeeObject *self, DeeObject *value);
-#define type_member_doc(desc)       DeeString_NewUtf8((desc)->m_doc, strlen((desc)->m_doc), STRING_ERROR_FIGNORE)
+#define type_member_doc(desc)       DeeString_NewUtf8((desc)->m_doc)
 #define type_member_del(desc, self) type_member_set(desc, self, Dee_None)
 
 #define type_member_get(desc, self)        Dee_type_member_get(desc, self)

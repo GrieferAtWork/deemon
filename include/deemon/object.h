@@ -2011,7 +2011,9 @@ DFUNDEF WUNUSED NONNULL((1, 3)) int (DCALL DeeObject_SetRangeIndexN)(DeeObject *
 #define Dee_HAS_FROMPRESENT(bound_status)        (bound_status) /* Always binary-compatible! */
 
 
-/* Convert a "!ITER_ISOK(obj)" value into the relevant Dee_HAS_* status */
+/* Convert a "!ITER_ISOK(obj)" value into the relevant Dee_HAS_* status:
+ * - `NULL`      -> `Dee_HAS_ERR`
+ * - `ITER_DONE` -> `Dee_HAS_NO` */
 #if 1
 #define Dee_HAS_FROMITERNOK(obj) ((int)(intptr_t)~(uintptr_t)(obj))
 #else
@@ -2019,14 +2021,18 @@ DFUNDEF WUNUSED NONNULL((1, 3)) int (DCALL DeeObject_SetRangeIndexN)(DeeObject *
 #endif
 
 
-/* Convert a "!ITER_ISOK(obj)" value into the relevant Dee_BOUND_* status */
+/* Convert a "!ITER_ISOK(obj)" value into the relevant Dee_BOUND_* status
+ * - `NULL`      -> `Dee_BOUND_ERR`
+ * - `ITER_DONE` -> `Dee_BOUND_NO` */
 #if Dee_BOUND_NO == 2
 #define Dee_BOUND_FROMITERNOK(obj) (((int)(intptr_t)~(uintptr_t)(obj)) | 2)
 #else /* Dee_BOUND_NO == 2 */
 #define Dee_BOUND_FROMITERNOK(obj) ((obj) == NULL ? Dee_BOUND_ERR : Dee_BOUND_NO)
 #endif /* Dee_BOUND_NO != 2 */
 
-/* Convert a "!ITER_ISOK(obj)" value into the relevant Dee_BOUND_* status (ITER_DONE means Dee_BOUND_MISSING) */
+/* Convert a "!ITER_ISOK(obj)" value into the relevant Dee_BOUND_* status (ITER_DONE means Dee_BOUND_MISSING)
+ * - `NULL`      -> `Dee_BOUND_ERR`
+ * - `ITER_DONE` -> `Dee_BOUND_MISSING` */
 #if Dee_BOUND_MISSING == 0
 #define Dee_BOUND_FROMITERNOK_MISSING(obj) ((int)(intptr_t)~(uintptr_t)(obj))
 #else /* Dee_BOUND_MISSING == 0 */

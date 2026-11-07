@@ -65,8 +65,8 @@ enum Dee_variant_type {
 	Dee_VARIANT_UINT64,  /* ... */
 	Dee_VARIANT_INT128,  /* ... */
 	Dee_VARIANT_UINT128, /* ... */
-	Dee_VARIANT_CSTR,    /* ... */
-	Dee_VARIANT_CSTRLEN, /* ... */
+	Dee_VARIANT_CSTR,    /* ... (utf-8) */
+	Dee_VARIANT_CSTRLEN, /* ... (utf-8) */
 #ifndef CONFIG_NO_FPU
 	Dee_VARIANT_FLOAT,   /* ... */
 #endif /* !CONFIG_NO_FPU */
@@ -103,10 +103,10 @@ struct Dee_variant {
 		__BYTE_TYPE__  _d_int128[16];  /* [valid_if(var_type == Dee_VARIANT_INT128)] */
 		__BYTE_TYPE__  _d_uint128[16]; /* [valid_if(var_type == Dee_VARIANT_UINT128)] */
 #endif /* __ALIGNOF_INT128__ > __ALIGNOF_POINTER__ */
-		char const     *d_cstr;        /* [1..1][valid_if(var_type == Dee_VARIANT_CSTR)] Statically allocated NUL-terminated C-string */
+		/*utf-8*/ char const *d_cstr;        /* [1..1][valid_if(var_type == Dee_VARIANT_CSTR)] Statically allocated NUL-terminated C-string */
 		union {
-			char const *sl_str;        /* [0..sl_len] Statically allocated C-string */
-			size_t      sl_len;        /* # of char-s in `sl_str` */
+			/*utf-8*/ char const *sl_str;        /* [0..sl_len] Statically allocated C-string */
+			size_t                sl_len;        /* # of char-s in `sl_str` */
 		}               d_cstrlen;     /* [valid_if(var_type == Dee_VARIANT_CSTRLEN)] Statically allocated C-string */
 #ifndef CONFIG_NO_FPU
 #if __ALIGNOF_DOUBLE__ <= __ALIGNOF_POINTER__
@@ -399,19 +399,19 @@ Dee_variant_cmpxch(struct Dee_variant *__restrict self,
 #define _Dee_variant_set_cstrlen(self, v)        (void)((self)->var_data.d_cstrlen.sl_len = (v))
 #define Dee_variant_init_cstr(self, str)         (void)((self)->var_type = Dee_VARIANT_CSTR, _Dee_variant_set_cstr(self, str))
 #define Dee_variant_init_cstrlen(self, str, len) (void)((self)->var_type = Dee_VARIANT_CSTRLEN, _Dee_variant_set_cstr(self, str), _Dee_variant_set_cstrlen(self, len))
-DFUNDEF NONNULL((1, 2)) void DCALL Dee_variant_setcstr(struct Dee_variant *__restrict self, char const *str);
-DFUNDEF NONNULL((1)) void DCALL Dee_variant_setcstrlen(struct Dee_variant *__restrict self, char const *str, size_t len);
+DFUNDEF NONNULL((1, 2)) void DCALL Dee_variant_setcstr(struct Dee_variant *__restrict self, /*utf-8*/ char const *str);
+DFUNDEF NONNULL((1)) void DCALL Dee_variant_setcstrlen(struct Dee_variant *__restrict self, /*utf-8*/ char const *str, size_t len);
 
 /* Same as `Dee_variant_init_cstr()`, but check at runtime if "str" is guarantied
  * to point into statically allocated memory. If it does, use "Dee_VARIANT_CSTR"
- * as variant typing, else use "Dee_VARIANT_OBJECT" and "DeeString_New()".
+ * as variant typing, else use "Dee_VARIANT_OBJECT" and "DeeString_NewUtf8()".
  *
  * When there is doubt regarding "str" being static, these functions always go the
  * safe route by assuming that it isn't, and turning them into string objects. */
 DFUNDEF WUNUSED NONNULL((1, 2)) int DCALL
-Dee_variant_init_cstr_maybe(struct Dee_variant *__restrict self, char const *str);
+Dee_variant_init_cstr_maybe(struct Dee_variant *__restrict self, /*utf-8*/ char const *str);
 DFUNDEF WUNUSED NONNULL((1)) ATTR_INS(2, 3) int DCALL
-Dee_variant_init_cstrlen_maybe(struct Dee_variant *__restrict self, char const *str, size_t len);
+Dee_variant_init_cstrlen_maybe(struct Dee_variant *__restrict self, /*utf-8*/ char const *str, size_t len);
 
 
 

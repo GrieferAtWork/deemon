@@ -1616,7 +1616,8 @@ abs_stack_any:
 			goto next_option;
 		if (!DeeBaseScope_IsVarargs(current_basescope, sym))
 			goto next_option;
-		result = DeeString_New("varargs");
+		result = Dee_AsObject(&str_varargs);
+		Dee_Incref(result);
 		break;
 
 	case ASM_OP_VKWD:
@@ -1629,7 +1630,8 @@ abs_stack_any:
 			goto next_option;
 		if (!DeeBaseScope_IsVarkwds(current_basescope, sym))
 			goto next_option;
-		result = DeeString_New("varkwds");
+		result = Dee_AsObject(&str_varkwds);
+		Dee_Incref(result);
 		break;
 
 	case ASM_OP_CONST: {
@@ -1768,7 +1770,8 @@ write_regular_local:
 			goto next_option;
 		if (value != 0)
 			goto next_option;
-		result = DeeString_New("$0");
+		result = Dee_AsObject(&str_dollar_0);
+		Dee_Incref(result);
 	}	break;
 
 	case ASM_OP_SEQ_MAP:

@@ -1423,7 +1423,7 @@ code_get_operatorname(DeeCodeObject *__restrict self) {
 		op = DeeTypeType_GetOperatorById(info.fi_type ? Dee_TYPE(info.fi_type)
 		                                              : &DeeType_Type,
 		                                 info.fi_clsop->co_name);
-		result = op ? DeeString_New(op->oi_sname)
+		result = op ? DeeString_NewAscii(op->oi_sname)
 		            : DeeInt_NewUInt16(info.fi_clsop->co_name);
 		Dee_XDecref(info.fi_type);
 		return result;

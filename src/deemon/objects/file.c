@@ -2828,7 +2828,7 @@ err:
 DEFAULT_OPIMP WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 file_repr(DeeObject *__restrict self) {
 	if (Dee_TYPE(self) == &DeeFile_Type.ft_base)
-		return DeeString_New("File()");
+		return DeeString_NewAscii("File()");
 	err_unimplemented_operator(Dee_TYPE(self), OPERATOR_REPR);
 	return NULL;
 }

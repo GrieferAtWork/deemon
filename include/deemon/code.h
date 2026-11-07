@@ -467,11 +467,11 @@ DeeCode_FindDDI(DeeObject *__restrict self,
                 unsigned int flags);
 
 /* Return the name for a specific assembly symbol which may be found in code. */
-DFUNDEF ATTR_PURE WUNUSED NONNULL((1)) char const *DCALL
+DFUNDEF ATTR_PURE WUNUSED NONNULL((1)) char const *DCALL /* TODO: Should return utf-8, but currently returns the weird latin-1/utf-8 hybrid of strings */
 DeeCode_GetASymbolName(DeeObject const *__restrict self, uint16_t aid); /* Argument */
-DFUNDEF ATTR_PURE WUNUSED NONNULL((1)) char const *DCALL
+DFUNDEF ATTR_PURE WUNUSED NONNULL((1)) char const *DCALL /* TODO: Should return utf-8, but currently returns the weird latin-1/utf-8 hybrid of strings */
 DeeCode_GetRSymbolName(DeeObject const *__restrict self, uint16_t rid); /* Reference */
-DFUNDEF ATTR_PURE WUNUSED NONNULL((1)) char const *DCALL
+DFUNDEF ATTR_PURE WUNUSED NONNULL((1)) char const *DCALL /* TODO: Should return utf-8, but currently returns the weird latin-1/utf-8 hybrid of strings */
 DeeCode_GetDDIString(DeeObject const *__restrict self, uint16_t id); /* DDI symbol/local/path/file */
 
 /* For debugger (evaluate while inside of `DeeCode_ExecFrame*`):

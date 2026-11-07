@@ -539,9 +539,8 @@ err_printer:
 		Dee_unicode_printer_fini(&printer);
 		return NULL;
 	}
-	return DeeString_NewUtf8(pos,
-	                         (size_t)(name_end - pos),
-	                         STRING_ERROR_FIGNORE);
+	return DeeString_NewUtf8Ex(pos, (size_t)(name_end - pos),
+	                           Dee_STRING_ERROR_FSTRICT);
 }
 
 
@@ -764,7 +763,7 @@ PRIVATE struct type_member tpconst dockwds_class_members[] = {
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 dockwds_ctor(DocKwds *__restrict self) {
-	self->dk_owner = DeeString_New("()");
+	self->dk_owner = DeeString_NewAscii("()");
 	if unlikely(!self->dk_owner)
 		goto err;
 	self->dk_start = DeeString_STR(self->dk_owner);

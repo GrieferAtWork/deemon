@@ -322,7 +322,7 @@ INTERN WUNUSED DREF DeeObject *DCALL
 get_token_name(tpp_token_id id, tpp_keyword const *kwd) {
 	char const *result = tpp_reprtokenid(id);
 	if (result != NULL)
-		return DeeString_New(result);
+		return DeeString_NewAscii(result);
 	if (kwd != NULL)
 		return DeeString_FromTppKeyword(kwd);
 	return ITER_DONE;
@@ -3003,9 +3003,9 @@ lexer_syspaths_getitem(DeeCompilerWrapperObject *self,
 	} else {
 		struct TPPString *string;
 		string = TPPLexer_Current->l_syspaths.il_pathv[i];
-		result = DeeString_NewUtf8(string->s_text,
-		                           string->s_size,
-		                           STRING_ERROR_FIGNORE);
+		result = DeeString_NewUtf8Ex(string->s_text,
+		                             string->s_size,
+		                             STRING_ERROR_FIGNORE);
 	}
 	COMPILER_END();
 	return result;
@@ -3201,10 +3201,10 @@ token_rawtext(DeeCompilerWrapperObject *__restrict self) {
 	DREF DeeObject *result;
 	if (COMPILER_BEGIN(self->cw_compiler))
 		goto err;
-	result = DeeString_NewUtf8(TPPLexer_Current->l_token.t_begin,
-	                           (size_t)(TPPLexer_Current->l_token.t_end -
-	                                    TPPLexer_Current->l_token.t_begin),
-	                           STRING_ERROR_FIGNORE);
+	result = DeeString_NewUtf8Ex(TPPLexer_Current->l_token.t_begin,
+	                             (size_t)(TPPLexer_Current->l_token.t_end -
+	                                      TPPLexer_Current->l_token.t_begin),
+	                             STRING_ERROR_FIGNORE);
 	COMPILER_END();
 	return result;
 err:
@@ -3691,9 +3691,9 @@ file_alltext(DeeCompilerItemObject *__restrict self) {
 		goto done;
 	file = DeeCompilerItem_VALUE(self, struct TPPFile);
 	if likely(file) {
-		result = DeeString_NewUtf8(file->f_begin,
-		                           (size_t)(file->f_end - file->f_begin),
-		                           STRING_ERROR_FIGNORE);
+		result = DeeString_NewUtf8Ex(file->f_begin,
+		                             (size_t)(file->f_end - file->f_begin),
+		                             STRING_ERROR_FIGNORE);
 	}
 	COMPILER_END();
 done:
@@ -3708,9 +3708,9 @@ file_nexttext(DeeCompilerItemObject *__restrict self) {
 		goto done;
 	file = DeeCompilerItem_VALUE(self, struct TPPFile);
 	if likely(file) {
-		result = DeeString_NewUtf8(file->f_pos,
-		                           (size_t)(file->f_end - file->f_pos),
-		                           STRING_ERROR_FIGNORE);
+		result = DeeString_NewUtf8Ex(file->f_pos,
+		                             (size_t)(file->f_end - file->f_pos),
+		                             STRING_ERROR_FIGNORE);
 	}
 	COMPILER_END();
 done:
@@ -3745,7 +3745,7 @@ file_filename(DeeCompilerItemObject *__restrict self) {
 		char const *filename;
 		size_t filename_length;
 		filename = TPPFile_Filename(file, &filename_length);
-		result   = DeeString_NewUtf8(filename, filename_length, STRING_ERROR_FIGNORE);
+		result   = DeeString_NewUtf8Ex(filename, filename_length, STRING_ERROR_FIGNORE);
 	}
 	COMPILER_END();
 done:
@@ -3847,7 +3847,7 @@ file_realfilename(DeeCompilerItemObject *__restrict self) {
 		char const *filename;
 		size_t filename_length;
 		filename = TPPFile_RealFilename(file, &filename_length);
-		result   = DeeString_NewUtf8(filename, filename_length, STRING_ERROR_FIGNORE);
+		result   = DeeString_NewUtf8Ex(filename, filename_length, STRING_ERROR_FIGNORE);
 	}
 	COMPILER_END();
 done:
@@ -3862,9 +3862,9 @@ file_name(DeeCompilerItemObject *__restrict self) {
 		goto done;
 	file = DeeCompilerItem_VALUE(self, struct TPPFile);
 	if likely(file) {
-		result = DeeString_NewUtf8(file->f_name,
-		                           file->f_namesize,
-		                           STRING_ERROR_FIGNORE);
+		result = DeeString_NewUtf8Ex(file->f_name,
+		                             file->f_namesize,
+		                             STRING_ERROR_FIGNORE);
 	}
 	COMPILER_END();
 done:

@@ -1074,9 +1074,9 @@ JITLexer_EvalModule(JITLexer *__restrict self) {
 			if (!self->jl_context->jc_impbase)
 				goto err_name_start_end_cannot_import_relative;
 		}
-		str = (DREF DeeStringObject *)DeeString_NewUtf8((char const *)name_start,
-		                                                (size_t)(name_end - name_start),
-		                                                STRING_ERROR_FSTRICT);
+		str = (DREF DeeStringObject *)DeeString_NewUtf8Ex((char const *)name_start,
+		                                                  (size_t)(name_end - name_start),
+		                                                  STRING_ERROR_FSTRICT);
 		if unlikely(!str)
 			goto err_trace;
 		if (name_start[0] == '.') {

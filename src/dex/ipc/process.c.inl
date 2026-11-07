@@ -822,7 +822,7 @@ process_do_get_etc_shells_default_shell(void) {
 		if (DeeSystem_IsAbsN(line_data, line_size)) {
 			DREF DeeStringObject *filename;
 			int error;
-			filename = (DREF DeeStringObject *)DeeString_NewUtf8(line_data, line_size, STRING_ERROR_FREPLAC);
+			filename = (DREF DeeStringObject *)DeeString_NewUtf8Ex(line_data, line_size, Dee_STRING_ERROR_FIGNORE);
 			if unlikely(!filename) {
 err_fp:
 				line = NULL;
@@ -4380,7 +4380,7 @@ ipc_unix_strings_from_nulterm_bytes(char const *__restrict data,
 	for (i = 0, iter = data; i < num_strings; ++i) {
 		DREF DeeObject *arg;
 		size_t arg_len = strlen(iter);
-		arg = DeeString_NewUtf8(iter, arg_len, STRING_ERROR_FIGNORE);
+		arg = DeeString_NewUtf8Ex(iter, arg_len, Dee_STRING_ERROR_FIGNORE);
 		if unlikely(!arg)
 			goto err_result_i;
 		DeeTuple_SET(result, i, arg);

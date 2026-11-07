@@ -198,7 +198,7 @@ type_str(DeeObject *__restrict self) {
 		return Dee_AsObject(result);
 	}
 	name = DeeType_GetName(me);
-	return DeeString_New(name);
+	return DeeString_NewAscii(name);
 }
 
 INTERN WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
@@ -2019,7 +2019,7 @@ type_getname_impl(DeeTypeObject *__restrict self) {
 		result = container_of(self->tp_name, DeeStringObject, s_str);
 		Dee_Incref(result);
 	} else {
-		result = (DREF DeeStringObject *)DeeString_New(self->tp_name);
+		result = (DREF DeeStringObject *)DeeString_NewAscii(self->tp_name);
 	}
 	return result;
 }

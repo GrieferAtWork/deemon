@@ -326,8 +326,8 @@ DeeLexerWarningLoc_ConvertToDeemon(DeeLexerWarningLoc *__restrict self) {
 		filename_len = self->lwl_filename_str
 		               ? tpp_string_len(self->lwl_filename_str)
 		               : tpp_strlen(filename);
-		filename_obj = (DREF DeeStringObject *)DeeString_NewUtf8(filename, filename_len,
-		                                                         STRING_ERROR_FIGNORE);
+		filename_obj = (DREF DeeStringObject *)DeeString_NewUtf8Ex(filename, filename_len,
+		                                                           Dee_STRING_ERROR_FREPLAC);
 		if unlikely(!filename_obj)
 			goto err;
 		filename = DeeString_AsUtf8(filename_obj);

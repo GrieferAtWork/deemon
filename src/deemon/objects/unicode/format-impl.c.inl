@@ -452,7 +452,7 @@ err:
 #ifdef DEFINE_DeeString_Format
 		return_reference_(pattern); /* Can just re-return "pattern" as-is. */
 #elif defined(DEFINE_DeeString_FormatWStr)
-		return DeeString_NewUtf8(LOCAL_pattern, LOCAL_pattern_length, STRING_ERROR_FIGNORE);
+		return DeeString_NewUtf8Ex(LOCAL_pattern, LOCAL_pattern_length, Dee_STRING_ERROR_FSTRICT);
 #elif defined(DEFINE_DeeString_FormatPrinter)
 		return (*pattern_printer)(arg, LOCAL_pattern, LOCAL_pattern_length);
 #endif /* ... */

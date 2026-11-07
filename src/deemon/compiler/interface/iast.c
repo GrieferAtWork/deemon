@@ -805,13 +805,13 @@ ast_gettryhandlers(Ast *__restrict self) {
 			switch (me->a_try.t_catchv[i].ce_flags &
 			        (Dee_EXCEPTION_HANDLER_FFINALLY | Dee_EXCEPTION_HANDLER_FINTERPT)) {
 			case Dee_EXCEPTION_HANDLER_FFINALLY | Dee_EXCEPTION_HANDLER_FINTERPT:
-				temp = DeeString_New("finally, interrupt");
+				temp = DeeString_NewAscii("finally, interrupt");
 				break;
 			case Dee_EXCEPTION_HANDLER_FFINALLY:
-				temp = DeeString_New("finally");
+				temp = DeeString_NewAscii("finally");
 				break;
 			case Dee_EXCEPTION_HANDLER_FINTERPT:
-				temp = DeeString_New("interrupt");
+				temp = DeeString_NewAscii("interrupt");
 				break;
 			default:
 				temp = Dee_EmptyString;
@@ -2287,7 +2287,7 @@ get_operator_name(Dee_operator_t opid) {
 	info = DeeTypeType_GetOperatorById(&DeeType_Type, opid);
 	if unlikely(!info)
 		return DeeInt_NewUInt16(opid);
-	return DeeString_New(info->oi_sname);
+	return DeeString_NewAscii(info->oi_sname);
 }
 
 
@@ -2978,7 +2978,7 @@ ast_getactionname(Ast *__restrict self) {
 	} else {
 		char const *name;
 		name   = get_action_name(me->a_flag);
-		result = name ? DeeString_New(name) : DeeInt_NewUInt16(me->a_flag);
+		result = name ? DeeString_NewAscii(name) : DeeInt_NewUInt16(me->a_flag);
 	}
 	COMPILER_END();
 	return result;

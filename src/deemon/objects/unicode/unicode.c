@@ -2161,27 +2161,27 @@ PRIVATE ATTR_COLD int DCALL throw_invalid_utf8_character_byte(uint8_t byte) {
 /* Construct a string from a UTF-8 character sequence. */
 #ifdef NDEBUG
 PUBLIC WUNUSED DREF DeeObject *
-(DCALL DeeDbgString_NewUtf8)(char const *__restrict str, size_t length,
-                             unsigned int error_mode,
-                             char const *file, int line) {
+(DCALL DeeDbgString_NewUtf8Ex)(/*utf-8*/ char const *__restrict str, size_t length,
+                               unsigned int error_mode,
+                               char const *file, int line) {
 	(void)file;
 	(void)line;
-	return DeeString_NewUtf8(str, length, error_mode);
+	return DeeString_NewUtf8Ex(str, length, error_mode);
 }
 PUBLIC WUNUSED DREF DeeObject *
-(DCALL DeeString_NewUtf8)(char const *__restrict str, size_t length,
-                          unsigned int error_mode)
+(DCALL DeeString_NewUtf8Ex)(/*utf-8*/ char const *__restrict str, size_t length,
+                            unsigned int error_mode)
 #define LOCAL_DeeDbgString(func, ...) DeeString_##func(__VA_ARGS__)
 #else /* NDEBUG */
 PUBLIC WUNUSED DREF DeeObject *
-(DCALL DeeString_NewUtf8)(char const *__restrict str, size_t length,
-                          unsigned int error_mode) {
-	return DeeDbgString_NewUtf8(str, length, error_mode, NULL, 0);
+(DCALL DeeString_NewUtf8Ex)(/*utf-8*/ char const *__restrict str, size_t length,
+                            unsigned int error_mode) {
+	return DeeDbgString_NewUtf8Ex(str, length, error_mode, NULL, 0);
 }
 PUBLIC WUNUSED DREF DeeObject *
-(DCALL DeeDbgString_NewUtf8)(char const *__restrict str, size_t length,
-                             unsigned int error_mode,
-                             char const *file, int line)
+(DCALL DeeDbgString_NewUtf8Ex)(/*utf-8*/ char const *__restrict str, size_t length,
+                               unsigned int error_mode,
+                               char const *file, int line)
 #define LOCAL_DeeDbgString(func, ...) DeeDbgString_##func(__VA_ARGS__, file, line)
 #endif /* !NDEBUG */
 {
@@ -2391,31 +2391,31 @@ err:
 }
 
 
-/* Same as `DeeString_NewUtf8()`, but uses `DeeObject_TryMalloc` & friends
+/* Same as `DeeString_NewUtf8Ex()`, but uses `DeeObject_TryMalloc` & friends
  * Given `error_mode` _MUST_ be `Dee_STRING_ERROR_FREPLAC` or `Dee_STRING_ERROR_FIGNORE` */
 #ifdef NDEBUG
 PUBLIC WUNUSED DREF DeeObject *
-(DCALL DeeDbgString_TryNewUtf8)(char const *__restrict str, size_t length,
-                                unsigned int error_mode,
-                                char const *file, int line) {
+(DCALL DeeDbgString_TryNewUtf8Ex)(/*utf-8*/ char const *__restrict str, size_t length,
+                                  unsigned int error_mode,
+                                  char const *file, int line) {
 	(void)file;
 	(void)line;
-	return DeeString_TryNewUtf8(str, length, error_mode);
+	return DeeString_TryNewUtf8Ex(str, length, error_mode);
 }
 PUBLIC WUNUSED DREF DeeObject *
-(DCALL DeeString_TryNewUtf8)(char const *__restrict str, size_t length,
-                             unsigned int error_mode)
+(DCALL DeeString_TryNewUtf8Ex)(/*utf-8*/ char const *__restrict str, size_t length,
+                               unsigned int error_mode)
 #define LOCAL_DeeDbgString(func, ...) DeeString_##func(__VA_ARGS__)
 #else /* NDEBUG */
 PUBLIC WUNUSED DREF DeeObject *
-(DCALL DeeString_TryNewUtf8)(char const *__restrict str, size_t length,
-                             unsigned int error_mode) {
-	return DeeDbgString_TryNewUtf8(str, length, error_mode, NULL, 0);
+(DCALL DeeString_TryNewUtf8Ex)(/*utf-8*/ char const *__restrict str, size_t length,
+                               unsigned int error_mode) {
+	return DeeDbgString_TryNewUtf8Ex(str, length, error_mode, NULL, 0);
 }
 PUBLIC WUNUSED DREF DeeObject *
-(DCALL DeeDbgString_TryNewUtf8)(char const *__restrict str, size_t length,
-                                unsigned int error_mode,
-                                char const *file, int line)
+(DCALL DeeDbgString_TryNewUtf8Ex)(/*utf-8*/ char const *__restrict str, size_t length,
+                                  unsigned int error_mode,
+                                  char const *file, int line)
 #define LOCAL_DeeDbgString(func, ...) DeeDbgString_##func(__VA_ARGS__, file, line)
 #endif /* !NDEBUG */
 {
@@ -2613,6 +2613,64 @@ err_r:
 	DeeObject_Free(result);
 err:
 	return NULL;
+#undef LOCAL_DeeDbgString
+}
+
+
+#ifdef NDEBUG
+PUBLIC WUNUSED DREF DeeObject *
+(DCALL DeeDbgString_NewUtf8)(/*utf-8*/ char const *__restrict str,
+                             char const *file, int line) {
+	(void)file;
+	(void)line;
+	return DeeString_NewUtf8(str);
+}
+PUBLIC WUNUSED DREF DeeObject *
+(DCALL DeeString_NewUtf8)(/*utf-8*/ char const *__restrict str)
+#define LOCAL_DeeDbgString(func, ...) DeeString_##func(__VA_ARGS__)
+#else /* NDEBUG */
+PUBLIC WUNUSED DREF DeeObject *
+(DCALL DeeString_NewUtf8)(/*utf-8*/ char const *__restrict str) {
+	return DeeDbgString_NewUtf8(str, NULL, 0);
+}
+PUBLIC WUNUSED DREF DeeObject *
+(DCALL DeeDbgString_NewUtf8)(/*utf-8*/ char const *__restrict str,
+                             char const *file, int line)
+#define LOCAL_DeeDbgString(func, ...) DeeDbgString_##func(__VA_ARGS__, file, line)
+#endif /* !NDEBUG */
+{
+	/* Error-mode shouldn't really matter, since callers should never supply invalid utf-8! */
+	size_t len = strlen(str);
+	return LOCAL_DeeDbgString(NewUtf8Ex, str, len, Dee_STRING_ERROR_FSTRICT);
+#undef LOCAL_DeeDbgString
+}
+
+
+#ifdef NDEBUG
+PUBLIC WUNUSED DREF DeeObject *
+(DCALL DeeDbgString_TryNewUtf8)(/*utf-8*/ char const *__restrict str,
+                                char const *file, int line) {
+	(void)file;
+	(void)line;
+	return DeeString_TryNewUtf8(str);
+}
+PUBLIC WUNUSED DREF DeeObject *
+(DCALL DeeString_TryNewUtf8)(/*utf-8*/ char const *__restrict str)
+#define LOCAL_DeeDbgString(func, ...) DeeString_##func(__VA_ARGS__)
+#else /* NDEBUG */
+PUBLIC WUNUSED DREF DeeObject *
+(DCALL DeeString_TryNewUtf8)(/*utf-8*/ char const *__restrict str) {
+	return DeeDbgString_TryNewUtf8(str, NULL, 0);
+}
+PUBLIC WUNUSED DREF DeeObject *
+(DCALL DeeDbgString_TryNewUtf8)(/*utf-8*/ char const *__restrict str,
+                                char const *file, int line)
+#define LOCAL_DeeDbgString(func, ...) DeeDbgString_##func(__VA_ARGS__, file, line)
+#endif /* !NDEBUG */
+{
+	/* Error-mode shouldn't really matter, since callers should never supply invalid utf-8! */
+	size_t len = strlen(str);
+	return LOCAL_DeeDbgString(TryNewUtf8Ex, str, len, Dee_STRING_ERROR_FREPLAC);
 #undef LOCAL_DeeDbgString
 }
 

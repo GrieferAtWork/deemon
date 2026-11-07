@@ -168,7 +168,7 @@ ast_genprint_utf8_string(instruction_t mode, char const *str,
 	int32_t cid;
 	DREF DeeObject *ob;
 	ASSERTF(num_bytes != 0, "Only call this function for non-empty strings!");
-	ob = DeeString_NewUtf8(str, num_bytes, STRING_ERROR_FSTRICT);
+	ob = DeeString_NewUtf8Ex(str, num_bytes, Dee_STRING_ERROR_FSTRICT);
 	if unlikely(!ob)
 		goto err;
 	cid = asm_newconst_inherited(ob);
