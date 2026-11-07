@@ -243,7 +243,7 @@ ob_weakref_hash(WeakRef *__restrict self) {
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 ob_weakref_compare(WeakRef *self, WeakRef *other) {
 	if (DeeNone_Check(other))
-		return Dee_weakref_getaddr(&self->wr_ref) ? 1 : 0;
+		return Dee_COMPARE_GR_FROMBOOL(Dee_weakref_getaddr(&self->wr_ref) != NULL);
 	if (DeeObject_AssertTypeExact(other, &DeeWeakRef_Type))
 		goto err;
 	Dee_return_compareT(DeeObject *,
@@ -256,13 +256,11 @@ err:
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 ob_weakref_trycompare_eq(WeakRef *self, WeakRef *other) {
 	if (DeeNone_Check(other))
-		return Dee_weakref_getaddr(&self->wr_ref) ? 1 : 0;
+		return Dee_COMPARE_NE_FROMBOOL(Dee_weakref_getaddr(&self->wr_ref) != NULL);
 	if (DeeObject_AssertTypeExact(other, &DeeWeakRef_Type))
 		return Dee_COMPARE_NE;
-	return (Dee_weakref_getaddr(&self->wr_ref) ==
-	        Dee_weakref_getaddr(&other->wr_ref))
-	       ? Dee_COMPARE_EQ
-	       : Dee_COMPARE_NE;
+	return Dee_COMPARE_EQ_FROMBOOL(Dee_weakref_getaddr(&self->wr_ref) ==
+	                               Dee_weakref_getaddr(&other->wr_ref));
 }
 
 PRIVATE struct type_cmp ob_weakref_cmp = {

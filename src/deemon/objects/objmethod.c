@@ -1155,7 +1155,8 @@ PRIVATE struct type_cmp clsmethod_cmp = {
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 clsmethod_bound_origin(DeeClsMethodObject *__restrict self) {
 	struct Dee_objmethod_origin origin;
-	return DeeClsMethod_GetOrigin(Dee_AsObject(self), &origin) ? 1 : 0;
+	bool hasorigin = DeeClsMethod_GetOrigin(Dee_AsObject(self), &origin);
+	return Dee_HAS_FROMBOOL(hasorigin);
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
@@ -1817,7 +1818,8 @@ clsproperty_printrepr(DeeClsPropertyObject *__restrict self,
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 clsproperty_bound_origin(DeeClsPropertyObject *__restrict self) {
 	struct Dee_clsproperty_origin origin;
-	return DeeClsProperty_GetOrigin(Dee_AsObject(self), &origin) ? 1 : 0;
+	bool hasorigin = DeeClsProperty_GetOrigin(Dee_AsObject(self), &origin);
+	return Dee_HAS_FROMBOOL(hasorigin);
 }
 
 #define clsproperty_bound_name clsproperty_bound_origin

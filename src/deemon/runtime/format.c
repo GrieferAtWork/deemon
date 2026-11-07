@@ -42,28 +42,6 @@
 #include <stddef.h>  /* NULL, size_t */
 #include <stdint.h>  /* UINT16_C, UINT32_C, intN_t, uintN_t */
 
-#ifndef PP_CAT2
-#define PP_PRIVATE_CAT2(a, b)    a##b
-#define PP_PRIVATE_CAT3(a, b, c) a##b##c
-#define PP_CAT2(a, b)            PP_PRIVATE_CAT2(a, b)
-#define PP_CAT3(a, b, c)         PP_PRIVATE_CAT3(a, b, c)
-#endif /* !PP_CAT2 */
-
-#ifndef PP_MUL8
-#define PP_PRIVATE_MUL8_0 0
-#define PP_PRIVATE_MUL8_1 8
-#define PP_PRIVATE_MUL8_2 16
-#define PP_PRIVATE_MUL8_4 32
-#define PP_PRIVATE_MUL8_8 64
-#define PP_PRIVATE_MUL8(x) PP_PRIVATE_MUL8_##x
-#define PP_MUL8(x)         PP_PRIVATE_MUL8(x)
-#endif /* !PP_MUL8 */
-
-#ifndef STATIC_ASSERT
-#define STATIC_ASSERT(expr) \
-	typedef int PP_CAT2(static_assert_, __LINE__)[(expr) ? 1 : -1]
-#endif /* !STATIC_ASSERT */
-
 DECL_BEGIN
 
 #undef byte_t

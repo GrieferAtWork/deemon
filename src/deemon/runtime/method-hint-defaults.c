@@ -3433,11 +3433,7 @@ default__seq_operator_compare__unsupported(DeeObject *lhs, DeeObject *rhs) {
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
 default__seq_operator_compare__empty(DeeObject *UNUSED(lhs), DeeObject *rhs) {
 	int rhs_nonempty = DeeObject_InvokeMethodHint(seq_operator_bool, rhs);
-	if unlikely(rhs_nonempty < 0)
-		goto err;
-	return rhs_nonempty ? Dee_COMPARE_LO : Dee_COMPARE_EQ;
-err:
-	return Dee_COMPARE_ERR;
+	return Dee_COMPARE_LO_FROMHAS(rhs_nonempty);
 }
 
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
@@ -3804,7 +3800,7 @@ default__seq_operator_compare__with__seq_operator_size__and__operator_getitem_in
 		if unlikely(foreach_result == SEQ_COMPARE_FOREACH_RESULT_ERROR)
 			goto err;
 		if (foreach_result == SEQ_COMPARE_FOREACH_RESULT_EQUAL) {
-			result = data.scf_sgi_oindex >= data.scf_sgi_osize ? Dee_COMPARE_EQ : Dee_COMPARE_GR;
+			result = Dee_COMPARE_FROM_eqTT_grFF(data.scf_sgi_oindex >= data.scf_sgi_osize);
 		} else if (foreach_result == SEQ_COMPARE_FOREACH_RESULT_LESS) {
 			result = Dee_COMPARE_LO;
 		} else {
@@ -3869,7 +3865,7 @@ default__seq_operator_compare__with__seq_operator_size__and__seq_operator_tryget
 		if unlikely(foreach_result == SEQ_COMPARE_FOREACH_RESULT_ERROR)
 			goto err;
 		if (foreach_result == SEQ_COMPARE_FOREACH_RESULT_EQUAL) {
-			result = data.scf_sgi_oindex >= data.scf_sgi_osize ? Dee_COMPARE_EQ : Dee_COMPARE_GR;
+			result = Dee_COMPARE_FROM_eqTT_grFF(data.scf_sgi_oindex >= data.scf_sgi_osize);
 		} else if (foreach_result == SEQ_COMPARE_FOREACH_RESULT_LESS) {
 			result = Dee_COMPARE_LO;
 		} else {
@@ -3934,7 +3930,7 @@ default__seq_operator_compare__with__seq_operator_size__and__seq_operator_getite
 		if unlikely(foreach_result == SEQ_COMPARE_FOREACH_RESULT_ERROR)
 			goto err;
 		if (foreach_result == SEQ_COMPARE_FOREACH_RESULT_EQUAL) {
-			result = data.scf_sgi_oindex >= data.scf_sgi_osize ? Dee_COMPARE_EQ : Dee_COMPARE_GR;
+			result = Dee_COMPARE_FROM_eqTT_grFF(data.scf_sgi_oindex >= data.scf_sgi_osize);
 		} else if (foreach_result == SEQ_COMPARE_FOREACH_RESULT_LESS) {
 			result = Dee_COMPARE_LO;
 		} else {
@@ -16013,15 +16009,15 @@ default__set_operator_bool(DeeObject *__restrict self) {
 
 INTERN WUNUSED NONNULL((1)) int DCALL
 default__set_operator_bool__with_callattr___set_bool__(DeeObject *__restrict self) {
-	int retval;
+	bool istrue;
 	DREF DeeObject *result = DeeObject_CallAttr(self, Dee_AsObject(&str___set_bool__), 0, NULL);
 	if unlikely(!result)
 		goto err;
 	if (DeeObject_AssertTypeExact(result, &DeeBool_Type))
 		goto err_r;
-	retval = Dee_HAS_FROMBOOL(DeeBool_IsTrue(result));
+	istrue = DeeBool_IsTrue(result);
 	DeeBool_Decref(result);
-	return retval;
+	return Dee_HAS_FROMBOOL(istrue);
 err_r:
 	Dee_Decref(result);
 err:
@@ -16033,15 +16029,15 @@ default__set_operator_bool__with_callobjectcache___set_bool__(DeeObject *__restr
 #ifdef __OPTIMIZE_SIZE__
 	return tdefault__set_operator_bool__with_callobjectcache___set_bool__(Dee_TYPE(self), self);
 #else /* __OPTIMIZE_SIZE__ */
-	int retval;
+	bool istrue;
 	DREF DeeObject *result = mhcache_call(Dee_TYPE(self), Dee_TYPE(self)->tp_mhcache->mhc___set_bool__, 1, (DeeObject *const *)&self);
 	if unlikely(!result)
 		goto err;
 	if (DeeObject_AssertTypeExact(result, &DeeBool_Type))
 		goto err_r;
-	retval = Dee_HAS_FROMBOOL(DeeBool_IsTrue(result));
+	istrue = DeeBool_IsTrue(result);
 	DeeBool_Decref(result);
-	return retval;
+	return Dee_HAS_FROMBOOL(istrue);
 err_r:
 	Dee_Decref(result);
 err:
@@ -16074,15 +16070,15 @@ err:
 
 INTERN WUNUSED NONNULL((1)) int DCALL
 default__set_operator_bool__with__set_operator_sizeob(DeeObject *__restrict self) {
-	int result;
+	bool istrue;
 	DREF DeeObject *sizeob = (*DeeType_RequireMethodHint(Dee_TYPE(self), set_operator_sizeob))(self);
 	if unlikely(!sizeob)
 		goto err;
 	if (DeeObject_AssertTypeExact(sizeob, &DeeInt_Type))
 		goto err;
-	result = Dee_HAS_FROMBOOL(!DeeInt_IsZero(sizeob));
+	istrue = !DeeInt_IsZero(sizeob);
 	Dee_Decref(sizeob);
-	return result;
+	return Dee_HAS_FROMBOOL(istrue);
 err:
 	return Dee_HAS_ERR;
 }
@@ -22382,19 +22378,19 @@ default__iter_operator_bool(DeeObject *__restrict self) {
 
 INTERN WUNUSED NONNULL((1)) int DCALL
 default__iter_operator_bool__with_callattr___iter_bool__(DeeObject *__restrict self) {
-	int retval;
+	bool istrue;
 	DREF DeeObject *result = DeeObject_CallAttr(self, Dee_AsObject(&str___iter_bool__), 0, NULL);
 	if unlikely(!result)
 		goto err;
 	if (DeeObject_AssertTypeExact(result, &DeeBool_Type))
 		goto err_r;
-	retval = DeeBool_IsTrue(result) ? 1 : 0;
+	istrue = DeeBool_IsTrue(result);
 	DeeBool_Decref(result);
-	return retval;
+	return Dee_HAS_FROMBOOL(istrue);
 err_r:
 	Dee_Decref(result);
 err:
-	return -1;
+	return Dee_HAS_ERR;
 }
 
 INTERN WUNUSED NONNULL((1)) int DCALL
@@ -22402,19 +22398,19 @@ default__iter_operator_bool__with_callobjectcache___iter_bool__(DeeObject *__res
 #ifdef __OPTIMIZE_SIZE__
 	return tdefault__iter_operator_bool__with_callobjectcache___iter_bool__(Dee_TYPE(self), self);
 #else /* __OPTIMIZE_SIZE__ */
-	int retval;
+	bool istrue;
 	DREF DeeObject *result = mhcache_call(Dee_TYPE(self), Dee_TYPE(self)->tp_mhcache->mhc___iter_bool__, 1, (DeeObject *const *)&self);
 	if unlikely(!result)
 		goto err;
 	if (DeeObject_AssertTypeExact(result, &DeeBool_Type))
 		goto err_r;
-	retval = DeeBool_IsTrue(result) ? 1 : 0;
+	istrue = DeeBool_IsTrue(result);
 	DeeBool_Decref(result);
-	return retval;
+	return Dee_HAS_FROMBOOL(istrue);
 err_r:
 	Dee_Decref(result);
 err:
-	return -1;
+	return Dee_HAS_ERR;
 #endif /* !__OPTIMIZE_SIZE__ */
 }
 
@@ -22431,9 +22427,9 @@ default__iter_operator_bool__with__iter_peek(DeeObject *__restrict self) {
 	if (!ITER_ISOK(next))
 		return Dee_HAS_FROMITERNOK(next);
 	Dee_Decref_unlikely(next);
-	return 1;
+	return Dee_HAS_YES;
 err:
-	return -1;
+	return Dee_HAS_ERR;
 }
 
 
@@ -24476,15 +24472,15 @@ tdefault__set_operator_ge__with_callobjectcache___set_ge__(DeeTypeObject *tp_sel
 /* set_operator_bool */
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
 tdefault__set_operator_bool__with_callobjectcache___set_bool__(DeeTypeObject *tp_self, DeeObject *self) {
-	int retval;
+	bool istrue;
 	DREF DeeObject *result = mhcache_call(tp_self, tp_self->tp_mhcache->mhc___set_bool__, 1, (DeeObject *const *)&self);
 	if unlikely(!result)
 		goto err;
 	if (DeeObject_AssertTypeExact(result, &DeeBool_Type))
 		goto err_r;
-	retval = Dee_HAS_FROMBOOL(DeeBool_IsTrue(result));
+	istrue = DeeBool_IsTrue(result);
 	DeeBool_Decref(result);
-	return retval;
+	return Dee_HAS_FROMBOOL(istrue);
 err_r:
 	Dee_Decref(result);
 err:
@@ -25205,19 +25201,19 @@ err:
 /* iter_operator_bool */
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
 tdefault__iter_operator_bool__with_callobjectcache___iter_bool__(DeeTypeObject *tp_self, DeeObject *self) {
-	int retval;
+	bool istrue;
 	DREF DeeObject *result = mhcache_call(tp_self, tp_self->tp_mhcache->mhc___iter_bool__, 1, (DeeObject *const *)&self);
 	if unlikely(!result)
 		goto err;
 	if (DeeObject_AssertTypeExact(result, &DeeBool_Type))
 		goto err_r;
-	retval = DeeBool_IsTrue(result) ? 1 : 0;
+	istrue = DeeBool_IsTrue(result);
 	DeeBool_Decref(result);
-	return retval;
+	return Dee_HAS_FROMBOOL(istrue);
 err_r:
 	Dee_Decref(result);
 err:
-	return -1;
+	return Dee_HAS_ERR;
 }
 
 /* iter_getindex */

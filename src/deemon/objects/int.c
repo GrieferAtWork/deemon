@@ -73,6 +73,8 @@
 #include <stddef.h>  /* NULL, offsetof, size_t */
 #include <stdint.h>  /* UINT16_C, UINT32_C, UINT64_C, intN_t, uintN_t */
 
+#undef SSIZE_MIN
+#define SSIZE_MIN __SSIZE_MIN__
 #undef SSIZE_MAX
 #define SSIZE_MAX __SSIZE_MAX__
 #undef byte_t
@@ -206,20 +208,55 @@ STATIC_ASSERT(Dee_CompareNe(20, 10) == Dee_COMPARE_GR);
 STATIC_ASSERT(Dee_Compare(10, 10) == Dee_COMPARE_EQ);
 STATIC_ASSERT(Dee_Compare(10, 20) == Dee_COMPARE_LO);
 STATIC_ASSERT(Dee_Compare(20, 10) == Dee_COMPARE_GR);
+STATIC_ASSERT(Dee_CompareFromDiff((Dee_ssize_t)SSIZE_MIN) == Dee_COMPARE_LO);
+STATIC_ASSERT(Dee_CompareFromDiff(INT_MIN) == Dee_COMPARE_LO);
 STATIC_ASSERT(Dee_CompareFromDiff(-10) == Dee_COMPARE_LO);
 STATIC_ASSERT(Dee_CompareFromDiff(-1) == Dee_COMPARE_LO);
 STATIC_ASSERT(Dee_CompareFromDiff(10) == Dee_COMPARE_GR);
+STATIC_ASSERT(Dee_CompareFromDiff(INT_MAX) == Dee_COMPARE_GR);
+STATIC_ASSERT(Dee_CompareFromDiff((Dee_ssize_t)SSIZE_MAX) == Dee_COMPARE_GR);
 STATIC_ASSERT(Dee_CompareFromDiff(1) == Dee_COMPARE_GR);
 STATIC_ASSERT(Dee_CompareFromDiff(0) == Dee_COMPARE_EQ);
+STATIC_ASSERT(Dee_CompareFromSign((Dee_ssize_t)SSIZE_MIN) == Dee_COMPARE_LO);
+STATIC_ASSERT(Dee_CompareFromSign(INT_MIN) == Dee_COMPARE_LO);
+STATIC_ASSERT(Dee_CompareFromSign(-10) == Dee_COMPARE_LO);
+STATIC_ASSERT(Dee_CompareFromSign(-1) == Dee_COMPARE_LO);
+STATIC_ASSERT(Dee_CompareFromSign(10) == Dee_COMPARE_GR);
+STATIC_ASSERT(Dee_CompareFromSign(INT_MAX) == Dee_COMPARE_GR);
+STATIC_ASSERT(Dee_CompareFromSign((Dee_ssize_t)SSIZE_MAX) == Dee_COMPARE_GR);
+STATIC_ASSERT(Dee_CompareFromSign(1) == Dee_COMPARE_GR);
+STATIC_ASSERT(Dee_CompareFromSign(0) == Dee_COMPARE_EQ);
+STATIC_ASSERT(Dee_CompareFromDiffNe((Dee_ssize_t)SSIZE_MIN) == Dee_COMPARE_LO);
+STATIC_ASSERT(Dee_CompareFromDiffNe(INT_MIN) == Dee_COMPARE_LO);
 STATIC_ASSERT(Dee_CompareFromDiffNe(-10) == Dee_COMPARE_LO);
 STATIC_ASSERT(Dee_CompareFromDiffNe(-1) == Dee_COMPARE_LO);
 STATIC_ASSERT(Dee_CompareFromDiffNe(1) == Dee_COMPARE_GR);
 STATIC_ASSERT(Dee_CompareFromDiffNe(10) == Dee_COMPARE_GR);
+STATIC_ASSERT(Dee_CompareFromDiffNe(INT_MAX) == Dee_COMPARE_GR);
+STATIC_ASSERT(Dee_CompareFromDiffNe((Dee_ssize_t)SSIZE_MAX) == Dee_COMPARE_GR);
+STATIC_ASSERT(Dee_CompareEqFromDiff((Dee_ssize_t)SSIZE_MIN) == Dee_COMPARE_LO ||
+              Dee_CompareEqFromDiff((Dee_ssize_t)SSIZE_MIN) == Dee_COMPARE_GR);
+STATIC_ASSERT(Dee_CompareEqFromDiff(INT_MIN) == Dee_COMPARE_LO ||
+              Dee_CompareEqFromDiff(INT_MIN) == Dee_COMPARE_GR);
 STATIC_ASSERT(Dee_CompareEqFromDiff(-10) == Dee_COMPARE_LO ||
               Dee_CompareEqFromDiff(-10) == Dee_COMPARE_GR);
 STATIC_ASSERT(Dee_CompareEqFromDiff(10) == Dee_COMPARE_LO ||
               Dee_CompareEqFromDiff(10) == Dee_COMPARE_GR);
+STATIC_ASSERT(Dee_CompareEqFromDiff(INT_MAX) == Dee_COMPARE_LO ||
+              Dee_CompareEqFromDiff(INT_MAX) == Dee_COMPARE_GR);
+STATIC_ASSERT(Dee_CompareEqFromDiff((Dee_ssize_t)SSIZE_MAX) == Dee_COMPARE_LO ||
+              Dee_CompareEqFromDiff((Dee_ssize_t)SSIZE_MAX) == Dee_COMPARE_GR);
 STATIC_ASSERT(Dee_CompareEqFromDiff(0) == Dee_COMPARE_EQ);
+
+STATIC_ASSERT(Dee_CompareFromBCmp(0) == Dee_COMPARE_EQ);
+STATIC_ASSERT(Dee_CompareFromBCmp(INT_MIN) == Dee_COMPARE_LO ||
+              Dee_CompareFromBCmp(INT_MIN) == Dee_COMPARE_GR);
+STATIC_ASSERT(Dee_CompareFromBCmp(-10) == Dee_COMPARE_LO ||
+              Dee_CompareFromBCmp(-10) == Dee_COMPARE_GR);
+STATIC_ASSERT(Dee_CompareFromBCmp(10) == Dee_COMPARE_LO ||
+              Dee_CompareFromBCmp(10) == Dee_COMPARE_GR);
+STATIC_ASSERT(Dee_CompareFromBCmp(INT_MAX) == Dee_COMPARE_LO ||
+              Dee_CompareFromBCmp(INT_MAX) == Dee_COMPARE_GR);
 
 STATIC_ASSERT(Dee_COMPARE_LO != Dee_COMPARE_EQ);
 STATIC_ASSERT(Dee_COMPARE_GR != Dee_COMPARE_EQ);
@@ -237,13 +274,69 @@ STATIC_ASSERT(Dee_Compare(INT_MAX, 0) == Dee_COMPARE_GR);
 STATIC_ASSERT(Dee_Compare(0, INT_MIN) == Dee_COMPARE_GR);
 STATIC_ASSERT(Dee_Compare(INT_MAX, INT_MIN) == Dee_COMPARE_GR);
 
+STATIC_ASSERT(Dee_Compare((Dee_ssize_t)0, (Dee_ssize_t)SSIZE_MAX) == Dee_COMPARE_LO);
+STATIC_ASSERT(Dee_Compare((Dee_ssize_t)SSIZE_MIN, (Dee_ssize_t)0) == Dee_COMPARE_LO);
+STATIC_ASSERT(Dee_Compare((Dee_ssize_t)SSIZE_MIN, (Dee_ssize_t)SSIZE_MAX) == Dee_COMPARE_LO);
+STATIC_ASSERT(Dee_Compare((Dee_ssize_t)SSIZE_MIN, (Dee_ssize_t)SSIZE_MIN) == Dee_COMPARE_EQ);
+STATIC_ASSERT(Dee_Compare((Dee_ssize_t)0, (Dee_ssize_t)0) == Dee_COMPARE_EQ);
+STATIC_ASSERT(Dee_Compare((Dee_ssize_t)SSIZE_MAX, (Dee_ssize_t)SSIZE_MAX) == Dee_COMPARE_EQ);
+STATIC_ASSERT(Dee_Compare((Dee_ssize_t)SSIZE_MAX, (Dee_ssize_t)0) == Dee_COMPARE_GR);
+STATIC_ASSERT(Dee_Compare((Dee_ssize_t)0, (Dee_ssize_t)SSIZE_MIN) == Dee_COMPARE_GR);
+STATIC_ASSERT(Dee_Compare((Dee_ssize_t)SSIZE_MAX, (Dee_ssize_t)SSIZE_MIN) == Dee_COMPARE_GR);
+STATIC_ASSERT(Dee_Compare((size_t)0, (size_t)SIZE_MAX) == Dee_COMPARE_LO);
+STATIC_ASSERT(Dee_Compare((size_t)0, (size_t)0) == Dee_COMPARE_EQ);
+STATIC_ASSERT(Dee_Compare((size_t)SIZE_MAX, (size_t)SIZE_MAX) == Dee_COMPARE_EQ);
+STATIC_ASSERT(Dee_Compare((size_t)SIZE_MAX, (size_t)0) == Dee_COMPARE_GR);
+
 STATIC_ASSERT(Dee_CompareNe(0, INT_MAX) == Dee_COMPARE_LO);
 STATIC_ASSERT(Dee_CompareNe(INT_MIN, 0) == Dee_COMPARE_LO);
 STATIC_ASSERT(Dee_CompareNe(INT_MIN, INT_MAX) == Dee_COMPARE_LO);
 STATIC_ASSERT(Dee_CompareNe(INT_MAX, 0) == Dee_COMPARE_GR);
 STATIC_ASSERT(Dee_CompareNe(0, INT_MIN) == Dee_COMPARE_GR);
 STATIC_ASSERT(Dee_CompareNe(INT_MAX, INT_MIN) == Dee_COMPARE_GR);
+STATIC_ASSERT(Dee_CompareNe((Dee_ssize_t)0, (Dee_ssize_t)SSIZE_MAX) == Dee_COMPARE_LO);
+STATIC_ASSERT(Dee_CompareNe((Dee_ssize_t)SSIZE_MIN, (Dee_ssize_t)0) == Dee_COMPARE_LO);
+STATIC_ASSERT(Dee_CompareNe((Dee_ssize_t)SSIZE_MIN, (Dee_ssize_t)SSIZE_MAX) == Dee_COMPARE_LO);
+STATIC_ASSERT(Dee_CompareNe((Dee_ssize_t)SSIZE_MAX, (Dee_ssize_t)0) == Dee_COMPARE_GR);
+STATIC_ASSERT(Dee_CompareNe((Dee_ssize_t)0, (Dee_ssize_t)SSIZE_MIN) == Dee_COMPARE_GR);
+STATIC_ASSERT(Dee_CompareNe((Dee_ssize_t)SSIZE_MAX, (Dee_ssize_t)SSIZE_MIN) == Dee_COMPARE_GR);
+STATIC_ASSERT(Dee_CompareNe((size_t)0, (size_t)SIZE_MAX) == Dee_COMPARE_LO);
+STATIC_ASSERT(Dee_CompareNe((size_t)SIZE_MAX, (size_t)0) == Dee_COMPARE_GR);
 
+#define STATIC_ASSERT_COMPARE_PREDICATE(pred, is_tt_value, is_ff_value) \
+	STATIC_ASSERT(is_tt_value(pred(true)));                             \
+	STATIC_ASSERT(is_tt_value(pred(1)));                                \
+	STATIC_ASSERT(is_tt_value(pred(10)));                               \
+	STATIC_ASSERT(is_tt_value(pred(INT_MIN)));                          \
+	STATIC_ASSERT(is_tt_value(pred(INT_MAX)));                          \
+	STATIC_ASSERT(is_tt_value(pred((size_t)SIZE_MAX)));                 \
+	STATIC_ASSERT(is_tt_value(pred((Dee_ssize_t)SSIZE_MIN)));           \
+	STATIC_ASSERT(is_tt_value(pred((Dee_ssize_t)SSIZE_MAX)));           \
+	STATIC_ASSERT(is_ff_value(pred(false)));                            \
+	STATIC_ASSERT(is_ff_value(pred(0)));                                \
+	STATIC_ASSERT(is_ff_value(pred((size_t)0)));                        \
+	STATIC_ASSERT(is_ff_value(pred((Dee_ssize_t)0)))
+STATIC_ASSERT_COMPARE_PREDICATE(Dee_COMPARE_EQ_FROMBOOL, Dee_COMPARE_ISEQ, Dee_COMPARE_ISNE);
+STATIC_ASSERT_COMPARE_PREDICATE(Dee_COMPARE_EQ_FROMBOOL, Dee_COMPARE_EQ ==, Dee_COMPARE_ISNE);
+STATIC_ASSERT_COMPARE_PREDICATE(Dee_COMPARE_NE_FROMBOOL, Dee_COMPARE_ISNE, Dee_COMPARE_ISEQ);
+STATIC_ASSERT_COMPARE_PREDICATE(Dee_COMPARE_NE_FROMBOOL, Dee_COMPARE_ISNE, Dee_COMPARE_EQ ==);
+STATIC_ASSERT_COMPARE_PREDICATE(Dee_COMPARE_LO_FROMBOOL, Dee_COMPARE_ISLO, Dee_COMPARE_ISEQ);
+STATIC_ASSERT_COMPARE_PREDICATE(Dee_COMPARE_LO_FROMBOOL, Dee_COMPARE_LO ==, Dee_COMPARE_EQ ==);
+STATIC_ASSERT_COMPARE_PREDICATE(Dee_COMPARE_GR_FROMBOOL, Dee_COMPARE_ISGR, Dee_COMPARE_ISEQ);
+STATIC_ASSERT_COMPARE_PREDICATE(Dee_COMPARE_GR_FROMBOOL, Dee_COMPARE_GR ==, Dee_COMPARE_EQ ==);
+STATIC_ASSERT_COMPARE_PREDICATE(Dee_COMPARE_FROM_grTT_eqFF, Dee_COMPARE_ISGR, Dee_COMPARE_ISEQ);
+STATIC_ASSERT_COMPARE_PREDICATE(Dee_COMPARE_FROM_grTT_eqFF, Dee_COMPARE_GR ==, Dee_COMPARE_EQ ==);
+STATIC_ASSERT_COMPARE_PREDICATE(Dee_COMPARE_FROM_eqTT_grFF, Dee_COMPARE_ISEQ, Dee_COMPARE_ISGR);
+STATIC_ASSERT_COMPARE_PREDICATE(Dee_COMPARE_FROM_eqTT_grFF, Dee_COMPARE_EQ ==, Dee_COMPARE_GR ==);
+STATIC_ASSERT_COMPARE_PREDICATE(Dee_COMPARE_FROM_loTT_eqFF, Dee_COMPARE_ISLO, Dee_COMPARE_ISEQ);
+STATIC_ASSERT_COMPARE_PREDICATE(Dee_COMPARE_FROM_loTT_eqFF, Dee_COMPARE_LO ==, Dee_COMPARE_EQ ==);
+STATIC_ASSERT_COMPARE_PREDICATE(Dee_COMPARE_FROM_eqTT_loFF, Dee_COMPARE_ISEQ, Dee_COMPARE_ISLO);
+STATIC_ASSERT_COMPARE_PREDICATE(Dee_COMPARE_FROM_eqTT_loFF, Dee_COMPARE_EQ ==, Dee_COMPARE_LO ==);
+STATIC_ASSERT_COMPARE_PREDICATE(Dee_COMPARE_FROM_loTT_grFF, Dee_COMPARE_ISLO, Dee_COMPARE_ISGR);
+STATIC_ASSERT_COMPARE_PREDICATE(Dee_COMPARE_FROM_loTT_grFF, Dee_COMPARE_LO ==, Dee_COMPARE_GR ==);
+STATIC_ASSERT_COMPARE_PREDICATE(Dee_COMPARE_FROM_grTT_loFF, Dee_COMPARE_ISGR, Dee_COMPARE_ISLO);
+STATIC_ASSERT_COMPARE_PREDICATE(Dee_COMPARE_FROM_grTT_loFF, Dee_COMPARE_GR ==, Dee_COMPARE_LO ==);
+#undef STATIC_ASSERT_COMPARE_PREDICATE
 
 #ifndef CONFIG_HAVE_memend
 #define CONFIG_HAVE_memend

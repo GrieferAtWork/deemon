@@ -109,35 +109,73 @@ DECL_BEGIN
 #define Dee_COMPARE_ISGR(x)        ((x) > 0)  /* Undefined if matches "Dee_COMPARE_ERR" */
 #define Dee_COMPARE_ISGE(x)        ((x) >= 0) /* Undefined if matches "Dee_COMPARE_ERR" */
 
-/* #define Dee_COMPARE_EQ_FROMBOOL(is_equal)     ((is_equal) ? Dee_COMPARE_EQ : Dee_COMPARE_NE)
- * #define Dee_COMPARE_NE_FROMBOOL(is_not_equal) ((is_not_equal) ? Dee_COMPARE_NE : Dee_COMPARE_EQ) */
+/* >> Dee_COMPARE_EQ_FROMBOOL(true)  = Dee_COMPARE_EQ
+ * >> Dee_COMPARE_EQ_FROMBOOL(false) = Dee_COMPARE_NE
+ * >> Dee_COMPARE_NE_FROMBOOL(true)  = Dee_COMPARE_NE
+ * >> Dee_COMPARE_NE_FROMBOOL(false) = Dee_COMPARE_EQ */
 #if Dee_COMPARE_EQ == 0 && Dee_COMPARE_ERR < 0
 #define Dee_COMPARE_EQ_FROMBOOL(is_equal)     (+!(is_equal))
-#define Dee_COMPARE_NE_FROMBOOL(is_not_equal) (+!!(is_not_equal)) /* @assume(is_not_equal >= 0) */
+#define Dee_COMPARE_NE_FROMBOOL(is_not_equal) (+!!(is_not_equal))
 #else /* Dee_COMPARE_EQ == 0 && Dee_COMPARE_ERR < 0 */
 #define Dee_COMPARE_EQ_FROMBOOL(is_equal)     ((is_equal) ? Dee_COMPARE_EQ : Dee_COMPARE_NE)
-#define Dee_COMPARE_NE_FROMBOOL(is_not_equal) ((is_equal) ? Dee_COMPARE_NE : Dee_COMPARE_EQ)
+#define Dee_COMPARE_NE_FROMBOOL(is_not_equal) ((is_not_equal) ? Dee_COMPARE_NE : Dee_COMPARE_EQ)
 #endif /* Dee_COMPARE_EQ != 0 || Dee_COMPARE_ERR >= 0 */
-#define Dee_CompareFromBCmp(status) Dee_COMPARE_EQ_FROMBOOL(!(status))
+
+/* >> Dee_COMPARE_LO_FROMBOOL(true)     = Dee_COMPARE_LO
+ * >> Dee_COMPARE_LO_FROMBOOL(false)    = Dee_COMPARE_EQ
+ * >> Dee_COMPARE_FROM_loTT_eqFF(true)  = Dee_COMPARE_LO
+ * >> Dee_COMPARE_FROM_loTT_eqFF(false) = Dee_COMPARE_EQ
+ * >> Dee_COMPARE_FROM_eqTT_loFF(true)  = Dee_COMPARE_EQ
+ * >> Dee_COMPARE_FROM_eqTT_loFF(false) = Dee_COMPARE_LO */
+#define Dee_COMPARE_LO_FROMBOOL Dee_COMPARE_FROM_loTT_eqFF
+#if Dee_COMPARE_LO == -1 && Dee_COMPARE_ERR < -1
+#define Dee_COMPARE_FROM_loTT_eqFF(is_less_else_equal) (-+!!(is_less_else_equal))
+#define Dee_COMPARE_FROM_eqTT_loFF(is_equal_else_less) (-+!(is_equal_else_less))
+#else /* Dee_COMPARE_LO == -1 && Dee_COMPARE_ERR < -1 */
+#define Dee_COMPARE_FROM_loTT_eqFF(is_less_else_equal) ((is_less_else_equal) ? Dee_COMPARE_LO : Dee_COMPARE_EQ)
+#define Dee_COMPARE_FROM_eqTT_loFF(is_equal_else_less) ((is_equal_else_less) ? Dee_COMPARE_EQ : Dee_COMPARE_LO)
+#endif /* Dee_COMPARE_LO != -1 || Dee_COMPARE_ERR >= -1 */
+
+/* >> Dee_COMPARE_GR_FROMBOOL(true)     = Dee_COMPARE_GR
+ * >> Dee_COMPARE_GR_FROMBOOL(false)    = Dee_COMPARE_EQ
+ * >> Dee_COMPARE_FROM_grTT_eqFF(true)  = Dee_COMPARE_GR
+ * >> Dee_COMPARE_FROM_grTT_eqFF(false) = Dee_COMPARE_EQ
+ * >> Dee_COMPARE_FROM_eqTT_grFF(true)  = Dee_COMPARE_EQ
+ * >> Dee_COMPARE_FROM_eqTT_grFF(false) = Dee_COMPARE_GR */
+#define Dee_COMPARE_GR_FROMBOOL Dee_COMPARE_FROM_grTT_eqFF
+#if Dee_COMPARE_GR == 1 && Dee_COMPARE_EQ == 0
+#define Dee_COMPARE_FROM_grTT_eqFF(is_greater_else_equal) (+!!(is_greater_else_equal))
+#define Dee_COMPARE_FROM_eqTT_grFF(is_equal_else_greater) (+!(is_equal_else_greater))
+#else /* Dee_COMPARE_GR == 1 && Dee_COMPARE_EQ == 0 */
+#define Dee_COMPARE_FROM_grTT_eqFF(is_greater_else_equal) ((is_greater_else_equal) ? Dee_COMPARE_GR : Dee_COMPARE_EQ)
+#define Dee_COMPARE_FROM_eqTT_grFF(is_equal_else_greater) ((is_equal_else_greater) ? Dee_COMPARE_EQ : Dee_COMPARE_GR)
+#endif /* Dee_COMPARE_GR != 1 || Dee_COMPARE_EQ != 0 */
+
+
+/* >> Dee_COMPARE_FROM_loTT_grFF(true)  = Dee_COMPARE_LO
+ * >> Dee_COMPARE_FROM_loTT_grFF(false) = Dee_COMPARE_GR
+ * >> Dee_COMPARE_FROM_grTT_loFF(true)  = Dee_COMPARE_GR
+ * >> Dee_COMPARE_FROM_grTT_loFF(false) = Dee_COMPARE_LO */
+#if Dee_COMPARE_LO == -1 && Dee_COMPARE_GR == 1
+#define Dee_COMPARE_FROM_loTT_grFF(is_less_else_greater) ((+!(is_less_else_greater) << 1) - 1)
+#define Dee_COMPARE_FROM_grTT_loFF(is_greater_else_less) ((+!!(is_greater_else_less) << 1) - 1)
+#else /* Dee_COMPARE_LO == -1 && Dee_COMPARE_GR == 1 */
+#define Dee_COMPARE_FROM_loTT_grFF(is_less_else_greater) ((is_less_else_greater) ? Dee_COMPARE_LO : Dee_COMPARE_GR)
+#define Dee_COMPARE_FROM_grTT_loFF(is_greater_else_less) ((is_greater_else_less) ? Dee_COMPARE_GR : Dee_COMPARE_LO)
+#endif /* Dee_COMPARE_LO != -1 || Dee_COMPARE_GR != 1 */
+
 
 /* Helper macros for implementing compare operators. */
+#define Dee_CompareFromBCmp(status) Dee_COMPARE_NE_FROMBOOL(status)
+#define Dee_CompareFromDiff(diff)   Dee_Compare(diff, 0)
+#define Dee_CompareFromSign         Dee_CompareFromDiff
+#define Dee_CompareFromDiffNe(diff) Dee_COMPARE_FROM_grTT_loFF((diff) > 0)
+#define Dee_CompareNe(a, b)         Dee_COMPARE_FROM_grTT_loFF((a) > (b))
 #if Dee_COMPARE_LO == -1 && Dee_COMPARE_EQ == 0 && Dee_COMPARE_GR == 1
-#define Dee_Compare(a, b)         (+((a) > (b)) - +((a) < (b)))
-#define Dee_CompareFromDiff(diff) (+((diff) > 0) - +((diff) < 0))
+#define Dee_Compare(a, b) (+((a) > (b)) - +((a) < (b)))
 #else /* Dee_COMPARE_LO == -1 && Dee_COMPARE_EQ == 0 && Dee_COMPARE_GR == 1 */
-#define Dee_Compare(a, b)         ((a) == (b) ? Dee_COMPARE_EQ : Dee_CompareNe(a, b))
-#define Dee_CompareFromDiff(diff) ((diff) == 0 ? Dee_COMPARE_EQ : (diff) < 0 ? Dee_COMPARE_LO : Dee_COMPARE_GR)
+#define Dee_Compare(a, b) ((a) == (b) ? Dee_COMPARE_EQ : Dee_CompareNe(a, b))
 #endif /* Dee_COMPARE_LO != -1 || Dee_COMPARE_EQ != 0 || Dee_COMPARE_GR != 1 */
-#if Dee_COMPARE_LO == -1 && Dee_COMPARE_GR == 1
-#define Dee_CompareFromDiffNe(diff) ((+((diff) > 0) << 1) - 1)
-#else /* Dee_COMPARE_LO == -1 && Dee_COMPARE_GR == 1 */
-#define Dee_CompareFromDiffNe(diff) ((diff) > 0 ? Dee_COMPARE_GR : Dee_COMPARE_LO)
-#endif /* Dee_COMPARE_LO != -1 || Dee_COMPARE_GR != 1 */
-#if Dee_COMPARE_LO == -1 && Dee_COMPARE_GR == 1
-#define Dee_CompareNe(a, b)         ((+((a) > (b)) << 1) - 1)
-#else /* Dee_COMPARE_LO == -1 && Dee_COMPARE_GR == 1 */
-#define Dee_CompareNe(a, b)         ((a) < (b) ? Dee_COMPARE_LO : Dee_COMPARE_GR)
-#endif /* Dee_COMPARE_LO != -1 || Dee_COMPARE_GR != 1 */
 #if Dee_COMPARE_EQ == 0 && Dee_COMPARE_NE != 0
 #define Dee_CompareEqFromDiff(diff) (+!!(diff)) /* Leading "+" to force promotion to "int" */
 #else /* Dee_COMPARE_EQ == 0 && Dee_COMPARE_NE != 0 */
@@ -1852,6 +1890,36 @@ DFUNDEF WUNUSED NONNULL((1, 3)) int (DCALL DeeObject_SetRangeIndexN)(DeeObject *
 #define Dee_COMPARE_NE_FROMHAS(is_not_equal_or_err) \
 	(Dee_HAS_ISERR(is_not_equal_or_err) ? Dee_COMPARE_ERR : Dee_COMPARE_NE_FROMBOOL(Dee_HAS_ISYES_NO_ERR(is_not_equal_or_err)))
 #endif /* Dee_COMPARE_ERR != -2 || Dee_COMPARE_EQ != 0 */
+
+/* >> Dee_COMPARE_LO_FROMHAS(Dee_HAS_ERR)  ==  Dee_COMPARE_ERR
+ * >> Dee_COMPARE_LO_FROMHAS(Dee_HAS_YES)  ==  Dee_COMPARE_LO
+ * >> Dee_COMPARE_LO_FROMHAS(Dee_HAS_NO)   ==  Dee_COMPARE_EQ */
+#if Dee_COMPARE_ERR == -2 && Dee_COMPARE_LO == -1 && Dee_COMPARE_EQ == 0
+/* IN   OUT
+ * <0   -2
+ * ==0  0
+ * >0   -1 */
+#define Dee_COMPARE_LO_FROMHAS(is_less_or_err_else_equal) \
+	(-+((is_less_or_err_else_equal) > 0) - (+((is_less_or_err_else_equal) < 0) << 1))
+#else /* Dee_COMPARE_ERR == -2 && Dee_COMPARE_LO == -1 && Dee_COMPARE_EQ == 0 */
+#define Dee_COMPARE_LO_FROMHAS(is_less_or_err_else_equal) \
+	(Dee_HAS_ISERR(is_less_or_err_else_equal) ? Dee_COMPARE_ERR : Dee_COMPARE_LO_FROMBOOL(Dee_HAS_ISYES_NO_ERR(is_less_or_err_else_equal)))
+#endif /* Dee_COMPARE_ERR != -2 || Dee_COMPARE_LO != -1 || Dee_COMPARE_EQ != 0 */
+
+/* >> Dee_COMPARE_GR_FROMHAS(Dee_HAS_ERR)  ==  Dee_COMPARE_ERR
+ * >> Dee_COMPARE_GR_FROMHAS(Dee_HAS_YES)  ==  Dee_COMPARE_GR
+ * >> Dee_COMPARE_GR_FROMHAS(Dee_HAS_NO)   ==  Dee_COMPARE_EQ */
+#if Dee_COMPARE_ERR == -2 && Dee_COMPARE_LO == -1 && Dee_COMPARE_EQ == 0
+/* IN   OUT
+ * <0   -2
+ * ==0  0
+ * >0   1 */
+#define Dee_COMPARE_GR_FROMHAS(is_greater_or_err_else_equal) \
+	(+((is_greater_or_err_else_equal) > 0) - (+((is_greater_or_err_else_equal) < 0) << 1))
+#else /* Dee_COMPARE_ERR == -2 && Dee_COMPARE_LO == -1 && Dee_COMPARE_EQ == 0 */
+#define Dee_COMPARE_GR_FROMHAS(is_greater_or_err_else_equal) \
+	(Dee_HAS_ISERR(is_greater_or_err_else_equal) ? Dee_COMPARE_ERR : Dee_COMPARE_GR_FROMBOOL(Dee_HAS_ISYES_NO_ERR(is_greater_or_err_else_equal)))
+#endif /* Dee_COMPARE_ERR != -2 || Dee_COMPARE_LO != -1 || Dee_COMPARE_EQ != 0 */
 
 
 #if Dee_COMPARE_ERR == -2 && Dee_COMPARE_EQ == 0 && (Dee_COMPARE_NE == 1 || Dee_COMPARE_NE == -1)

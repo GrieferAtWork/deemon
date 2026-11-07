@@ -202,7 +202,8 @@ err:
 
 INTERN WUNUSED NONNULL((1)) int DCALL /* "INTERN" because shared with "./roset.c" */
 rditer_bool(RoDictIterator *__restrict self) {
-	return atomic_read(&self->rodi_vidx) < self->rodi_dict->rd_vsize ? 1 : 0;
+	bool hasnext = atomic_read(&self->rodi_vidx) < self->rodi_dict->rd_vsize;
+	return Dee_HAS_FROMBOOL(hasnext);
 }
 
 INTERN WUNUSED NONNULL((1, 2)) int DCALL /* "INTERN" because shared with "./roset.c" */

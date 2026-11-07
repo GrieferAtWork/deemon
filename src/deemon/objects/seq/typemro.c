@@ -165,23 +165,27 @@ PRIVATE WUNUSED NONNULL((1)) int DCALL
 typemroiter_bool(TypeMROIterator *__restrict self) {
 	DeeTypeObject *iter;
 	DeeTypeMRO mro;
+	bool hasnext;
 	TypeMROIterator_LockAcquire(self);
 	iter = self->tmi_iter;
 	memcpy(&mro, &self->tmi_mro, sizeof(DeeTypeMRO));
 	TypeMROIterator_LockRelease(self);
-	return (iter == NULL || DeeTypeMRO_Next(&mro, iter) != NULL) ? 1 : 0;
+	hasnext = iter == NULL || DeeTypeMRO_Next(&mro, iter) != NULL;
+	return Dee_HAS_FROMBOOL(hasnext);
 }
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 typebasesiter_bool(TypeMROIterator *__restrict self) {
 	DeeTypeObject *iter;
 	DeeTypeMRO mro;
+	bool hasnext;
 	TypeMROIterator_LockAcquire(self);
 	iter = self->tmi_iter;
 	memcpy(&mro, &self->tmi_mro, sizeof(DeeTypeMRO));
 	TypeMROIterator_LockRelease(self);
 	ASSERT(iter != NULL);
-	return DeeTypeMRO_NextDirectBase(&mro, iter) != NULL ? 1 : 0;
+	hasnext = DeeTypeMRO_NextDirectBase(&mro, iter) != NULL;
+	return Dee_HAS_FROMBOOL(hasnext);
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeTypeObject *DCALL
@@ -544,7 +548,8 @@ typemro_bool(TypeMRO *__restrict self) {
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 typebases_bool(TypeMRO *__restrict self) {
 	/* Bases are empty when the type doesn't have any bases. */
-	return DeeType_Base(self->tm_type) != NULL ? 1 : 0;
+	bool hasbase = DeeType_Base(self->tm_type) != NULL;
+	return Dee_HAS_FROMBOOL(hasbase);
 }
 #else /* WANT_typebases_bool */
 #define PTR_typebases_bool NULL

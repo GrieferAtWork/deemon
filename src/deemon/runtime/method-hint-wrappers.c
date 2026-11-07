@@ -2439,9 +2439,9 @@ DeeMA___iter_bool__(DeeObject *__restrict self, size_t argc, DeeObject *const *a
 	DeeArg_Unpack0(err, argc, argv, "__iter_bool__");
 {
 	int result = (*DeeType_RequireMethodHint(Dee_TYPE(self), iter_operator_bool))(self);
-	if unlikely(result < 0)
+	if unlikely(Dee_HAS_ISERR(result))
 		goto err;
-	return_bool(result);
+	return_bool(Dee_HAS_ISYES_NO_ERR(result));
 err:
 	return NULL;
 }}

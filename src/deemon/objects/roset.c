@@ -495,9 +495,9 @@ roset_mh_contains_with_range(RoSet *self, DeeObject *key, size_t start, size_t e
 	size_t index = roset_mh_find(self, key, start, end);
 	if unlikely(index == (size_t)Dee_COMPARE_ERR)
 		goto err;
-	return index != (size_t)-1 ? 1 : 0;
+	return Dee_HAS_FROMBOOL(index != (size_t)-1);
 err:
-	return -1;
+	return Dee_HAS_ERR;
 }
 #endif /* SUBSTITUDE_roset_mh_contains_with_range */
 

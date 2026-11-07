@@ -226,7 +226,7 @@ DeeNone_OperatorInt(DeeObject *__restrict UNUSED(self)) {
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 DeeNone_OperatorCompare(DeeObject *UNUSED(self), DeeObject *other) {
-	return DeeNone_Check(other) ? Dee_COMPARE_EQ : Dee_COMPARE_LO;
+	return Dee_COMPARE_FROM_eqTT_loFF(DeeNone_Check(other));
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL

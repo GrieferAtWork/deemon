@@ -217,7 +217,7 @@ soi_getitem(SeqOneIterator *__restrict self) {
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 soi_bool(SeqOneIterator *__restrict self) {
 	bool bound = atomic_read(&self->soi_item) != ITER_DONE;
-	return bound ? 1 : 0;
+	return Dee_HAS_FROMBOOL(bound);
 }
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL

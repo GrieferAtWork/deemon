@@ -100,7 +100,8 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 spi_bool(SeqPairIterator *__restrict self) {
-	return atomic_read(&self->spi_index) < 2 ? 1 : 0;
+	bool has = atomic_read(&self->spi_index) < 2;
+	return Dee_HAS_FROMBOOL(has);
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL

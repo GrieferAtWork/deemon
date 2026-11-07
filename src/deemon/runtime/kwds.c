@@ -730,21 +730,21 @@ PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 kwds_hasitem(Kwds *self, DeeObject *key) {
 	size_t index;
 	if (!DeeString_Check(key))
-		return 0;
+		return Dee_HAS_NO;
 	index = DeeKwds_IndexOf(Dee_AsObject(self), key);
-	return index != (size_t)-1 ? 1 : 0;
+	return Dee_HAS_FROMBOOL(index != (size_t)-1);
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 kwds_hasitem_string_hash(Kwds *self, char const *key, Dee_hash_t hash) {
 	size_t index = DeeKwds_IndexOfStringHash(Dee_AsObject(self), key, hash);
-	return index != (size_t)-1 ? 1 : 0;
+	return Dee_HAS_FROMBOOL(index != (size_t)-1);
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 kwds_hasitem_string_len_hash(Kwds *self, char const *key, size_t keylen, Dee_hash_t hash) {
 	size_t index = DeeKwds_IndexOfStringLenHash(Dee_AsObject(self), key, keylen, hash);
-	return index != (size_t)-1 ? 1 : 0;
+	return Dee_HAS_FROMBOOL(index != (size_t)-1);
 }
 
 PRIVATE struct type_seq kwds_seq = {

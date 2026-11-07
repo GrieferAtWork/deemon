@@ -3479,7 +3479,7 @@ token_compare_eq(DeeCompilerWrapperObject *self, DeeObject *other) {
 		result = Dee_COMPARE_ERR;
 	} else {
 		tpp_token_id cur = DeeLexer_GetTok(DeeLexer_OfCompiler(self->cw_compiler));
-		result = cur == other_id ? Dee_COMPARE_EQ : Dee_COMPARE_NE;
+		result = Dee_COMPARE_EQ_FROMBOOL(cur, other_id);
 	}
 	COMPILER_END();
 	return result;

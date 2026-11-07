@@ -387,48 +387,48 @@ DECL_END
 /* Platform-specific functions                                          */
 /************************************************************************/
 
-/* @return:  1: Exists
- * @return:  0: Doesn't exist
- * @return: -1: Error */
+/* @return: Dee_HAS_YES: Exists
+ * @return: Dee_HAS_NO:  Doesn't exist
+ * @return: Dee_HAS_ERR: Error */
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 posix_environ_hasenv(DeeStringObject *__restrict name) {
 #ifdef posix_getenv_USE_GetEnvironmentVariableW
 	bool result;
 	LPCWSTR wname = (LPCWSTR)DeeString_AsWide(name);
 	if unlikely(!wname)
-		return -1;
+		return Dee_HAS_ERR;
 	environ_lock_read();
 	DBG_ALIGNMENT_DISABLE();
 	result = GetEnvironmentVariableW(wname, NULL, 0) != 0;
 	DBG_ALIGNMENT_ENABLE();
 	environ_lock_endread();
-	return result ? 1 : 0;
+	return Dee_HAS_FROMBOOL(result);
 #endif /* posix_getenv_USE_GetEnvironmentVariableW */
 
 #ifdef posix_getenv_USE_wgetenv
 	bool result;
 	Dee_wchar_t const *wname = DeeString_AsWide(name);
 	if unlikely(!wname)
-		return -1;
+		return Dee_HAS_ERR;
 	environ_lock_read();
 	DBG_ALIGNMENT_DISABLE();
 	result = wgetenv((wchar_t *)wname) != NULL;
 	DBG_ALIGNMENT_ENABLE();
 	environ_lock_endread();
-	return result ? 1 : 0;
+	return Dee_HAS_FROMBOOL(result);
 #endif /* posix_getenv_USE_wgetenv */
 
 #ifdef posix_getenv_USE_getenv
 	bool result;
 	char const *utf8 = DeeString_AsUtf8(name);
 	if unlikely(!utf8)
-		return -1;
+		return Dee_HAS_ERR;
 	environ_lock_read();
 	DBG_ALIGNMENT_DISABLE();
 	result = getenv((char *)utf8) != NULL;
 	DBG_ALIGNMENT_ENABLE();
 	environ_lock_endread();
-	return result ? 1 : 0;
+	return Dee_HAS_FROMBOOL(result);
 #endif /* posix_getenv_USE_getenv */
 
 #ifdef posix_getenv_USE_wenviron
@@ -438,15 +438,15 @@ posix_environ_hasenv(DeeStringObject *__restrict name) {
 	size_t i, wname_len;
 	wname = DeeString_AsWide(name);
 	if unlikely(!wname)
-		return -1;
+		return Dee_HAS_ERR;
 	wname_len = wcslen((wchar_t *)wname);
-	result = 0;
+	result = Dee_HAS_NO;
 	environ_lock_read();
 	if (wenviron) {
 		for (i = 0; (wenvstr = (Dee_wchar_t const *)wenviron[i]) != NULL; ++i) {
 			if (bcmpc(wenvstr, wname, wname_len, sizeof(Dee_wchar_t)) == 0 &&
 				wenvstr[wname_len] == (Dee_wchar_t)'=') {
-				result = 1;
+				result = Dee_HAS_YES;
 				break;
 			}
 		}
@@ -461,15 +461,15 @@ posix_environ_hasenv(DeeStringObject *__restrict name) {
 	size_t i, utf8_name_len;
 	utf8_name = DeeString_AsUtf8(name);
 	if unlikely(!utf8_name)
-		return -1;
+		return Dee_HAS_ERR;
 	utf8_name_len = strlen(utf8_name);
-	result = 0;
+	result = Dee_HAS_NO;
 	environ_lock_read();
 	if (environ) {
 		for (i = 0; (envstr = (char *)environ[i]) != NULL; ++i) {
 			if (bcmpc(envstr, utf8_name, wname_len, sizeof(char)) == 0 &&
 				envstr[wname_len] == '=') {
-				result = 1;
+				result = Dee_HAS_YES;
 				break;
 			}
 		}
@@ -480,7 +480,7 @@ posix_environ_hasenv(DeeStringObject *__restrict name) {
 
 #ifdef posix_getenv_USE_STUB
 	(void)name;
-	return 0;
+	return Dee_HAS_NO;
 #endif /* posix_getenv_USE_STUB */
 }
 
@@ -2186,9 +2186,9 @@ environ_contains(DeeObject *UNUSED(self), DeeObject *key) {
 	if (DeeObject_AssertTypeExact(key, &DeeString_Type))
 		goto err;
 	exists = posix_environ_hasenv((DeeStringObject *)key);
-	if unlikely(exists < 0)
+	if unlikely(Dee_HAS_ISERR(exists))
 		goto err;
-	return_bool(exists);
+	return_bool(Dee_HAS_ISYES_NO_ERR(exists));
 err:
 	return NULL;
 }

@@ -1277,7 +1277,8 @@ unlock_and_err_index:
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 list_hasitem_index(List *me, size_t index) {
-	return index < DeeList_SIZE_ATOMIC(me) ? 1 : 0;
+	bool has = index < DeeList_SIZE_ATOMIC(me);
+	return Dee_HAS_FROMBOOL(has);
 }
 
 PRIVATE WUNUSED NONNULL((1, 2, 3)) int DCALL

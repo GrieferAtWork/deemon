@@ -2221,7 +2221,7 @@ impl_instance_builtin_compare(DeeTypeObject *tp_self,
 		if (lhs_val != rhs_val) {
 			if (!lhs_val || !rhs_val) {
 				Dee_instance_desc_lock_endread(instance);
-				return lhs_val ? 1 : -1; /* Different NULL values. */
+				return Dee_COMPARE_FROM_grTT_loFF(lhs_val != NULL); /* Different NULL values. */
 			}
 			Dee_Incref(lhs_val);
 			Dee_Incref(rhs_val);
@@ -2231,13 +2231,13 @@ impl_instance_builtin_compare(DeeTypeObject *tp_self,
 			temp = DeeObject_Compare(lhs_val, rhs_val);
 			Dee_Decref(rhs_val);
 			Dee_Decref(lhs_val);
-			if (temp != 0)
+			if (Dee_COMPARE_ISNE_OR_ERR(temp))
 				return temp; /* Error, or non-equal */
 			Dee_instance_desc_lock_read(instance);
 		}
 	}
 	Dee_instance_desc_lock_endread(instance);
-	return 0; /* All elements are equal */
+	return Dee_COMPARE_EQ; /* All elements are equal */
 }
 #endif /* !DEFINED_impl_instance_builtin_compare */
 INTERN WUNUSED NONNULL((1, 2, 3)) int DCALL

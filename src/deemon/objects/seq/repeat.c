@@ -921,7 +921,7 @@ STATIC_ASSERT(offsetof(RepeatItem, rpit_obj) == offsetof(ProxyObject, po_obj));
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 repeatitem_bool(RepeatItem *__restrict self) {
-	return likely(self->rpit_num) ? 1 : 0;
+	return Dee_HAS_FROMBOOL(self->rpit_num != 0);
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF RepeatItemIterator *DCALL

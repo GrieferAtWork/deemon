@@ -314,7 +314,8 @@ cell_printrepr(DeeCellObject *__restrict self,
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 cell_bool(DeeCellObject *__restrict self) {
-	return DeeCell_IsBound(self) ? 1 : 0;
+	bool isbound = DeeCell_IsBound(self);
+	return Dee_HAS_FROMBOOL(isbound);
 }
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL

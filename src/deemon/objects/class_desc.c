@@ -139,7 +139,8 @@ coti_peek_ent(ClassOperatorTableIterator const *__restrict self) {
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 coti_bool(ClassOperatorTableIterator *__restrict self) {
-	return coti_peek_ent(self) != NULL ? 1 : 0;
+	bool hasent = coti_peek_ent(self) != NULL;
+	return Dee_HAS_FROMBOOL(hasent);
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
@@ -762,7 +763,8 @@ cati_peek_ent(ClassAttributeTableIterator const *__restrict self) {
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 cati_bool(ClassAttributeTableIterator *__restrict self) {
-	return cati_peek_ent(self) != NULL ? 1 : 0;
+	bool hasent = cati_peek_ent(self) != NULL;
+	return Dee_HAS_FROMBOOL(hasent);
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL

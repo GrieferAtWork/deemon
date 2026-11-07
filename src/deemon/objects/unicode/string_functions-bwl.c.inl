@@ -549,7 +549,7 @@ LOCAL_memcasecmp(LOCAL_uchar_t const *lhs, size_t lhs_size,
 		uint32_t lhs_ch, rhs_ch;
 		if (unicode_foldreader_empty(&lhs_reader)) {
 			bool rhs_empty = unicode_foldreader_empty(&rhs_reader);
-			return rhs_empty ? Dee_COMPARE_EQ : Dee_COMPARE_LO;
+			return Dee_COMPARE_FROM_eqTT_loFF(rhs_empty);
 		}
 		if (unicode_foldreader_empty(&rhs_reader))
 			return Dee_COMPARE_GR;

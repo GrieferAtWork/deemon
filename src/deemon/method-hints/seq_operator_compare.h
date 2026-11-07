@@ -89,11 +89,7 @@ if (isEq) {
 } else {
 	print('%{$empty = {');
 	print('	int rhs_nonempty = DeeObject_InvokeMethodHint(seq_operator_bool, rhs);');
-	print('	if unlikely(rhs_nonempty < 0)');
-	print('		goto err;');
-	print('	return rhs_nonempty ? Dee_COMPARE_LO : Dee_COMPARE_EQ;');
-	print('err:');
-	print('	return Dee_COMPARE_ERR;');
+	print('	return Dee_COMPARE_LO_FROMHAS(rhs_nonempty);');
 	print('}}');
 }
 
@@ -566,7 +562,7 @@ if (isEq) {
 	print('		if unlikely(foreach_result == SEQ_COMPARE_FOREACH_RESULT_ERROR)');
 	print('			goto err;');
 	print('		if (foreach_result == SEQ_COMPARE_FOREACH_RESULT_EQUAL) {');
-	print('			result = data.scf_sgi_oindex >= data.scf_sgi_osize ? Dee_COMPARE_EQ : Dee_COMPARE_GR;');
+	print('			result = Dee_COMPARE_FROM_eqTT_grFF(data.scf_sgi_oindex >= data.scf_sgi_osize);');
 	print('		} else if (foreach_result == SEQ_COMPARE_FOREACH_RESULT_LESS) {');
 	print('			result = Dee_COMPARE_LO;');
 	print('		} else {');
@@ -655,7 +651,7 @@ if (isEq) {
 	print('		if unlikely(foreach_result == SEQ_COMPARE_FOREACH_RESULT_ERROR)');
 	print('			goto err;');
 	print('		if (foreach_result == SEQ_COMPARE_FOREACH_RESULT_EQUAL) {');
-	print('			result = data.scf_sgi_oindex >= data.scf_sgi_osize ? Dee_COMPARE_EQ : Dee_COMPARE_GR;');
+	print('			result = Dee_COMPARE_FROM_eqTT_grFF(data.scf_sgi_oindex >= data.scf_sgi_osize);');
 	print('		} else if (foreach_result == SEQ_COMPARE_FOREACH_RESULT_LESS) {');
 	print('			result = Dee_COMPARE_LO;');
 	print('		} else {');
@@ -744,7 +740,7 @@ if (isEq) {
 	print('		if unlikely(foreach_result == SEQ_COMPARE_FOREACH_RESULT_ERROR)');
 	print('			goto err;');
 	print('		if (foreach_result == SEQ_COMPARE_FOREACH_RESULT_EQUAL) {');
-	print('			result = data.scf_sgi_oindex >= data.scf_sgi_osize ? Dee_COMPARE_EQ : Dee_COMPARE_GR;');
+	print('			result = Dee_COMPARE_FROM_eqTT_grFF(data.scf_sgi_oindex >= data.scf_sgi_osize);');
 	print('		} else if (foreach_result == SEQ_COMPARE_FOREACH_RESULT_LESS) {');
 	print('			result = Dee_COMPARE_LO;');
 	print('		} else {');
@@ -893,11 +889,7 @@ __seq_compare__.seq_operator_compare([[nonnull]] DeeObject *lhs,
 %{unsupported(auto)}
 %{$empty = {
 	int rhs_nonempty = DeeObject_InvokeMethodHint(seq_operator_bool, rhs);
-	if unlikely(rhs_nonempty < 0)
-		goto err;
-	return rhs_nonempty ? Dee_COMPARE_LO : Dee_COMPARE_EQ;
-err:
-	return Dee_COMPARE_ERR;
+	return Dee_COMPARE_LO_FROMHAS(rhs_nonempty);
 }}
 %{$with__seq_operator_eq__and__seq_operator__lo = {
 	int temp;
@@ -1247,7 +1239,7 @@ err:
 		if unlikely(foreach_result == SEQ_COMPARE_FOREACH_RESULT_ERROR)
 			goto err;
 		if (foreach_result == SEQ_COMPARE_FOREACH_RESULT_EQUAL) {
-			result = data.scf_sgi_oindex >= data.scf_sgi_osize ? Dee_COMPARE_EQ : Dee_COMPARE_GR;
+			result = Dee_COMPARE_FROM_eqTT_grFF(data.scf_sgi_oindex >= data.scf_sgi_osize);
 		} else if (foreach_result == SEQ_COMPARE_FOREACH_RESULT_LESS) {
 			result = Dee_COMPARE_LO;
 		} else {
@@ -1310,7 +1302,7 @@ err:
 		if unlikely(foreach_result == SEQ_COMPARE_FOREACH_RESULT_ERROR)
 			goto err;
 		if (foreach_result == SEQ_COMPARE_FOREACH_RESULT_EQUAL) {
-			result = data.scf_sgi_oindex >= data.scf_sgi_osize ? Dee_COMPARE_EQ : Dee_COMPARE_GR;
+			result = Dee_COMPARE_FROM_eqTT_grFF(data.scf_sgi_oindex >= data.scf_sgi_osize);
 		} else if (foreach_result == SEQ_COMPARE_FOREACH_RESULT_LESS) {
 			result = Dee_COMPARE_LO;
 		} else {
@@ -1373,7 +1365,7 @@ err:
 		if unlikely(foreach_result == SEQ_COMPARE_FOREACH_RESULT_ERROR)
 			goto err;
 		if (foreach_result == SEQ_COMPARE_FOREACH_RESULT_EQUAL) {
-			result = data.scf_sgi_oindex >= data.scf_sgi_osize ? Dee_COMPARE_EQ : Dee_COMPARE_GR;
+			result = Dee_COMPARE_FROM_eqTT_grFF(data.scf_sgi_oindex >= data.scf_sgi_osize);
 		} else if (foreach_result == SEQ_COMPARE_FOREACH_RESULT_LESS) {
 			result = Dee_COMPARE_LO;
 		} else {

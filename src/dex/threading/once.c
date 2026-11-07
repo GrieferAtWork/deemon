@@ -459,7 +459,8 @@ err_not_finished:
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 once_bool(DeeOnceObject *__restrict self) {
-	return Dee_once_hasrun(&self->o_once) ? 1 : 0;
+	bool hasrun = Dee_once_hasrun(&self->o_once);
+	return Dee_HAS_FROMBOOL(hasrun);
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL

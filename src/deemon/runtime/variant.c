@@ -674,9 +674,11 @@ Dee_variant_fast_compare_impl(struct Dee_variant const *__restrict lhs,
 	switch (lhs->var_type) {
 
 	case Dee_VARIANT_UNBOUND:
-		return rhs->var_type == Dee_VARIANT_UNBOUND
-		       ? Dee_COMPARE_EQ  /* UNBOUND == UNBOUND */
-		       : Dee_COMPARE_LO; /* UNBOUND < BOUND */
+		/* UNBOUND == UNBOUND  ->  Dee_COMPARE_EQ
+		 * UNBOUND <  BOUND    ->  Dee_COMPARE_LO
+		 *
+		 * -> If "rhs" isn't unbound, Dee_COMPARE_LO. Else: Dee_COMPARE_EQ */
+		return Dee_COMPARE_LO_FROMBOOL(rhs->var_type != Dee_VARIANT_UNBOUND);
 
 	case Dee_VARIANT_INT32: {
 		int32_t lhs_value = _Dee_variant_get_int32(lhs);
@@ -809,9 +811,9 @@ Dee_variant_compare_impl(struct Dee_variant *__restrict lhs,
 	if unlikely(!ITER_ISOK(lhs_ob)) {
 		if unlikely(!lhs_ob)
 			goto err;
-		return Dee_variant_isbound_nonatomic(rhs)
-		       ? Dee_COMPARE_LO  /* UNBOUND < BOUND */
-		       : Dee_COMPARE_EQ; /* UNBOUND == UNBOUND */
+		/* UNBOUND < BOUND     ->  Dee_COMPARE_LO
+		 * UNBOUND == UNBOUND  ->  Dee_COMPARE_EQ */
+		return Dee_COMPARE_LO_FROMBOOL(Dee_variant_isbound_nonatomic(rhs));
 	}
 	rhs_ob = Dee_variant_getobject(rhs);
 	if unlikely(!ITER_ISOK(rhs_ob)) {
@@ -840,9 +842,9 @@ Dee_variant_compare_eq_impl(struct Dee_variant *__restrict lhs,
 	if unlikely(!ITER_ISOK(lhs_ob)) {
 		if unlikely(!lhs_ob)
 			goto err;
-		return Dee_variant_isbound_nonatomic(rhs)
-		       ? Dee_COMPARE_LO  /* UNBOUND < BOUND */
-		       : Dee_COMPARE_EQ; /* UNBOUND == UNBOUND */
+		/* UNBOUND < BOUND     ->  Dee_COMPARE_LO
+		 * UNBOUND == UNBOUND  ->  Dee_COMPARE_EQ */
+		return Dee_COMPARE_LO_FROMBOOL(Dee_variant_isbound_nonatomic(rhs));
 	}
 	rhs_ob = Dee_variant_getobject(rhs);
 	if unlikely(!ITER_ISOK(rhs_ob)) {
@@ -871,9 +873,9 @@ Dee_variant_trycompare_eq_impl(struct Dee_variant *__restrict lhs,
 	if unlikely(!ITER_ISOK(lhs_ob)) {
 		if unlikely(!lhs_ob)
 			goto err;
-		return Dee_variant_isbound_nonatomic(rhs)
-		       ? Dee_COMPARE_LO  /* UNBOUND < BOUND */
-		       : Dee_COMPARE_EQ; /* UNBOUND == UNBOUND */
+		/* UNBOUND < BOUND     ->  Dee_COMPARE_LO
+		 * UNBOUND == UNBOUND  ->  Dee_COMPARE_EQ */
+		return Dee_COMPARE_LO_FROMBOOL(Dee_variant_isbound_nonatomic(rhs));
 	}
 	rhs_ob = Dee_variant_getobject(rhs);
 	if unlikely(!ITER_ISOK(rhs_ob)) {
