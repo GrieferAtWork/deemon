@@ -40,6 +40,7 @@
 
 DECL_BEGIN
 
+#ifndef CONFIG_EXPERIMENTAL_USE_STATELESS_PARSER
 #ifndef CONFIG_EXPERIMENTAL_USE_TPP3
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 DeeString_DecodeLFEscaped(struct Dee_unicode_printer *__restrict printer,
@@ -997,6 +998,7 @@ err_noprinter:
 	return NULL;
 }
 #endif /* !CONFIG_EXPERIMENTAL_USE_TPP3 */
+#endif /* !CONFIG_EXPERIMENTAL_USE_STATELESS_PARSER */
 
 DECL_END
 

@@ -1484,7 +1484,7 @@ again_acquire_locks:
 	if (existing_module) {
 		if (Dee_IncrefIfNotZero(existing_module)) {
 			Dee_DPRINTF("[RT][dex] Warning: Found existing module %q at %p-%p overlapping with "
-			            /**/ "\"DEX\" symbol of %q at %p. This is very weird a probably a bug\n",
+			            /**/ "\"DEX\" symbol of %q at %p. This is very weird and probably a bug\n",
 			            existing_module->mo_absname,
 			            existing_module->mo_minaddr,
 			            existing_module->mo_maxaddr,
@@ -1614,7 +1614,7 @@ handle_existing_module:
 			existing_dexdata = existing_module->mo_moddata.mo_dexdata;
 			if (existing_dexdata->mdx_handle != dex_handle) {
 				Dee_DPRINTF("[RT][dex] Warning: Found existing module %q (handle %p) sharing its at-addr "
-				            /**/ "key with with %q (handle %p). This is very weird a probably a bug\n",
+				            /**/ "key with with %q (handle %p). This is very weird and probably a bug\n",
 				            existing_module->mo_absname, existing_dexdata->mdx_handle,
 				            absname, dex_handle);
 			}
@@ -1632,7 +1632,7 @@ handle_existing_module:
 		if unlikely(existing_module) {
 			if (Dee_IncrefIfNotZero(existing_module)) {
 				Dee_DPRINTF("[RT][dex] Warning: Found existing module %q at %p-%p overlapping "
-				            /**/ "with %q at %p-%p. This is very weird a probably a bug\n",
+				            /**/ "with %q at %p-%p. This is very weird and probably a bug\n",
 				            existing_module->mo_absname,
 				            existing_module->mo_minaddr,
 				            existing_module->mo_maxaddr,

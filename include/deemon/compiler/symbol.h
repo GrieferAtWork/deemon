@@ -41,6 +41,62 @@
 
 #include "../api.h"
 
+#ifdef CONFIG_EXPERIMENTAL_USE_STATELESS_PARSER
+#include "../alloc.h"           /* DeeObject_FREE, DeeObject_MALLOC */
+#include "ast.h"
+
+DECL_BEGIN
+
+/* Link-time symbol declaration */
+typedef struct Dee_link_symbol DeeLinkSymbol;
+
+enum Dee_link_symbol_kind {
+	Dee_LINK_SYMBOL_KIND_LOCAL,  /* `local` or `__stack` variable */
+	Dee_LINK_SYMBOL_KIND_STATIC, /* `static` variable */
+	Dee_LINK_SYMBOL_KIND_GLOBAL, /* `global` variable */
+	Dee_LINK_SYMBOL_KIND_EXTERN, /* `global` in another module */
+};
+
+enum Dee_link_symbol_local_init_kind {
+	Dee_LINK_SYMBOL_LOCAL_INIT_KIND_UNBOUND,       /* Initialized as unbound */
+	Dee_LINK_SYMBOL_LOCAL_INIT_KIND_PARAM,         /* Function parameter */
+	Dee_LINK_SYMBOL_LOCAL_INIT_KIND_VARARGS,       /* Function varargs parameter */
+	Dee_LINK_SYMBOL_LOCAL_INIT_KIND_VARKWDS,       /* Function varkwds parameter */
+	Dee_LINK_SYMBOL_LOCAL_INIT_KIND_EXCEPT,        /* Currently thrown exception */
+	Dee_LINK_SYMBOL_LOCAL_INIT_KIND_THIS_FUNCTION, /* Currently function */
+	Dee_LINK_SYMBOL_LOCAL_INIT_KIND_THIS_MODULE,   /* Currently module */
+};
+
+struct Dee_link_symbol_local {
+	size_t lsl_id; /* [lock(WRITE_ONCE)] Local-id (or `(size_t)-1` if not used (yet))
+	                * Index into table of local-symbols during assembly, where that
+	                * table specifically holds information regarding where exactly
+	                * the symbol is stored (local, stack, param, except, ...) */
+	enum Dee_link_symbol_local_init_kind lsl_init_kind; /* How symbol should be initialized when allocated by assembler */
+	Dee_ast_symref_byname_flag           lsl_flag;      /* Symbol declaration flags */
+};
+
+struct Dee_link_symbol {
+	Dee_refcnt_t              ls_refcnt; /* Reference counter (NOT atomic) */
+	tpp_keyword const        *ls_name;   /* [0..1][const] Symbol name */
+	DeeAstLoc                 ls_loc;    /* [const] Location where symbol was declared */
+	enum Dee_link_symbol_kind ls_kind;   /* [const] Symbol kind */
+	Dee_refcnt_t              ls_rdnum;  /* # of times this symbol is read from */
+	Dee_refcnt_t              ls_wrnum;  /* # of times this symbol is written to (includes initialization) */
+	union {
+		struct Dee_link_symbol_local lsd_local; /* [valid_if(ls_kind == Dee_LINK_SYMBOL_KIND_LOCAL)] */
+	} ls_data;
+};
+
+#ifdef CONFIG_BUILDING_DEEMON
+/* Create a new, anonymous, local-variable symbol. */
+INTDEF DREF DeeLinkSymbol *DCALL DeeLinkSymbol_NewAnonLocal(void);
+#endif /* CONFIG_BUILDING_DEEMON */
+
+
+DECL_END
+
+#else /* CONFIG_EXPERIMENTAL_USE_STATELESS_PARSER */
 #include "../alloc.h"           /* DeeObject_FREE, DeeObject_MALLOC */
 #include "../code.h"            /* DeeCodeObject */
 #include "../module.h"          /* Dee_module_symbol */
@@ -1238,5 +1294,6 @@ decl_ast_func_getscope(struct decl_ast const *__restrict self) {
 #endif /* CONFIG_BUILDING_DEEMON */
 
 DECL_END
+#endif /* !CONFIG_EXPERIMENTAL_USE_STATELESS_PARSER */
 
 #endif /* !GUARD_DEEMON_COMPILER_SYMBOL_H */

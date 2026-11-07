@@ -157,7 +157,14 @@ struct Dee_ast_symref_byname {
 };
 struct Dee_ast_symref_nth {
 	tpp_keyword const *asrnt_name; /* [1..1] Symbol name */
-	DeeAst            *asrnt_nth;  /* [1..1][owned] Expression describing which match to use (where `0` means the same as `Dee_AST_SYMREF_KIND_BYNAME` + `Dee_AST_SYMREF_BYNAME_KIND_AUTO`) */
+	/* Expression describing which match to use (where `0` means the same
+	 * as `Dee_AST_SYMREF_KIND_BYNAME` + `Dee_AST_SYMREF_BYNAME_KIND_AUTO`)
+	 *
+	 * If the linker cannot turn this one into a constant, an AST will be
+	 * replaced with `Dee_AST_SWITCH_EXPR`, which will be used to resolve
+	 * this expression at runtime, and interact with any possible symbol
+	 * matching the given `asrnt_name` */
+	DeeAst            *asrnt_nth;  /* [1..1][owned] */
 };
 
 struct Dee_module_symbol;
@@ -421,9 +428,8 @@ enum Dee_ast_kind {
 #define Dee_AST_CASE_ACT3 case Dee_AST_ACT3_RANGE:
 	Dee_AST_ACT3_RANGE,     /* `[<act0>:<act1>, <act2>]`   - Create a new range object for enumerating indices from `<act0>` to `<act1>`, using `<act2>` as step. (constexpr(none) is used to indicate unset action operands) */
 
-#define Dee_AST_ISSYM(x)                                     \
-	((unsigned int)(x) >= (unsigned int)Dee_AST_SYMBOL_RD && \
-	 (unsigned int)(x) <= (unsigned int)Dee_AST_SYMREF_XCH)
+	/* TODO: Ast codes for doing low-level interactions with global/extern/static variables BY-ID
+	 *       (as in: sid/gid/eid), for use by the linker  */
 	Dee_AST_SYMBOL_RD,     /* Read from symbol */
 	Dee_AST_SYMBOL_BND,    /* Check if symbol is bound */
 	Dee_AST_SYMBOL_DEL,    /* Unbind symbol */
@@ -647,14 +653,14 @@ typedef uint_fast8_t Dee_ast_catch_handler_flag;
 #define Dee_AST_CATCH_HANDLER_FLAG_INTERRUPT 0x01 /* Treat as `@[interrupt]` handler (allow `DeeType_IsInterrupt()` to be caught) */
 
 struct Dee_ast_catch_handler {
-	Dee_ast_catch_handler_flag ach_flag; /* Catch-handler flags */
-	DeeAst                    *ach_mask; /* [0..1][owned] Catch-handler mask (or `NULL` for catch-all) */
-	DeeAst                    *ach_into; /* [0..1][owned] Catch-as expression (the current exception is stored in here; usually a `Dee_AST_SYMDEF`, which will be scoped alongside `ach_body`) */
-	DeeAst                    *ach_body; /* [1..1][owned] Catch-handler body */
+	Dee_ast_catch_handler_flag   ach_flag;    /* Catch-handler flags */
+	DeeAst                      *ach_mask;    /* [0..1][owned] Catch-handler mask (or `NULL` for catch-all) */
+	DeeAst                      *ach_body;    /* [1..1][owned] Catch-handler body */
+	tpp_keyword const           *ach_into;    /* [0..1] Name of symbol to store the current exception within */
+	DREF struct Dee_link_symbol *ach_intosym; /* [REFERENCE(Dee_link_symbol_wr_inc)][0..1] Set by linker: symbol to store current exception inside of */
 };
 #define Dee_ast_catch_handler_fini(self) \
 	(DeeAst_XDestroy((self)->ach_mask),  \
-	 DeeAst_XDestroy((self)->ach_into),  \
 	 DeeAst_Destroy((self)->ach_body))
 
 struct Dee_ast_catch {
@@ -766,6 +772,9 @@ struct Dee_ast_function {
 	DREF struct Dee_link_symbol        *af_symbol_this;    /* [0..1] Set/created by linker: symbol for `Dee_AST_SYMREF_KIND_THIS` (left `NULL` if `Dee_AST_FUNCTION_FLAG_THISCALL` isn't set) */
 	DREF struct Dee_link_symbol        *af_symbol_tp_this; /* [0..1] Set by linker: symbol for `Dee_AST_SYMREF_KIND_TP_THIS` (left `NULL` if `Dee_AST_FUNCTION_FLAG_THISCALL` isn't set, or not inside of a class scope; s.a. `struct Dee_ast_class::ac_tp_this`) */
 	struct Dee_ast_typedef              af_return_typedef; /* Type annotation for return value */
+	size_t                              af_refsym_c;       /* Set by linker: # of elements in `af_refsym_v` */
+	DREF struct Dee_link_symbol       **af_refsym_v;       /* [REFERENCE(Dee_link_symbol_rd_inc)][1..1][0..af_refsym_c][owned] Set by linker: Symbols referenced
+	                                                        * by `af_body`, that need to be passed during function construction (i.e: aren't global/extern) */
 	struct Dee_ast_function_param       af_params[Dee_AST_FLEXARRAY]; /* [af_argc_max] Function parameters */
 };
 
@@ -796,6 +805,12 @@ struct Dee_ast_class_member {
 #define Dee_ast_class_member_fini(self) DeeAst_Destroy((self)->cm_init)
 
 struct Dee_ast_class {
+	/* TODO: This way of encoding classes is OK, but there needs to be a second encoding!
+	 *       `Dee_AST_CLASS` is what the linker should create, but the parser should have
+	 *       its own AST-type that is more abstract and more descriptive, whilst ensuring
+	 *       that everything that makes up `ac_desc` is known at compile-time (which is
+	 *       something that the linker needs to know, as with the current design, the
+	 *       linker could only work properly when `ac_desc` is `Dee_AST_CONST`) */
 	DeeAst                      *ac_base;    /* [0..1][owned] Class base/super type */
 	DeeAst                      *ac_desc;    /* [1..1][owned] Class descriptor (usually `Dee_AST_CONST` pointing to `DeeClassDescriptor_Type`) */
 	DREF struct Dee_link_symbol *ac_tp_this; /* [0..1] Set by linker: symbol for `Dee_AST_SYMREF_KIND_TP_THIS`

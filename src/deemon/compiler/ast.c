@@ -744,6 +744,8 @@ DeeAst_PackFunction_(/*inherit(always)*/ DeeAst *__restrict self,
 	result->a_data.ad_function.af_argc_max       = argc_max;
 	result->a_data.ad_function.af_symbol_this    = NULL; /* Set by linker */
 	result->a_data.ad_function.af_symbol_tp_this = NULL; /* Set by linker */
+	result->a_data.ad_function.af_refsym_c       = 0;    /* Set by linker */
+	result->a_data.ad_function.af_refsym_v       = NULL; /* Set by linker */
 	return result;
 }
 

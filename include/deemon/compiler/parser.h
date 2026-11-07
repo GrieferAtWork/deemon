@@ -188,6 +188,28 @@ INTDEF WUNUSED NONNULL((1, 2)) int DFCALL DeeParser_ParseTypeDef(DeeParser *__re
 INTDEF WUNUSED NONNULL((1, 2)) int DFCALL DeeParser_ParseOperatorName(DeeParser *__restrict self, /*out*/ struct Dee_ast_operator_id *__restrict result);
 
 /************************************************************************/
+/* file: ../../../src/deemon/compiler/parser/class.c                    */
+/************************************************************************/
+
+/* Parse a class declaration, starting at the `class` keyword. */
+INTDEF WUNUSED NONNULL((1)) DeeAst *DFCALL
+DeeParser_ParseClass(DeeParser *__restrict self,
+                     enum Dee_ast_symref_byname_kind decl_kind,
+                     Dee_ast_symref_byname_flag decl_flags);
+
+/* Similar to `DeeParser_ParseClass()`, but (should) start at the `:` or `{`
+ * following the class's name. Additionally, the class isn't wrapped in a
+ * `Dee_AST_ACT2_STORE` AST to assign it to a symbol bearing its name, nor
+ * will the returned AST have location information yet.
+ *
+ * @param: class_flags: Set of `TP_FNORMAL | TP_FFINAL` */
+INTDEF WUNUSED NONNULL((1)) DeeAst *DFCALL
+DeeParser_ParseClass2(DeeParser *__restrict self,
+                      tpp_keyword const *opt_class_name,
+                      uint16_t class_flags);
+
+
+/************************************************************************/
 /* file: ../../../src/deemon/compiler/parser/function.c                 */
 /************************************************************************/
 struct Dee_ast_function_builder {
@@ -273,8 +295,8 @@ DeeParser_ParseFunction(DeeParser *__restrict self,
 
 /* Similar to `DeeParser_ParseFunction()`, but (should) start at the `(` of the
  * function's parameter list. Additionally, the function isn't wrapped in a
- * `Dee_AST_ACT2_STORE` AST to assign it to a symbol bearing its name, or will
- * the returned function has location information yet. */
+ * `Dee_AST_ACT2_STORE` AST to assign it to a symbol bearing its name, nor
+ * will the returned AST have location information yet. */
 INTDEF WUNUSED NONNULL((1)) DeeAst *DFCALL
 DeeParser_ParseFunction2(DeeParser *__restrict self,
                          tpp_keyword const *opt_function_name,
@@ -286,11 +308,9 @@ DeeParser_ParseFunction2(DeeParser *__restrict self,
 /************************************************************************/
 INTDEF ATTR_CONST WUNUSED bool DFCALL TPP_TOK_MAYBE_EXPR_START(tpp_token_id tok);
 INTDEF WUNUSED NONNULL((1)) DeeAst *DFCALL DeeParser_ParseUnaryHead(DeeParser *__restrict self);
-INTDEF WUNUSED NONNULL((1, 2)) DeeAst *DFCALL DeeParser_ParseUnaryOperand(DeeParser *__restrict self, /*inherit(always)*/ DeeAst *__restrict lhs);
 INTDEF WUNUSED NONNULL((1)) DeeAst *DFCALL DeeParser_ParseUnary(DeeParser *__restrict self);
-INTDEF WUNUSED NONNULL((1, 2)) DeeAst *DFCALL DeeParser_ParseExprOperand(DeeParser *__restrict self, /*inherit(always)*/ DeeAst *__restrict lhs);
 #define DeeParser_ParseExprHead DeeParser_ParseUnaryHead
-
+INTDEF WUNUSED NONNULL((1, 2)) DeeAst *DFCALL DeeParser_ParseExprOperand(DeeParser *__restrict self, /*inherit(always)*/ DeeAst *__restrict lhs);
 INTDEF WUNUSED NONNULL((1)) DeeAst *DFCALL DeeParser_ParseExpr(DeeParser *__restrict self);
 
 
@@ -360,7 +380,8 @@ DeeParser_ParseExprArgList(DeeParser *__restrict self,
 /* Parse the contents of a `{ ... }` expression as either:
  * >> { a, b, c }         // Dee_AST_MULTI+Dee_AST_MULTI_KIND_GENERIC_SEQ
  * >> { a: b, c: d }      // Dee_AST_MULTI+Dee_AST_MULTI_KIND_GENERIC_MAP
- * >> { a, b, c = d... }  // Compile as `{ ((a, b, c) = d)... }`, aka `{ (a, b, c = d...)... }`
+ * >> { a, b, c = d... }  // Dee_AST_MULTI+Dee_AST_MULTI_KIND_GENERIC_SEQ
+ *                        // Compile as `{ ((a, b, c) = d)... }`, aka `{ (a, b, c = d...)... }`
  *
  * NOTE: This function must be called with the current token pointing **AFTER** the leading `{`
  * IMPORTANT: The caller must still amend location information to the returned AST. */

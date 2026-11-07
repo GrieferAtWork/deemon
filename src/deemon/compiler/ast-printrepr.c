@@ -868,8 +868,7 @@ DeeAst_PrintRepr_impl_catch(Dee_ast_printrepr_flag flag, size_t indent_level,
 		              : DeeFormat_PRINT(printer, arg, "..."));
 		if (this_handler->ach_into) {
 			EDO(err_temp, DeeFormat_PRINT(printer, arg, " as "));
-			EDO(err_temp, DeeAst_PrintRepr(this_handler->ach_into, Dee_AST_PRINTREPR_FLAG_ASEXPR,
-			                               indent_level, printer, arg));
+			EDO(err_temp, tpp_keyword_print(this_handler->ach_into, printer, arg));
 		}
 		EDO(err_temp, DeeAst_PrintRepr(this_handler->ach_body, flag,
 		                               indent_level, printer, arg));

@@ -444,12 +444,12 @@ string_parser_pack(/*inherit(always)*/ struct string_parser *__restrict self) {
 	/* Pack string template (or constant string if there aren't any params) */
 	template_str = Dee_unicode_printer_pack(&self->sp_printer);
 	if unlikely(!template_str)
-		goto err__expr;
+		goto err_expr;
 
 	/* Pack string template into an AST */
 	template_str_ast = DeeAst_NewConst(template_str);
 	if unlikely(!template_str_ast)
-		goto err__expr;
+		goto err_expr;
 	DeeAst_SetLoc(template_str_ast, &self->sp_loc);
 
 	/* Check for simple case: without any format-params, we're already done! */
@@ -459,12 +459,12 @@ string_parser_pack(/*inherit(always)*/ struct string_parser *__restrict self) {
 	DeeAst_SetLoc(params_ast, &self->sp_loc);
 	return DeeAst_MakeCallAttrConst(&self->sp_loc, template_str_ast,
 	                                Dee_AsObject(&str_format), 1, &params_ast);
-err__expr:
+err_expr:
 	if (self->sp_paramc > 0) {
 		DeeAst_Destroyv(DeeAst_GetMultiElem(self->sp_paramv), self->sp_paramc);
 		DeeAst_FreeUninitializedMulti(self->sp_paramv);
 	}
-err:
+/*err:*/
 	return NULL;
 }
 
@@ -597,10 +597,10 @@ err_r:
 PRIVATE WUNUSED NONNULL((1)) DeeAst *DFCALL
 DeeParser_ParseUnaryParenFunction(DeeParser *__restrict self,
                                   enum Dee_ast_kind act1_kind) {
-	DeeAstLoc loc;
+	DeeAstLoc function_loc;
 	bool has_paren;
-	DeeAst *expr;
-	if (DeeParser_GetLoc(self, &loc))
+	DeeAst *result;
+	if (DeeParser_GetLoc(self, &function_loc))
 		goto err;
 	DeeParser_NoLf_Push(self);
 	if (TPP_TOK_ISERR(DeeParser_Yield(self))) {
@@ -610,16 +610,17 @@ err_nolf_break:
 	}
 	if (DeeParser_ParenBegin(self, &has_paren))
 		goto err_nolf_break;
-	expr = DeeParser_ParseExpr(self);
-	if unlikely(!expr)
+	result = DeeParser_ParseExpr(self);
+	if unlikely(!result)
 		goto err_nolf_break;
-	expr = DeeAst_NewAct1(act1_kind, expr, &self->p_lexer, &loc);
-	if unlikely(!expr)
+	result = DeeAst_NewAct1(act1_kind, result);
+	if unlikely(!result)
 		goto err_nolf_break;
+	DeeAst_SetLoc(result, &function_loc);
 	DeeParser_NoLf_Pop(self);
 	if (DeeParser_ParenEnd(self, has_paren))
 		goto err;
-	return expr;
+	return result;
 err:
 	return NULL;
 }
@@ -706,7 +707,6 @@ PRIVATE WUNUSED NONNULL((1)) DeeAst *DFCALL
 DeeParser_ParseUnaryOperator(DeeParser *__restrict self) {
 	DeeAst *result;
 	DeeAstLoc loc;
-	tpp_token_id tok;
 	tpp_token_id const mode = DeeParser_GetTok(self);
 	ASSERT(TPP_TOK_IS_UNARY_BUILTIN_FUNCTION(mode));
 	if (DeeParser_GetLoc(self, &loc))
@@ -909,21 +909,12 @@ err:
 }
 
 
-/* TPP_KWD_class */
-PRIVATE WUNUSED NONNULL((1)) DeeAst *DFCALL
-DeeParser_ParseUnaryClass(DeeParser *__restrict self, bool is_final) {
-	ASSERT(DeeParser_GetTok(self) == TPP_KWD_class);
-	/* TODO */
-}
-
-
 /* With the current token being `->`, parse that token,
  * as well as the following function-body. This function
  * returns the **BODY** of the function, meaning that the
  * caller must still package as `Dee_AST_FUNCTION` */
 PRIVATE WUNUSED NONNULL((1)) DeeAst *DFCALL
 DeeParser_ParseFunctionBodyAtArrow(DeeParser *__restrict self) {
-	DeeAst *result;
 	tpp_token_id tok;
 	DeeParser_NoLf_Push(self);
 	tok = DeeParser_Yield(self);
@@ -1019,7 +1010,7 @@ err_builder_nolf_break:
 	return Dee_ast_function_builder_pack(&builder, NULL, function_body);
 err_builder:
 	Dee_ast_function_builder_fini(&builder);
-err:
+/*err:*/
 	return NULL;
 }
 
@@ -1083,7 +1074,7 @@ DeeParser_MaybeParseUnaryCastSuffix(DeeParser *__restrict self,
 	return DeeAst_MakeCall(loc, type_expr, 1, &cast_suffix);
 err_type_expr:
 	DeeAst_Destroy(type_expr);
-err:
+/*err:*/
 	return NULL;
 }
 
@@ -1145,7 +1136,7 @@ err_result_function:
 
 			function_body = DeeParser_ParseFunctionBodyAtArrow(self);
 			if unlikely(!function_body) {
-err_result_function_return_typedef:
+/*err_result_function_return_typedef:*/
 				Dee_ast_typedef_fini(DeeAst_GetFunctionReturnTypedef(result));
 				goto err_result_function;
 			}
@@ -1186,7 +1177,8 @@ return_empty_tuple:
 			goto err;
 		DeeParser_NoLf_Break(self);
 		if (tok == TPP_KWD_class) {
-			result = DeeParser_ParseUnaryClass(self, true);
+			result = DeeParser_ParseClass(self, Dee_AST_SYMREF_BYNAME_KIND_DECL,
+			                              Dee_AST_SYMREF_BYNAME_FLAG_FINAL);
 			if unlikely(!result)
 				goto err;
 			result = DeeParser_ParseExprOperand(self, result);
@@ -1375,18 +1367,18 @@ err:
  * and the current token is whatever comes **AFTER** said keyword! */
 PRIVATE WUNUSED NONNULL((1, 2, 3)) DeeAst *DFCALL
 DeeParser_ParseUnarySymbolNameOperand(DeeParser *__restrict self,
-                                      tpp_keyword const *__restrict keyword,
-                                      DeeAstLoc const *__restrict keyword_loc) {
+                                      tpp_keyword const *__restrict symbol_name,
+                                      DeeAstLoc const *__restrict symbol_loc) {
 	DeeAst *result;
 	if (DeeParser_GetTok(self) == TPP_KWD_from) {
 		/* TODO */
 	}
 
 	/* General case: compile as an automatic symbol reference. */
-	result = DeeAst_NewSymRefByName(keyword,
+	result = DeeAst_NewSymRefByName(symbol_name,
 	                                Dee_AST_SYMREF_BYNAME_KIND_AUTO,
 	                                Dee_AST_SYMREF_BYNAME_FLAG_NORMAL);
-	result = DeeAst_TrySetLoc(result, keyword_loc);
+	result = DeeAst_TrySetLoc(result, symbol_loc);
 	return result;
 }
 
@@ -1404,8 +1396,10 @@ DeeParser_ParseUnaryFinalClass(DeeParser *__restrict self) {
 	tok = DeeParser_Require(self, TPP_KWD_class);
 	if (TPP_TOK_ISERR(tok))
 		goto err;
-	if (tok == TPP_KWD_class)
-		return DeeParser_ParseUnaryClass(self, true);
+	if (tok == TPP_KWD_class) {
+		return DeeParser_ParseClass(self, Dee_AST_SYMREF_BYNAME_KIND_DECL,
+		                            Dee_AST_SYMREF_BYNAME_FLAG_FINAL);
+	}
 
 	/* Fallback: if what follows after `final` isn't `class`, then treat
 	 *           the `final` as though it was a symbol name. Note that in
@@ -1630,6 +1624,21 @@ err:
 	return NULL;
 }
 
+PRIVATE WUNUSED NONNULL((1)) DeeAst *DFCALL
+DeeParser_ParseUnarySymbolName(DeeParser *__restrict self) {
+	DeeAstLoc symbol_loc;
+	tpp_keyword const *symbol_name;
+	ASSERT(DeeParser_HasTokenKwd(self));
+	symbol_name = DeeParser_GetTokenKwd(self);
+	if (DeeParser_GetLoc(self, &symbol_loc))
+		goto err;
+	if (TPP_TOK_ISERR(DeeParser_Yield(self)))
+		goto err;
+	return DeeParser_ParseUnarySymbolNameOperand(self, symbol_name, &symbol_loc);
+err:
+	return NULL;
+}
+
 
 INTERN ATTR_CONST WUNUSED bool DFCALL
 TPP_TOK_MAYBE_EXPR_START(tpp_token_id tok) {
@@ -1650,6 +1659,30 @@ TPP_TOK_MAYBE_EXPR_START(tpp_token_id tok) {
 	case TPP_TOK_COLON_COLON:
 	case TPP_TOK_DOT_DOT_DOT:
 		return true;
+
+		/* Keywords that can only appear inside of expressions (but not at the start) */
+	case TPP_KWD_as:
+	case TPP_KWD_in:
+	case TPP_KWD_is:
+		/* Keywords that can only appear inside of expressions/statements */
+	case TPP_KWD_else:
+	case TPP_KWD_catch:
+	case TPP_KWD_finally:
+		/* Keywords that can only appear inside of statements */
+	case TPP_KWD_from:
+	case TPP_KWD_return:
+	case TPP_KWD_yield:
+	case TPP_KWD_throw:
+	case TPP_KWD_print:
+	case TPP_KWD_break:
+	case TPP_KWD_continue:
+	case TPP_KWD___asm:
+	case TPP_KWD___asm__:
+	case TPP_KWD_goto:
+	case TPP_KWD_case:
+	case TPP_KWD_default:
+		return false;
+
 	default: break;
 	}
 	return TPP_TOK_ISKEYWORD(tok);
@@ -1695,13 +1728,18 @@ DeeParser_ParseUnaryHead(DeeParser *__restrict self) {
 	case TPP_KWD_final:
 		return DeeParser_ParseUnaryFinalClass(self);
 	case TPP_KWD_class:
-		return DeeParser_ParseUnaryClass(self, false);
+		return DeeParser_ParseClass(self, Dee_AST_SYMREF_BYNAME_KIND_DECL,
+		                            Dee_AST_SYMREF_BYNAME_FLAG_NORMAL);
 	case TPP_KWD_import:
 		return DeeParser_ParseUnaryImport(self);
 	case '{':
 		return DeeParser_ParseUnaryBrace(self);
-
+	default:
+		if (DeeParser_HasTokenKwd(self))
+			return DeeParser_ParseUnarySymbolName(self);
+		break;
 	}
+
 #if 0
 	switch (DeeParser_GetTok(self)) {
 
@@ -2092,6 +2130,2017 @@ err:
 	return NULL;
 }
 
+/************************************************************************/
+/* OPERAND LEVELS                                                       */
+/************************************************************************/
+
+#define Dee_PARSER_EXPR_METHOD_Os     0
+#define Dee_PARSER_EXPR_METHOD_switch 1
+#define Dee_PARSER_EXPR_METHOD_if     2
+#ifndef Dee_PARSER_EXPR_METHOD
+#ifdef __OPTIMIZE_SIZE__
+#define Dee_PARSER_EXPR_METHOD Dee_PARSER_EXPR_METHOD_Os
+#else /* __OPTIMIZE_SIZE__ */
+#define Dee_PARSER_EXPR_METHOD Dee_PARSER_EXPR_METHOD_switch
+#endif /* !__OPTIMIZE_SIZE__ */
+#endif /* !Dee_PARSER_EXPR_METHOD */
+#undef Dee_PARSER_EXPR_EXPR_METHOD /* Mustn't be `Dee_PARSER_EXPR_METHOD_Os` */
+#ifdef __OPTIMIZE_SIZE__
+#define Dee_PARSER_EXPR_EXPR_METHOD Dee_PARSER_EXPR_METHOD_if
+#else /* __OPTIMIZE_SIZE__ */
+#define Dee_PARSER_EXPR_EXPR_METHOD Dee_PARSER_EXPR_METHOD_switch
+#endif /* !__OPTIMIZE_SIZE__ */
+
+/*[[[deemon
+import * from deemon;
+
+local EXPR_LEVELS: {string: {string...}} = {
+	"Unary":  { "'.'", "'['", "'('", "'{'", "TPP_TOK_COLON_COLON", "TPP_TOK_PLUS_PLUS", "TPP_TOK_MINUS_MINUS", "TPP_TOK_DOT_DOT_DOT" },
+	"Prod":   { "'*'", "'/'", "'%'", "TPP_TOK_STAR_STAR" },
+	"Sum":    { "'+'", "'-'" },
+	"Shift":  { "TPP_TOK_LANGLE_LANGLE", "TPP_TOK_RANGLE_RANGLE" },
+	"Cmp":    { "'<'", "'>'", "TPP_TOK_LANGLE_EQUAL", "TPP_TOK_RANGLE_EQUAL" },
+	"CmpEq":  { "TPP_TOK_EQUAL_EQUAL", "TPP_TOK_EXCLAIM_EQUAL", "TPP_TOK_EQUAL_EQUAL_EQUAL", "TPP_TOK_EXCLAIM_EQUAL_EQUAL", "TPP_TOK_QMARK_QMARK", "TPP_KWD_is", "TPP_KWD_in", "'!'" },
+	"And":    { "'&'" },
+	"Xor":    { "'^'" },
+	"Or":     { "'|'" },
+	"As":     { "TPP_KWD_as" },
+	"Land":   { "TPP_TOK_AMP_AMP" },
+	"Lor":    { "TPP_TOK_PIPE_PIPE" },
+	"Cond":   { "'?'" },
+	"Expr":   { "TPP_TOK_COLON_EQUAL", "TPP_TOK_PLUS_EQUAL", "TPP_TOK_MINUS_EQUAL", "TPP_TOK_STAR_EQUAL", "TPP_TOK_SLASH_EQUAL", "TPP_TOK_PERCENT_EQUAL",
+	            "TPP_TOK_LANGLE_LANGLE_EQUAL", "TPP_TOK_RANGLE_RANGLE_EQUAL", "TPP_TOK_AMP_EQUAL", "TPP_TOK_PIPE_EQUAL", "TPP_TOK_HAT_EQUAL", "TPP_TOK_STAR_STAR_EQUAL" },
+};
+function getLevelVisi(level: string): string {
+	if (level in { "Unary", "Expr" })
+		return "INTERN";
+	return "PRIVATE";
+}
+function getLevelVisiHasParseOne(level: string): string {
+	return level != "Cond";
+}
+
+local PREV_LEVEL: {string: string} = Dict();
+{
+	local prevLevel = none;
+	for (local levelName, none: EXPR_LEVELS) {
+		if (prevLevel !is none)
+			PREV_LEVEL[levelName] = prevLevel;
+		prevLevel = levelName;
+	}
+}
+
+for (local levelName, levelTokens: EXPR_LEVELS) {
+	print(f"/" f"* >> {levelName} *" f"/");
+	local visi = getLevelVisi(levelName);
+	local visi = { "INTERN": "INTDEF" }.get(visi, visi);
+	print(f"PRIVATE WUNUSED NONNULL((1, 2)) DeeAst *DFCALL DeeParser_Parse{levelName}OperandMany(DeeParser *__restrict self, /" f"*inherit(always)*" f"/ DeeAst *__restrict lhs);");
+	if (getLevelVisiHasParseOne(levelName))
+		print(f"LOCAL WUNUSED NONNULL((1, 2)) DeeAst *DFCALL DeeParser_Parse{levelName}OperandOne(DeeParser *__restrict self, /" f"*inherit(always)*" f"/ DeeAst *__restrict lhs);");
+	print(f"#define TPP_TOK_IS_{levelName.upper()}_OPERAND(tok) \\");
+	print("	(", " || ".join(for (local token: levelTokens) f"(tok) == {token}"), ")");
+	print(f"#define TPP_CASE_TPP_TOK_{levelName.upper()}_OPERAND \\");
+	print("	", " ".join(for (local token: levelTokens) f"case {token}:"));
+	if (levelName in PREV_LEVEL) {
+		local thisLevelConfigName = f"Dee_PARSER_EXPR_{levelName.upper()}_METHOD";
+		print(f"#ifndef {thisLevelConfigName}");
+		print(f"#define {thisLevelConfigName} Dee_PARSER_EXPR_METHOD");
+		print(f"#endif /" f"* !{thisLevelConfigName} *" f"/");
+	}
+	print;
+}
+for (local levelName, levelTokens: EXPR_LEVELS) {
+	print(f"/" f"* >> {levelName} *" f"/");
+	if (getLevelVisiHasParseOne(levelName)) {
+		print(f"PRIVATE WUNUSED NONNULL((1, 2)) DeeAst *DFCALL");
+		print(f"DeeParser_Parse{levelName}OperandMany(DeeParser *__restrict self, /" f"*inherit(always)*" f"/ DeeAst *__restrict lhs) \{");
+		print(f"	do \{");
+		print(f"		lhs = DeeParser_Parse{levelName}OperandOne(self, lhs);");
+		print(f"	\} while (likely(lhs) && TPP_TOK_IS_{levelName.upper()}_OPERAND(DeeParser_GetTok(self)));");
+		print(f"	return lhs;");
+		print(f"\}");
+		print;
+	}
+	local prevLevelName = PREV_LEVEL.get(levelName);
+	local thisLevelConfigName = f"Dee_PARSER_EXPR_{levelName.upper()}_METHOD";
+	local needFullparser = "1";
+	if (levelName == "Lor") // Special case: "Lor" parser is only needed if "Cond" is Os
+		needFullparser = "Dee_PARSER_EXPR_COND_METHOD == Dee_PARSER_EXPR_METHOD_Os";
+
+	if (needFullparser != "1")
+		print(f"#if {needFullparser}");
+	if (prevLevelName is none) {
+		print(f"{getLevelVisi(levelName)} WUNUSED NONNULL((1)) DeeAst *DFCALL");
+		print(f"DeeParser_Parse{levelName}(DeeParser *__restrict self) \{");
+		print(f"	DeeAst *result = DeeParser_ParseUnaryHead(self);");
+		print(f"	if (likely(result) && TPP_TOK_IS_{levelName.upper()}_OPERAND(DeeParser_GetTok(self)))");
+		print(f"		result = DeeParser_Parse{levelName}OperandMany(self, result);");
+		print(f"	return result;");
+		print(f"\}");
+	} else {
+		print(f"#if {thisLevelConfigName} == Dee_PARSER_EXPR_METHOD_Os");
+		print(f"{getLevelVisi(levelName)} WUNUSED NONNULL((1)) DeeAst *DFCALL");
+		print(f"DeeParser_Parse{levelName}(DeeParser *__restrict self) \{");
+		print(f"	DeeAst *result = DeeParser_Parse{prevLevelName}(self);");
+		print(f"	if (likely(result) && TPP_TOK_IS_{levelName.upper()}_OPERAND(DeeParser_GetTok(self)))");
+		print(f"		result = DeeParser_Parse{levelName}OperandMany(self, result);");
+		print(f"	return result;");
+		print(f"\}");
+		print(f"#else /" f"* {thisLevelConfigName} == Dee_PARSER_EXPR_METHOD_Os *" f"/");
+		print(f"{getLevelVisi(levelName)} WUNUSED NONNULL((1, 2)) DeeAst *DFCALL");
+		print(f"DeeParser_Parse{levelName}Operand(DeeParser *__restrict self, /" f"*inherit(always)*" f"/ DeeAst *__restrict lhs) \{");
+		local prevLevels = [prevLevelName, levelName];
+		while ((prevLevelName = PREV_LEVEL.get(prevLevelName)) !is none)
+			prevLevels.insert(0, prevLevelName);
+		print(f"#if {thisLevelConfigName} == Dee_PARSER_EXPR_METHOD_switch");
+		print(f"	switch (DeeParser_GetTok(self)) \{");
+		local isFirst = true;
+		for (local prevLevel: prevLevels) {
+			print(f"		"),;
+			if (!isFirst)
+				print(f"if (TPP_TOK_IS_{prevLevel.upper()}_OPERAND(DeeParser_GetTok(self)))"),;
+			isFirst = false;
+			print(f"\{");
+			print(f"	TPP_CASE_TPP_TOK_{prevLevel.upper()}_OPERAND");
+			print(f"			lhs = DeeParser_Parse{prevLevel}OperandMany(self, lhs);");
+			print(f"			if unlikely(!lhs)");
+			print(f"				goto done;");
+			print(f"		\}");
+		}
+		print(f"		break;");
+		print(f"	default: break;");
+		print(f"	\}");
+		print(f"#else /" f"* {thisLevelConfigName} == Dee_PARSER_EXPR_METHOD_switch *" f"/");
+		for (local prevLevel: prevLevels) {
+			print(f"	if (TPP_TOK_IS_{prevLevel.upper()}_OPERAND(DeeParser_GetTok(self))) \{");
+			print(f"		lhs = DeeParser_Parse{prevLevel}OperandMany(self, lhs);");
+			print(f"		if unlikely(!lhs)");
+			print(f"			goto done;");
+			print(f"	\}");
+		}
+		print(f"#endif /" f"* {thisLevelConfigName} != Dee_PARSER_EXPR_METHOD_switch *" f"/");
+		print(f"done:");
+		print(f"	return lhs;");
+		print(f"\}");
+		print;
+		print(f"{getLevelVisi(levelName)} WUNUSED NONNULL((1)) DeeAst *DFCALL");
+		print(f"DeeParser_Parse{levelName}(DeeParser *__restrict self) \{");
+		print(f"	DeeAst *result = DeeParser_ParseUnaryHead(self);");
+		print(f"	if likely(result)");
+		print(f"		result = DeeParser_Parse{levelName}Operand(self, result);");
+		print(f"	return result;");
+		print(f"\}");
+		print(f"#endif /" f"* {thisLevelConfigName} != Dee_PARSER_EXPR_METHOD_Os *" f"/");
+	}
+	if (needFullparser != "1")
+		print(f"#endif /" f"* {needFullparser} *" f"/");
+	print;
+	print;
+}
+]]]*/
+/* >> Unary */
+PRIVATE WUNUSED NONNULL((1, 2)) DeeAst *DFCALL DeeParser_ParseUnaryOperandMany(DeeParser *__restrict self, /*inherit(always)*/ DeeAst *__restrict lhs);
+LOCAL WUNUSED NONNULL((1, 2)) DeeAst *DFCALL DeeParser_ParseUnaryOperandOne(DeeParser *__restrict self, /*inherit(always)*/ DeeAst *__restrict lhs);
+#define TPP_TOK_IS_UNARY_OPERAND(tok) \
+	((tok) == '.' || (tok) == '[' || (tok) == '(' || (tok) == '{' || (tok) == TPP_TOK_COLON_COLON || (tok) == TPP_TOK_PLUS_PLUS || (tok) == TPP_TOK_MINUS_MINUS || (tok) == TPP_TOK_DOT_DOT_DOT)
+#define TPP_CASE_TPP_TOK_UNARY_OPERAND \
+	case '.': case '[': case '(': case '{': case TPP_TOK_COLON_COLON: case TPP_TOK_PLUS_PLUS: case TPP_TOK_MINUS_MINUS: case TPP_TOK_DOT_DOT_DOT:
+
+/* >> Prod */
+PRIVATE WUNUSED NONNULL((1, 2)) DeeAst *DFCALL DeeParser_ParseProdOperandMany(DeeParser *__restrict self, /*inherit(always)*/ DeeAst *__restrict lhs);
+LOCAL WUNUSED NONNULL((1, 2)) DeeAst *DFCALL DeeParser_ParseProdOperandOne(DeeParser *__restrict self, /*inherit(always)*/ DeeAst *__restrict lhs);
+#define TPP_TOK_IS_PROD_OPERAND(tok) \
+	((tok) == '*' || (tok) == '/' || (tok) == '%' || (tok) == TPP_TOK_STAR_STAR)
+#define TPP_CASE_TPP_TOK_PROD_OPERAND \
+	case '*': case '/': case '%': case TPP_TOK_STAR_STAR:
+#ifndef Dee_PARSER_EXPR_PROD_METHOD
+#define Dee_PARSER_EXPR_PROD_METHOD Dee_PARSER_EXPR_METHOD
+#endif /* !Dee_PARSER_EXPR_PROD_METHOD */
+
+/* >> Sum */
+PRIVATE WUNUSED NONNULL((1, 2)) DeeAst *DFCALL DeeParser_ParseSumOperandMany(DeeParser *__restrict self, /*inherit(always)*/ DeeAst *__restrict lhs);
+LOCAL WUNUSED NONNULL((1, 2)) DeeAst *DFCALL DeeParser_ParseSumOperandOne(DeeParser *__restrict self, /*inherit(always)*/ DeeAst *__restrict lhs);
+#define TPP_TOK_IS_SUM_OPERAND(tok) \
+	((tok) == '+' || (tok) == '-')
+#define TPP_CASE_TPP_TOK_SUM_OPERAND \
+	case '+': case '-':
+#ifndef Dee_PARSER_EXPR_SUM_METHOD
+#define Dee_PARSER_EXPR_SUM_METHOD Dee_PARSER_EXPR_METHOD
+#endif /* !Dee_PARSER_EXPR_SUM_METHOD */
+
+/* >> Shift */
+PRIVATE WUNUSED NONNULL((1, 2)) DeeAst *DFCALL DeeParser_ParseShiftOperandMany(DeeParser *__restrict self, /*inherit(always)*/ DeeAst *__restrict lhs);
+LOCAL WUNUSED NONNULL((1, 2)) DeeAst *DFCALL DeeParser_ParseShiftOperandOne(DeeParser *__restrict self, /*inherit(always)*/ DeeAst *__restrict lhs);
+#define TPP_TOK_IS_SHIFT_OPERAND(tok) \
+	((tok) == TPP_TOK_LANGLE_LANGLE || (tok) == TPP_TOK_RANGLE_RANGLE)
+#define TPP_CASE_TPP_TOK_SHIFT_OPERAND \
+	case TPP_TOK_LANGLE_LANGLE: case TPP_TOK_RANGLE_RANGLE:
+#ifndef Dee_PARSER_EXPR_SHIFT_METHOD
+#define Dee_PARSER_EXPR_SHIFT_METHOD Dee_PARSER_EXPR_METHOD
+#endif /* !Dee_PARSER_EXPR_SHIFT_METHOD */
+
+/* >> Cmp */
+PRIVATE WUNUSED NONNULL((1, 2)) DeeAst *DFCALL DeeParser_ParseCmpOperandMany(DeeParser *__restrict self, /*inherit(always)*/ DeeAst *__restrict lhs);
+LOCAL WUNUSED NONNULL((1, 2)) DeeAst *DFCALL DeeParser_ParseCmpOperandOne(DeeParser *__restrict self, /*inherit(always)*/ DeeAst *__restrict lhs);
+#define TPP_TOK_IS_CMP_OPERAND(tok) \
+	((tok) == '<' || (tok) == '>' || (tok) == TPP_TOK_LANGLE_EQUAL || (tok) == TPP_TOK_RANGLE_EQUAL)
+#define TPP_CASE_TPP_TOK_CMP_OPERAND \
+	case '<': case '>': case TPP_TOK_LANGLE_EQUAL: case TPP_TOK_RANGLE_EQUAL:
+#ifndef Dee_PARSER_EXPR_CMP_METHOD
+#define Dee_PARSER_EXPR_CMP_METHOD Dee_PARSER_EXPR_METHOD
+#endif /* !Dee_PARSER_EXPR_CMP_METHOD */
+
+/* >> CmpEq */
+PRIVATE WUNUSED NONNULL((1, 2)) DeeAst *DFCALL DeeParser_ParseCmpEqOperandMany(DeeParser *__restrict self, /*inherit(always)*/ DeeAst *__restrict lhs);
+LOCAL WUNUSED NONNULL((1, 2)) DeeAst *DFCALL DeeParser_ParseCmpEqOperandOne(DeeParser *__restrict self, /*inherit(always)*/ DeeAst *__restrict lhs);
+#define TPP_TOK_IS_CMPEQ_OPERAND(tok) \
+	((tok) == TPP_TOK_EQUAL_EQUAL || (tok) == TPP_TOK_EXCLAIM_EQUAL || (tok) == TPP_TOK_EQUAL_EQUAL_EQUAL || (tok) == TPP_TOK_EXCLAIM_EQUAL_EQUAL || (tok) == TPP_TOK_QMARK_QMARK || (tok) == TPP_KWD_is || (tok) == TPP_KWD_in || (tok) == '!')
+#define TPP_CASE_TPP_TOK_CMPEQ_OPERAND \
+	case TPP_TOK_EQUAL_EQUAL: case TPP_TOK_EXCLAIM_EQUAL: case TPP_TOK_EQUAL_EQUAL_EQUAL: case TPP_TOK_EXCLAIM_EQUAL_EQUAL: case TPP_TOK_QMARK_QMARK: case TPP_KWD_is: case TPP_KWD_in: case '!':
+#ifndef Dee_PARSER_EXPR_CMPEQ_METHOD
+#define Dee_PARSER_EXPR_CMPEQ_METHOD Dee_PARSER_EXPR_METHOD
+#endif /* !Dee_PARSER_EXPR_CMPEQ_METHOD */
+
+/* >> And */
+PRIVATE WUNUSED NONNULL((1, 2)) DeeAst *DFCALL DeeParser_ParseAndOperandMany(DeeParser *__restrict self, /*inherit(always)*/ DeeAst *__restrict lhs);
+LOCAL WUNUSED NONNULL((1, 2)) DeeAst *DFCALL DeeParser_ParseAndOperandOne(DeeParser *__restrict self, /*inherit(always)*/ DeeAst *__restrict lhs);
+#define TPP_TOK_IS_AND_OPERAND(tok) \
+	((tok) == '&')
+#define TPP_CASE_TPP_TOK_AND_OPERAND \
+	case '&':
+#ifndef Dee_PARSER_EXPR_AND_METHOD
+#define Dee_PARSER_EXPR_AND_METHOD Dee_PARSER_EXPR_METHOD
+#endif /* !Dee_PARSER_EXPR_AND_METHOD */
+
+/* >> Xor */
+PRIVATE WUNUSED NONNULL((1, 2)) DeeAst *DFCALL DeeParser_ParseXorOperandMany(DeeParser *__restrict self, /*inherit(always)*/ DeeAst *__restrict lhs);
+LOCAL WUNUSED NONNULL((1, 2)) DeeAst *DFCALL DeeParser_ParseXorOperandOne(DeeParser *__restrict self, /*inherit(always)*/ DeeAst *__restrict lhs);
+#define TPP_TOK_IS_XOR_OPERAND(tok) \
+	((tok) == '^')
+#define TPP_CASE_TPP_TOK_XOR_OPERAND \
+	case '^':
+#ifndef Dee_PARSER_EXPR_XOR_METHOD
+#define Dee_PARSER_EXPR_XOR_METHOD Dee_PARSER_EXPR_METHOD
+#endif /* !Dee_PARSER_EXPR_XOR_METHOD */
+
+/* >> Or */
+PRIVATE WUNUSED NONNULL((1, 2)) DeeAst *DFCALL DeeParser_ParseOrOperandMany(DeeParser *__restrict self, /*inherit(always)*/ DeeAst *__restrict lhs);
+LOCAL WUNUSED NONNULL((1, 2)) DeeAst *DFCALL DeeParser_ParseOrOperandOne(DeeParser *__restrict self, /*inherit(always)*/ DeeAst *__restrict lhs);
+#define TPP_TOK_IS_OR_OPERAND(tok) \
+	((tok) == '|')
+#define TPP_CASE_TPP_TOK_OR_OPERAND \
+	case '|':
+#ifndef Dee_PARSER_EXPR_OR_METHOD
+#define Dee_PARSER_EXPR_OR_METHOD Dee_PARSER_EXPR_METHOD
+#endif /* !Dee_PARSER_EXPR_OR_METHOD */
+
+/* >> As */
+PRIVATE WUNUSED NONNULL((1, 2)) DeeAst *DFCALL DeeParser_ParseAsOperandMany(DeeParser *__restrict self, /*inherit(always)*/ DeeAst *__restrict lhs);
+LOCAL WUNUSED NONNULL((1, 2)) DeeAst *DFCALL DeeParser_ParseAsOperandOne(DeeParser *__restrict self, /*inherit(always)*/ DeeAst *__restrict lhs);
+#define TPP_TOK_IS_AS_OPERAND(tok) \
+	((tok) == TPP_KWD_as)
+#define TPP_CASE_TPP_TOK_AS_OPERAND \
+	case TPP_KWD_as:
+#ifndef Dee_PARSER_EXPR_AS_METHOD
+#define Dee_PARSER_EXPR_AS_METHOD Dee_PARSER_EXPR_METHOD
+#endif /* !Dee_PARSER_EXPR_AS_METHOD */
+
+/* >> Land */
+PRIVATE WUNUSED NONNULL((1, 2)) DeeAst *DFCALL DeeParser_ParseLandOperandMany(DeeParser *__restrict self, /*inherit(always)*/ DeeAst *__restrict lhs);
+LOCAL WUNUSED NONNULL((1, 2)) DeeAst *DFCALL DeeParser_ParseLandOperandOne(DeeParser *__restrict self, /*inherit(always)*/ DeeAst *__restrict lhs);
+#define TPP_TOK_IS_LAND_OPERAND(tok) \
+	((tok) == TPP_TOK_AMP_AMP)
+#define TPP_CASE_TPP_TOK_LAND_OPERAND \
+	case TPP_TOK_AMP_AMP:
+#ifndef Dee_PARSER_EXPR_LAND_METHOD
+#define Dee_PARSER_EXPR_LAND_METHOD Dee_PARSER_EXPR_METHOD
+#endif /* !Dee_PARSER_EXPR_LAND_METHOD */
+
+/* >> Lor */
+PRIVATE WUNUSED NONNULL((1, 2)) DeeAst *DFCALL DeeParser_ParseLorOperandMany(DeeParser *__restrict self, /*inherit(always)*/ DeeAst *__restrict lhs);
+LOCAL WUNUSED NONNULL((1, 2)) DeeAst *DFCALL DeeParser_ParseLorOperandOne(DeeParser *__restrict self, /*inherit(always)*/ DeeAst *__restrict lhs);
+#define TPP_TOK_IS_LOR_OPERAND(tok) \
+	((tok) == TPP_TOK_PIPE_PIPE)
+#define TPP_CASE_TPP_TOK_LOR_OPERAND \
+	case TPP_TOK_PIPE_PIPE:
+#ifndef Dee_PARSER_EXPR_LOR_METHOD
+#define Dee_PARSER_EXPR_LOR_METHOD Dee_PARSER_EXPR_METHOD
+#endif /* !Dee_PARSER_EXPR_LOR_METHOD */
+
+/* >> Cond */
+PRIVATE WUNUSED NONNULL((1, 2)) DeeAst *DFCALL DeeParser_ParseCondOperandMany(DeeParser *__restrict self, /*inherit(always)*/ DeeAst *__restrict lhs);
+#define TPP_TOK_IS_COND_OPERAND(tok) \
+	((tok) == '?')
+#define TPP_CASE_TPP_TOK_COND_OPERAND \
+	case '?':
+#ifndef Dee_PARSER_EXPR_COND_METHOD
+#define Dee_PARSER_EXPR_COND_METHOD Dee_PARSER_EXPR_METHOD
+#endif /* !Dee_PARSER_EXPR_COND_METHOD */
+
+/* >> Expr */
+PRIVATE WUNUSED NONNULL((1, 2)) DeeAst *DFCALL DeeParser_ParseExprOperandMany(DeeParser *__restrict self, /*inherit(always)*/ DeeAst *__restrict lhs);
+LOCAL WUNUSED NONNULL((1, 2)) DeeAst *DFCALL DeeParser_ParseExprOperandOne(DeeParser *__restrict self, /*inherit(always)*/ DeeAst *__restrict lhs);
+#define TPP_TOK_IS_EXPR_OPERAND(tok) \
+	((tok) == TPP_TOK_COLON_EQUAL || (tok) == TPP_TOK_PLUS_EQUAL || (tok) == TPP_TOK_MINUS_EQUAL || (tok) == TPP_TOK_STAR_EQUAL || (tok) == TPP_TOK_SLASH_EQUAL || (tok) == TPP_TOK_PERCENT_EQUAL || (tok) == TPP_TOK_LANGLE_LANGLE_EQUAL || (tok) == TPP_TOK_RANGLE_RANGLE_EQUAL || (tok) == TPP_TOK_AMP_EQUAL || (tok) == TPP_TOK_PIPE_EQUAL || (tok) == TPP_TOK_HAT_EQUAL || (tok) == TPP_TOK_STAR_STAR_EQUAL)
+#define TPP_CASE_TPP_TOK_EXPR_OPERAND \
+	case TPP_TOK_COLON_EQUAL: case TPP_TOK_PLUS_EQUAL: case TPP_TOK_MINUS_EQUAL: case TPP_TOK_STAR_EQUAL: case TPP_TOK_SLASH_EQUAL: case TPP_TOK_PERCENT_EQUAL: case TPP_TOK_LANGLE_LANGLE_EQUAL: case TPP_TOK_RANGLE_RANGLE_EQUAL: case TPP_TOK_AMP_EQUAL: case TPP_TOK_PIPE_EQUAL: case TPP_TOK_HAT_EQUAL: case TPP_TOK_STAR_STAR_EQUAL:
+#ifndef Dee_PARSER_EXPR_EXPR_METHOD
+#define Dee_PARSER_EXPR_EXPR_METHOD Dee_PARSER_EXPR_METHOD
+#endif /* !Dee_PARSER_EXPR_EXPR_METHOD */
+
+/* >> Unary */
+PRIVATE WUNUSED NONNULL((1, 2)) DeeAst *DFCALL
+DeeParser_ParseUnaryOperandMany(DeeParser *__restrict self, /*inherit(always)*/ DeeAst *__restrict lhs) {
+	do {
+		lhs = DeeParser_ParseUnaryOperandOne(self, lhs);
+	} while (likely(lhs) && TPP_TOK_IS_UNARY_OPERAND(DeeParser_GetTok(self)));
+	return lhs;
+}
+
+INTERN WUNUSED NONNULL((1)) DeeAst *DFCALL
+DeeParser_ParseUnary(DeeParser *__restrict self) {
+	DeeAst *result = DeeParser_ParseUnaryHead(self);
+	if (likely(result) && TPP_TOK_IS_UNARY_OPERAND(DeeParser_GetTok(self)))
+		result = DeeParser_ParseUnaryOperandMany(self, result);
+	return result;
+}
+
+
+/* >> Prod */
+PRIVATE WUNUSED NONNULL((1, 2)) DeeAst *DFCALL
+DeeParser_ParseProdOperandMany(DeeParser *__restrict self, /*inherit(always)*/ DeeAst *__restrict lhs) {
+	do {
+		lhs = DeeParser_ParseProdOperandOne(self, lhs);
+	} while (likely(lhs) && TPP_TOK_IS_PROD_OPERAND(DeeParser_GetTok(self)));
+	return lhs;
+}
+
+#if Dee_PARSER_EXPR_PROD_METHOD == Dee_PARSER_EXPR_METHOD_Os
+PRIVATE WUNUSED NONNULL((1)) DeeAst *DFCALL
+DeeParser_ParseProd(DeeParser *__restrict self) {
+	DeeAst *result = DeeParser_ParseUnary(self);
+	if (likely(result) && TPP_TOK_IS_PROD_OPERAND(DeeParser_GetTok(self)))
+		result = DeeParser_ParseProdOperandMany(self, result);
+	return result;
+}
+#else /* Dee_PARSER_EXPR_PROD_METHOD == Dee_PARSER_EXPR_METHOD_Os */
+PRIVATE WUNUSED NONNULL((1, 2)) DeeAst *DFCALL
+DeeParser_ParseProdOperand(DeeParser *__restrict self, /*inherit(always)*/ DeeAst *__restrict lhs) {
+#if Dee_PARSER_EXPR_PROD_METHOD == Dee_PARSER_EXPR_METHOD_switch
+	switch (DeeParser_GetTok(self)) {
+		{
+	TPP_CASE_TPP_TOK_UNARY_OPERAND
+			lhs = DeeParser_ParseUnaryOperandMany(self, lhs);
+			if unlikely(!lhs)
+				goto done;
+		}
+		if (TPP_TOK_IS_PROD_OPERAND(DeeParser_GetTok(self))){
+	TPP_CASE_TPP_TOK_PROD_OPERAND
+			lhs = DeeParser_ParseProdOperandMany(self, lhs);
+			if unlikely(!lhs)
+				goto done;
+		}
+		break;
+	default: break;
+	}
+#else /* Dee_PARSER_EXPR_PROD_METHOD == Dee_PARSER_EXPR_METHOD_switch */
+	if (TPP_TOK_IS_UNARY_OPERAND(DeeParser_GetTok(self))) {
+		lhs = DeeParser_ParseUnaryOperandMany(self, lhs);
+		if unlikely(!lhs)
+			goto done;
+	}
+	if (TPP_TOK_IS_PROD_OPERAND(DeeParser_GetTok(self))) {
+		lhs = DeeParser_ParseProdOperandMany(self, lhs);
+		if unlikely(!lhs)
+			goto done;
+	}
+#endif /* Dee_PARSER_EXPR_PROD_METHOD != Dee_PARSER_EXPR_METHOD_switch */
+done:
+	return lhs;
+}
+
+PRIVATE WUNUSED NONNULL((1)) DeeAst *DFCALL
+DeeParser_ParseProd(DeeParser *__restrict self) {
+	DeeAst *result = DeeParser_ParseUnaryHead(self);
+	if likely(result)
+		result = DeeParser_ParseProdOperand(self, result);
+	return result;
+}
+#endif /* Dee_PARSER_EXPR_PROD_METHOD != Dee_PARSER_EXPR_METHOD_Os */
+
+
+/* >> Sum */
+PRIVATE WUNUSED NONNULL((1, 2)) DeeAst *DFCALL
+DeeParser_ParseSumOperandMany(DeeParser *__restrict self, /*inherit(always)*/ DeeAst *__restrict lhs) {
+	do {
+		lhs = DeeParser_ParseSumOperandOne(self, lhs);
+	} while (likely(lhs) && TPP_TOK_IS_SUM_OPERAND(DeeParser_GetTok(self)));
+	return lhs;
+}
+
+#if Dee_PARSER_EXPR_SUM_METHOD == Dee_PARSER_EXPR_METHOD_Os
+PRIVATE WUNUSED NONNULL((1)) DeeAst *DFCALL
+DeeParser_ParseSum(DeeParser *__restrict self) {
+	DeeAst *result = DeeParser_ParseProd(self);
+	if (likely(result) && TPP_TOK_IS_SUM_OPERAND(DeeParser_GetTok(self)))
+		result = DeeParser_ParseSumOperandMany(self, result);
+	return result;
+}
+#else /* Dee_PARSER_EXPR_SUM_METHOD == Dee_PARSER_EXPR_METHOD_Os */
+PRIVATE WUNUSED NONNULL((1, 2)) DeeAst *DFCALL
+DeeParser_ParseSumOperand(DeeParser *__restrict self, /*inherit(always)*/ DeeAst *__restrict lhs) {
+#if Dee_PARSER_EXPR_SUM_METHOD == Dee_PARSER_EXPR_METHOD_switch
+	switch (DeeParser_GetTok(self)) {
+		{
+	TPP_CASE_TPP_TOK_UNARY_OPERAND
+			lhs = DeeParser_ParseUnaryOperandMany(self, lhs);
+			if unlikely(!lhs)
+				goto done;
+		}
+		if (TPP_TOK_IS_PROD_OPERAND(DeeParser_GetTok(self))){
+	TPP_CASE_TPP_TOK_PROD_OPERAND
+			lhs = DeeParser_ParseProdOperandMany(self, lhs);
+			if unlikely(!lhs)
+				goto done;
+		}
+		if (TPP_TOK_IS_SUM_OPERAND(DeeParser_GetTok(self))){
+	TPP_CASE_TPP_TOK_SUM_OPERAND
+			lhs = DeeParser_ParseSumOperandMany(self, lhs);
+			if unlikely(!lhs)
+				goto done;
+		}
+		break;
+	default: break;
+	}
+#else /* Dee_PARSER_EXPR_SUM_METHOD == Dee_PARSER_EXPR_METHOD_switch */
+	if (TPP_TOK_IS_UNARY_OPERAND(DeeParser_GetTok(self))) {
+		lhs = DeeParser_ParseUnaryOperandMany(self, lhs);
+		if unlikely(!lhs)
+			goto done;
+	}
+	if (TPP_TOK_IS_PROD_OPERAND(DeeParser_GetTok(self))) {
+		lhs = DeeParser_ParseProdOperandMany(self, lhs);
+		if unlikely(!lhs)
+			goto done;
+	}
+	if (TPP_TOK_IS_SUM_OPERAND(DeeParser_GetTok(self))) {
+		lhs = DeeParser_ParseSumOperandMany(self, lhs);
+		if unlikely(!lhs)
+			goto done;
+	}
+#endif /* Dee_PARSER_EXPR_SUM_METHOD != Dee_PARSER_EXPR_METHOD_switch */
+done:
+	return lhs;
+}
+
+PRIVATE WUNUSED NONNULL((1)) DeeAst *DFCALL
+DeeParser_ParseSum(DeeParser *__restrict self) {
+	DeeAst *result = DeeParser_ParseUnaryHead(self);
+	if likely(result)
+		result = DeeParser_ParseSumOperand(self, result);
+	return result;
+}
+#endif /* Dee_PARSER_EXPR_SUM_METHOD != Dee_PARSER_EXPR_METHOD_Os */
+
+
+/* >> Shift */
+PRIVATE WUNUSED NONNULL((1, 2)) DeeAst *DFCALL
+DeeParser_ParseShiftOperandMany(DeeParser *__restrict self, /*inherit(always)*/ DeeAst *__restrict lhs) {
+	do {
+		lhs = DeeParser_ParseShiftOperandOne(self, lhs);
+	} while (likely(lhs) && TPP_TOK_IS_SHIFT_OPERAND(DeeParser_GetTok(self)));
+	return lhs;
+}
+
+#if Dee_PARSER_EXPR_SHIFT_METHOD == Dee_PARSER_EXPR_METHOD_Os
+PRIVATE WUNUSED NONNULL((1)) DeeAst *DFCALL
+DeeParser_ParseShift(DeeParser *__restrict self) {
+	DeeAst *result = DeeParser_ParseSum(self);
+	if (likely(result) && TPP_TOK_IS_SHIFT_OPERAND(DeeParser_GetTok(self)))
+		result = DeeParser_ParseShiftOperandMany(self, result);
+	return result;
+}
+#else /* Dee_PARSER_EXPR_SHIFT_METHOD == Dee_PARSER_EXPR_METHOD_Os */
+PRIVATE WUNUSED NONNULL((1, 2)) DeeAst *DFCALL
+DeeParser_ParseShiftOperand(DeeParser *__restrict self, /*inherit(always)*/ DeeAst *__restrict lhs) {
+#if Dee_PARSER_EXPR_SHIFT_METHOD == Dee_PARSER_EXPR_METHOD_switch
+	switch (DeeParser_GetTok(self)) {
+		{
+	TPP_CASE_TPP_TOK_UNARY_OPERAND
+			lhs = DeeParser_ParseUnaryOperandMany(self, lhs);
+			if unlikely(!lhs)
+				goto done;
+		}
+		if (TPP_TOK_IS_PROD_OPERAND(DeeParser_GetTok(self))){
+	TPP_CASE_TPP_TOK_PROD_OPERAND
+			lhs = DeeParser_ParseProdOperandMany(self, lhs);
+			if unlikely(!lhs)
+				goto done;
+		}
+		if (TPP_TOK_IS_SUM_OPERAND(DeeParser_GetTok(self))){
+	TPP_CASE_TPP_TOK_SUM_OPERAND
+			lhs = DeeParser_ParseSumOperandMany(self, lhs);
+			if unlikely(!lhs)
+				goto done;
+		}
+		if (TPP_TOK_IS_SHIFT_OPERAND(DeeParser_GetTok(self))){
+	TPP_CASE_TPP_TOK_SHIFT_OPERAND
+			lhs = DeeParser_ParseShiftOperandMany(self, lhs);
+			if unlikely(!lhs)
+				goto done;
+		}
+		break;
+	default: break;
+	}
+#else /* Dee_PARSER_EXPR_SHIFT_METHOD == Dee_PARSER_EXPR_METHOD_switch */
+	if (TPP_TOK_IS_UNARY_OPERAND(DeeParser_GetTok(self))) {
+		lhs = DeeParser_ParseUnaryOperandMany(self, lhs);
+		if unlikely(!lhs)
+			goto done;
+	}
+	if (TPP_TOK_IS_PROD_OPERAND(DeeParser_GetTok(self))) {
+		lhs = DeeParser_ParseProdOperandMany(self, lhs);
+		if unlikely(!lhs)
+			goto done;
+	}
+	if (TPP_TOK_IS_SUM_OPERAND(DeeParser_GetTok(self))) {
+		lhs = DeeParser_ParseSumOperandMany(self, lhs);
+		if unlikely(!lhs)
+			goto done;
+	}
+	if (TPP_TOK_IS_SHIFT_OPERAND(DeeParser_GetTok(self))) {
+		lhs = DeeParser_ParseShiftOperandMany(self, lhs);
+		if unlikely(!lhs)
+			goto done;
+	}
+#endif /* Dee_PARSER_EXPR_SHIFT_METHOD != Dee_PARSER_EXPR_METHOD_switch */
+done:
+	return lhs;
+}
+
+PRIVATE WUNUSED NONNULL((1)) DeeAst *DFCALL
+DeeParser_ParseShift(DeeParser *__restrict self) {
+	DeeAst *result = DeeParser_ParseUnaryHead(self);
+	if likely(result)
+		result = DeeParser_ParseShiftOperand(self, result);
+	return result;
+}
+#endif /* Dee_PARSER_EXPR_SHIFT_METHOD != Dee_PARSER_EXPR_METHOD_Os */
+
+
+/* >> Cmp */
+PRIVATE WUNUSED NONNULL((1, 2)) DeeAst *DFCALL
+DeeParser_ParseCmpOperandMany(DeeParser *__restrict self, /*inherit(always)*/ DeeAst *__restrict lhs) {
+	do {
+		lhs = DeeParser_ParseCmpOperandOne(self, lhs);
+	} while (likely(lhs) && TPP_TOK_IS_CMP_OPERAND(DeeParser_GetTok(self)));
+	return lhs;
+}
+
+#if Dee_PARSER_EXPR_CMP_METHOD == Dee_PARSER_EXPR_METHOD_Os
+PRIVATE WUNUSED NONNULL((1)) DeeAst *DFCALL
+DeeParser_ParseCmp(DeeParser *__restrict self) {
+	DeeAst *result = DeeParser_ParseShift(self);
+	if (likely(result) && TPP_TOK_IS_CMP_OPERAND(DeeParser_GetTok(self)))
+		result = DeeParser_ParseCmpOperandMany(self, result);
+	return result;
+}
+#else /* Dee_PARSER_EXPR_CMP_METHOD == Dee_PARSER_EXPR_METHOD_Os */
+PRIVATE WUNUSED NONNULL((1, 2)) DeeAst *DFCALL
+DeeParser_ParseCmpOperand(DeeParser *__restrict self, /*inherit(always)*/ DeeAst *__restrict lhs) {
+#if Dee_PARSER_EXPR_CMP_METHOD == Dee_PARSER_EXPR_METHOD_switch
+	switch (DeeParser_GetTok(self)) {
+		{
+	TPP_CASE_TPP_TOK_UNARY_OPERAND
+			lhs = DeeParser_ParseUnaryOperandMany(self, lhs);
+			if unlikely(!lhs)
+				goto done;
+		}
+		if (TPP_TOK_IS_PROD_OPERAND(DeeParser_GetTok(self))){
+	TPP_CASE_TPP_TOK_PROD_OPERAND
+			lhs = DeeParser_ParseProdOperandMany(self, lhs);
+			if unlikely(!lhs)
+				goto done;
+		}
+		if (TPP_TOK_IS_SUM_OPERAND(DeeParser_GetTok(self))){
+	TPP_CASE_TPP_TOK_SUM_OPERAND
+			lhs = DeeParser_ParseSumOperandMany(self, lhs);
+			if unlikely(!lhs)
+				goto done;
+		}
+		if (TPP_TOK_IS_SHIFT_OPERAND(DeeParser_GetTok(self))){
+	TPP_CASE_TPP_TOK_SHIFT_OPERAND
+			lhs = DeeParser_ParseShiftOperandMany(self, lhs);
+			if unlikely(!lhs)
+				goto done;
+		}
+		if (TPP_TOK_IS_CMP_OPERAND(DeeParser_GetTok(self))){
+	TPP_CASE_TPP_TOK_CMP_OPERAND
+			lhs = DeeParser_ParseCmpOperandMany(self, lhs);
+			if unlikely(!lhs)
+				goto done;
+		}
+		break;
+	default: break;
+	}
+#else /* Dee_PARSER_EXPR_CMP_METHOD == Dee_PARSER_EXPR_METHOD_switch */
+	if (TPP_TOK_IS_UNARY_OPERAND(DeeParser_GetTok(self))) {
+		lhs = DeeParser_ParseUnaryOperandMany(self, lhs);
+		if unlikely(!lhs)
+			goto done;
+	}
+	if (TPP_TOK_IS_PROD_OPERAND(DeeParser_GetTok(self))) {
+		lhs = DeeParser_ParseProdOperandMany(self, lhs);
+		if unlikely(!lhs)
+			goto done;
+	}
+	if (TPP_TOK_IS_SUM_OPERAND(DeeParser_GetTok(self))) {
+		lhs = DeeParser_ParseSumOperandMany(self, lhs);
+		if unlikely(!lhs)
+			goto done;
+	}
+	if (TPP_TOK_IS_SHIFT_OPERAND(DeeParser_GetTok(self))) {
+		lhs = DeeParser_ParseShiftOperandMany(self, lhs);
+		if unlikely(!lhs)
+			goto done;
+	}
+	if (TPP_TOK_IS_CMP_OPERAND(DeeParser_GetTok(self))) {
+		lhs = DeeParser_ParseCmpOperandMany(self, lhs);
+		if unlikely(!lhs)
+			goto done;
+	}
+#endif /* Dee_PARSER_EXPR_CMP_METHOD != Dee_PARSER_EXPR_METHOD_switch */
+done:
+	return lhs;
+}
+
+PRIVATE WUNUSED NONNULL((1)) DeeAst *DFCALL
+DeeParser_ParseCmp(DeeParser *__restrict self) {
+	DeeAst *result = DeeParser_ParseUnaryHead(self);
+	if likely(result)
+		result = DeeParser_ParseCmpOperand(self, result);
+	return result;
+}
+#endif /* Dee_PARSER_EXPR_CMP_METHOD != Dee_PARSER_EXPR_METHOD_Os */
+
+
+/* >> CmpEq */
+PRIVATE WUNUSED NONNULL((1, 2)) DeeAst *DFCALL
+DeeParser_ParseCmpEqOperandMany(DeeParser *__restrict self, /*inherit(always)*/ DeeAst *__restrict lhs) {
+	do {
+		lhs = DeeParser_ParseCmpEqOperandOne(self, lhs);
+	} while (likely(lhs) && TPP_TOK_IS_CMPEQ_OPERAND(DeeParser_GetTok(self)));
+	return lhs;
+}
+
+#if Dee_PARSER_EXPR_CMPEQ_METHOD == Dee_PARSER_EXPR_METHOD_Os
+PRIVATE WUNUSED NONNULL((1)) DeeAst *DFCALL
+DeeParser_ParseCmpEq(DeeParser *__restrict self) {
+	DeeAst *result = DeeParser_ParseCmp(self);
+	if (likely(result) && TPP_TOK_IS_CMPEQ_OPERAND(DeeParser_GetTok(self)))
+		result = DeeParser_ParseCmpEqOperandMany(self, result);
+	return result;
+}
+#else /* Dee_PARSER_EXPR_CMPEQ_METHOD == Dee_PARSER_EXPR_METHOD_Os */
+PRIVATE WUNUSED NONNULL((1, 2)) DeeAst *DFCALL
+DeeParser_ParseCmpEqOperand(DeeParser *__restrict self, /*inherit(always)*/ DeeAst *__restrict lhs) {
+#if Dee_PARSER_EXPR_CMPEQ_METHOD == Dee_PARSER_EXPR_METHOD_switch
+	switch (DeeParser_GetTok(self)) {
+		{
+	TPP_CASE_TPP_TOK_UNARY_OPERAND
+			lhs = DeeParser_ParseUnaryOperandMany(self, lhs);
+			if unlikely(!lhs)
+				goto done;
+		}
+		if (TPP_TOK_IS_PROD_OPERAND(DeeParser_GetTok(self))){
+	TPP_CASE_TPP_TOK_PROD_OPERAND
+			lhs = DeeParser_ParseProdOperandMany(self, lhs);
+			if unlikely(!lhs)
+				goto done;
+		}
+		if (TPP_TOK_IS_SUM_OPERAND(DeeParser_GetTok(self))){
+	TPP_CASE_TPP_TOK_SUM_OPERAND
+			lhs = DeeParser_ParseSumOperandMany(self, lhs);
+			if unlikely(!lhs)
+				goto done;
+		}
+		if (TPP_TOK_IS_SHIFT_OPERAND(DeeParser_GetTok(self))){
+	TPP_CASE_TPP_TOK_SHIFT_OPERAND
+			lhs = DeeParser_ParseShiftOperandMany(self, lhs);
+			if unlikely(!lhs)
+				goto done;
+		}
+		if (TPP_TOK_IS_CMP_OPERAND(DeeParser_GetTok(self))){
+	TPP_CASE_TPP_TOK_CMP_OPERAND
+			lhs = DeeParser_ParseCmpOperandMany(self, lhs);
+			if unlikely(!lhs)
+				goto done;
+		}
+		if (TPP_TOK_IS_CMPEQ_OPERAND(DeeParser_GetTok(self))){
+	TPP_CASE_TPP_TOK_CMPEQ_OPERAND
+			lhs = DeeParser_ParseCmpEqOperandMany(self, lhs);
+			if unlikely(!lhs)
+				goto done;
+		}
+		break;
+	default: break;
+	}
+#else /* Dee_PARSER_EXPR_CMPEQ_METHOD == Dee_PARSER_EXPR_METHOD_switch */
+	if (TPP_TOK_IS_UNARY_OPERAND(DeeParser_GetTok(self))) {
+		lhs = DeeParser_ParseUnaryOperandMany(self, lhs);
+		if unlikely(!lhs)
+			goto done;
+	}
+	if (TPP_TOK_IS_PROD_OPERAND(DeeParser_GetTok(self))) {
+		lhs = DeeParser_ParseProdOperandMany(self, lhs);
+		if unlikely(!lhs)
+			goto done;
+	}
+	if (TPP_TOK_IS_SUM_OPERAND(DeeParser_GetTok(self))) {
+		lhs = DeeParser_ParseSumOperandMany(self, lhs);
+		if unlikely(!lhs)
+			goto done;
+	}
+	if (TPP_TOK_IS_SHIFT_OPERAND(DeeParser_GetTok(self))) {
+		lhs = DeeParser_ParseShiftOperandMany(self, lhs);
+		if unlikely(!lhs)
+			goto done;
+	}
+	if (TPP_TOK_IS_CMP_OPERAND(DeeParser_GetTok(self))) {
+		lhs = DeeParser_ParseCmpOperandMany(self, lhs);
+		if unlikely(!lhs)
+			goto done;
+	}
+	if (TPP_TOK_IS_CMPEQ_OPERAND(DeeParser_GetTok(self))) {
+		lhs = DeeParser_ParseCmpEqOperandMany(self, lhs);
+		if unlikely(!lhs)
+			goto done;
+	}
+#endif /* Dee_PARSER_EXPR_CMPEQ_METHOD != Dee_PARSER_EXPR_METHOD_switch */
+done:
+	return lhs;
+}
+
+PRIVATE WUNUSED NONNULL((1)) DeeAst *DFCALL
+DeeParser_ParseCmpEq(DeeParser *__restrict self) {
+	DeeAst *result = DeeParser_ParseUnaryHead(self);
+	if likely(result)
+		result = DeeParser_ParseCmpEqOperand(self, result);
+	return result;
+}
+#endif /* Dee_PARSER_EXPR_CMPEQ_METHOD != Dee_PARSER_EXPR_METHOD_Os */
+
+
+/* >> And */
+PRIVATE WUNUSED NONNULL((1, 2)) DeeAst *DFCALL
+DeeParser_ParseAndOperandMany(DeeParser *__restrict self, /*inherit(always)*/ DeeAst *__restrict lhs) {
+	do {
+		lhs = DeeParser_ParseAndOperandOne(self, lhs);
+	} while (likely(lhs) && TPP_TOK_IS_AND_OPERAND(DeeParser_GetTok(self)));
+	return lhs;
+}
+
+#if Dee_PARSER_EXPR_AND_METHOD == Dee_PARSER_EXPR_METHOD_Os
+PRIVATE WUNUSED NONNULL((1)) DeeAst *DFCALL
+DeeParser_ParseAnd(DeeParser *__restrict self) {
+	DeeAst *result = DeeParser_ParseCmpEq(self);
+	if (likely(result) && TPP_TOK_IS_AND_OPERAND(DeeParser_GetTok(self)))
+		result = DeeParser_ParseAndOperandMany(self, result);
+	return result;
+}
+#else /* Dee_PARSER_EXPR_AND_METHOD == Dee_PARSER_EXPR_METHOD_Os */
+PRIVATE WUNUSED NONNULL((1, 2)) DeeAst *DFCALL
+DeeParser_ParseAndOperand(DeeParser *__restrict self, /*inherit(always)*/ DeeAst *__restrict lhs) {
+#if Dee_PARSER_EXPR_AND_METHOD == Dee_PARSER_EXPR_METHOD_switch
+	switch (DeeParser_GetTok(self)) {
+		{
+	TPP_CASE_TPP_TOK_UNARY_OPERAND
+			lhs = DeeParser_ParseUnaryOperandMany(self, lhs);
+			if unlikely(!lhs)
+				goto done;
+		}
+		if (TPP_TOK_IS_PROD_OPERAND(DeeParser_GetTok(self))){
+	TPP_CASE_TPP_TOK_PROD_OPERAND
+			lhs = DeeParser_ParseProdOperandMany(self, lhs);
+			if unlikely(!lhs)
+				goto done;
+		}
+		if (TPP_TOK_IS_SUM_OPERAND(DeeParser_GetTok(self))){
+	TPP_CASE_TPP_TOK_SUM_OPERAND
+			lhs = DeeParser_ParseSumOperandMany(self, lhs);
+			if unlikely(!lhs)
+				goto done;
+		}
+		if (TPP_TOK_IS_SHIFT_OPERAND(DeeParser_GetTok(self))){
+	TPP_CASE_TPP_TOK_SHIFT_OPERAND
+			lhs = DeeParser_ParseShiftOperandMany(self, lhs);
+			if unlikely(!lhs)
+				goto done;
+		}
+		if (TPP_TOK_IS_CMP_OPERAND(DeeParser_GetTok(self))){
+	TPP_CASE_TPP_TOK_CMP_OPERAND
+			lhs = DeeParser_ParseCmpOperandMany(self, lhs);
+			if unlikely(!lhs)
+				goto done;
+		}
+		if (TPP_TOK_IS_CMPEQ_OPERAND(DeeParser_GetTok(self))){
+	TPP_CASE_TPP_TOK_CMPEQ_OPERAND
+			lhs = DeeParser_ParseCmpEqOperandMany(self, lhs);
+			if unlikely(!lhs)
+				goto done;
+		}
+		if (TPP_TOK_IS_AND_OPERAND(DeeParser_GetTok(self))){
+	TPP_CASE_TPP_TOK_AND_OPERAND
+			lhs = DeeParser_ParseAndOperandMany(self, lhs);
+			if unlikely(!lhs)
+				goto done;
+		}
+		break;
+	default: break;
+	}
+#else /* Dee_PARSER_EXPR_AND_METHOD == Dee_PARSER_EXPR_METHOD_switch */
+	if (TPP_TOK_IS_UNARY_OPERAND(DeeParser_GetTok(self))) {
+		lhs = DeeParser_ParseUnaryOperandMany(self, lhs);
+		if unlikely(!lhs)
+			goto done;
+	}
+	if (TPP_TOK_IS_PROD_OPERAND(DeeParser_GetTok(self))) {
+		lhs = DeeParser_ParseProdOperandMany(self, lhs);
+		if unlikely(!lhs)
+			goto done;
+	}
+	if (TPP_TOK_IS_SUM_OPERAND(DeeParser_GetTok(self))) {
+		lhs = DeeParser_ParseSumOperandMany(self, lhs);
+		if unlikely(!lhs)
+			goto done;
+	}
+	if (TPP_TOK_IS_SHIFT_OPERAND(DeeParser_GetTok(self))) {
+		lhs = DeeParser_ParseShiftOperandMany(self, lhs);
+		if unlikely(!lhs)
+			goto done;
+	}
+	if (TPP_TOK_IS_CMP_OPERAND(DeeParser_GetTok(self))) {
+		lhs = DeeParser_ParseCmpOperandMany(self, lhs);
+		if unlikely(!lhs)
+			goto done;
+	}
+	if (TPP_TOK_IS_CMPEQ_OPERAND(DeeParser_GetTok(self))) {
+		lhs = DeeParser_ParseCmpEqOperandMany(self, lhs);
+		if unlikely(!lhs)
+			goto done;
+	}
+	if (TPP_TOK_IS_AND_OPERAND(DeeParser_GetTok(self))) {
+		lhs = DeeParser_ParseAndOperandMany(self, lhs);
+		if unlikely(!lhs)
+			goto done;
+	}
+#endif /* Dee_PARSER_EXPR_AND_METHOD != Dee_PARSER_EXPR_METHOD_switch */
+done:
+	return lhs;
+}
+
+PRIVATE WUNUSED NONNULL((1)) DeeAst *DFCALL
+DeeParser_ParseAnd(DeeParser *__restrict self) {
+	DeeAst *result = DeeParser_ParseUnaryHead(self);
+	if likely(result)
+		result = DeeParser_ParseAndOperand(self, result);
+	return result;
+}
+#endif /* Dee_PARSER_EXPR_AND_METHOD != Dee_PARSER_EXPR_METHOD_Os */
+
+
+/* >> Xor */
+PRIVATE WUNUSED NONNULL((1, 2)) DeeAst *DFCALL
+DeeParser_ParseXorOperandMany(DeeParser *__restrict self, /*inherit(always)*/ DeeAst *__restrict lhs) {
+	do {
+		lhs = DeeParser_ParseXorOperandOne(self, lhs);
+	} while (likely(lhs) && TPP_TOK_IS_XOR_OPERAND(DeeParser_GetTok(self)));
+	return lhs;
+}
+
+#if Dee_PARSER_EXPR_XOR_METHOD == Dee_PARSER_EXPR_METHOD_Os
+PRIVATE WUNUSED NONNULL((1)) DeeAst *DFCALL
+DeeParser_ParseXor(DeeParser *__restrict self) {
+	DeeAst *result = DeeParser_ParseAnd(self);
+	if (likely(result) && TPP_TOK_IS_XOR_OPERAND(DeeParser_GetTok(self)))
+		result = DeeParser_ParseXorOperandMany(self, result);
+	return result;
+}
+#else /* Dee_PARSER_EXPR_XOR_METHOD == Dee_PARSER_EXPR_METHOD_Os */
+PRIVATE WUNUSED NONNULL((1, 2)) DeeAst *DFCALL
+DeeParser_ParseXorOperand(DeeParser *__restrict self, /*inherit(always)*/ DeeAst *__restrict lhs) {
+#if Dee_PARSER_EXPR_XOR_METHOD == Dee_PARSER_EXPR_METHOD_switch
+	switch (DeeParser_GetTok(self)) {
+		{
+	TPP_CASE_TPP_TOK_UNARY_OPERAND
+			lhs = DeeParser_ParseUnaryOperandMany(self, lhs);
+			if unlikely(!lhs)
+				goto done;
+		}
+		if (TPP_TOK_IS_PROD_OPERAND(DeeParser_GetTok(self))){
+	TPP_CASE_TPP_TOK_PROD_OPERAND
+			lhs = DeeParser_ParseProdOperandMany(self, lhs);
+			if unlikely(!lhs)
+				goto done;
+		}
+		if (TPP_TOK_IS_SUM_OPERAND(DeeParser_GetTok(self))){
+	TPP_CASE_TPP_TOK_SUM_OPERAND
+			lhs = DeeParser_ParseSumOperandMany(self, lhs);
+			if unlikely(!lhs)
+				goto done;
+		}
+		if (TPP_TOK_IS_SHIFT_OPERAND(DeeParser_GetTok(self))){
+	TPP_CASE_TPP_TOK_SHIFT_OPERAND
+			lhs = DeeParser_ParseShiftOperandMany(self, lhs);
+			if unlikely(!lhs)
+				goto done;
+		}
+		if (TPP_TOK_IS_CMP_OPERAND(DeeParser_GetTok(self))){
+	TPP_CASE_TPP_TOK_CMP_OPERAND
+			lhs = DeeParser_ParseCmpOperandMany(self, lhs);
+			if unlikely(!lhs)
+				goto done;
+		}
+		if (TPP_TOK_IS_CMPEQ_OPERAND(DeeParser_GetTok(self))){
+	TPP_CASE_TPP_TOK_CMPEQ_OPERAND
+			lhs = DeeParser_ParseCmpEqOperandMany(self, lhs);
+			if unlikely(!lhs)
+				goto done;
+		}
+		if (TPP_TOK_IS_AND_OPERAND(DeeParser_GetTok(self))){
+	TPP_CASE_TPP_TOK_AND_OPERAND
+			lhs = DeeParser_ParseAndOperandMany(self, lhs);
+			if unlikely(!lhs)
+				goto done;
+		}
+		if (TPP_TOK_IS_XOR_OPERAND(DeeParser_GetTok(self))){
+	TPP_CASE_TPP_TOK_XOR_OPERAND
+			lhs = DeeParser_ParseXorOperandMany(self, lhs);
+			if unlikely(!lhs)
+				goto done;
+		}
+		break;
+	default: break;
+	}
+#else /* Dee_PARSER_EXPR_XOR_METHOD == Dee_PARSER_EXPR_METHOD_switch */
+	if (TPP_TOK_IS_UNARY_OPERAND(DeeParser_GetTok(self))) {
+		lhs = DeeParser_ParseUnaryOperandMany(self, lhs);
+		if unlikely(!lhs)
+			goto done;
+	}
+	if (TPP_TOK_IS_PROD_OPERAND(DeeParser_GetTok(self))) {
+		lhs = DeeParser_ParseProdOperandMany(self, lhs);
+		if unlikely(!lhs)
+			goto done;
+	}
+	if (TPP_TOK_IS_SUM_OPERAND(DeeParser_GetTok(self))) {
+		lhs = DeeParser_ParseSumOperandMany(self, lhs);
+		if unlikely(!lhs)
+			goto done;
+	}
+	if (TPP_TOK_IS_SHIFT_OPERAND(DeeParser_GetTok(self))) {
+		lhs = DeeParser_ParseShiftOperandMany(self, lhs);
+		if unlikely(!lhs)
+			goto done;
+	}
+	if (TPP_TOK_IS_CMP_OPERAND(DeeParser_GetTok(self))) {
+		lhs = DeeParser_ParseCmpOperandMany(self, lhs);
+		if unlikely(!lhs)
+			goto done;
+	}
+	if (TPP_TOK_IS_CMPEQ_OPERAND(DeeParser_GetTok(self))) {
+		lhs = DeeParser_ParseCmpEqOperandMany(self, lhs);
+		if unlikely(!lhs)
+			goto done;
+	}
+	if (TPP_TOK_IS_AND_OPERAND(DeeParser_GetTok(self))) {
+		lhs = DeeParser_ParseAndOperandMany(self, lhs);
+		if unlikely(!lhs)
+			goto done;
+	}
+	if (TPP_TOK_IS_XOR_OPERAND(DeeParser_GetTok(self))) {
+		lhs = DeeParser_ParseXorOperandMany(self, lhs);
+		if unlikely(!lhs)
+			goto done;
+	}
+#endif /* Dee_PARSER_EXPR_XOR_METHOD != Dee_PARSER_EXPR_METHOD_switch */
+done:
+	return lhs;
+}
+
+PRIVATE WUNUSED NONNULL((1)) DeeAst *DFCALL
+DeeParser_ParseXor(DeeParser *__restrict self) {
+	DeeAst *result = DeeParser_ParseUnaryHead(self);
+	if likely(result)
+		result = DeeParser_ParseXorOperand(self, result);
+	return result;
+}
+#endif /* Dee_PARSER_EXPR_XOR_METHOD != Dee_PARSER_EXPR_METHOD_Os */
+
+
+/* >> Or */
+PRIVATE WUNUSED NONNULL((1, 2)) DeeAst *DFCALL
+DeeParser_ParseOrOperandMany(DeeParser *__restrict self, /*inherit(always)*/ DeeAst *__restrict lhs) {
+	do {
+		lhs = DeeParser_ParseOrOperandOne(self, lhs);
+	} while (likely(lhs) && TPP_TOK_IS_OR_OPERAND(DeeParser_GetTok(self)));
+	return lhs;
+}
+
+#if Dee_PARSER_EXPR_OR_METHOD == Dee_PARSER_EXPR_METHOD_Os
+PRIVATE WUNUSED NONNULL((1)) DeeAst *DFCALL
+DeeParser_ParseOr(DeeParser *__restrict self) {
+	DeeAst *result = DeeParser_ParseXor(self);
+	if (likely(result) && TPP_TOK_IS_OR_OPERAND(DeeParser_GetTok(self)))
+		result = DeeParser_ParseOrOperandMany(self, result);
+	return result;
+}
+#else /* Dee_PARSER_EXPR_OR_METHOD == Dee_PARSER_EXPR_METHOD_Os */
+PRIVATE WUNUSED NONNULL((1, 2)) DeeAst *DFCALL
+DeeParser_ParseOrOperand(DeeParser *__restrict self, /*inherit(always)*/ DeeAst *__restrict lhs) {
+#if Dee_PARSER_EXPR_OR_METHOD == Dee_PARSER_EXPR_METHOD_switch
+	switch (DeeParser_GetTok(self)) {
+		{
+	TPP_CASE_TPP_TOK_UNARY_OPERAND
+			lhs = DeeParser_ParseUnaryOperandMany(self, lhs);
+			if unlikely(!lhs)
+				goto done;
+		}
+		if (TPP_TOK_IS_PROD_OPERAND(DeeParser_GetTok(self))){
+	TPP_CASE_TPP_TOK_PROD_OPERAND
+			lhs = DeeParser_ParseProdOperandMany(self, lhs);
+			if unlikely(!lhs)
+				goto done;
+		}
+		if (TPP_TOK_IS_SUM_OPERAND(DeeParser_GetTok(self))){
+	TPP_CASE_TPP_TOK_SUM_OPERAND
+			lhs = DeeParser_ParseSumOperandMany(self, lhs);
+			if unlikely(!lhs)
+				goto done;
+		}
+		if (TPP_TOK_IS_SHIFT_OPERAND(DeeParser_GetTok(self))){
+	TPP_CASE_TPP_TOK_SHIFT_OPERAND
+			lhs = DeeParser_ParseShiftOperandMany(self, lhs);
+			if unlikely(!lhs)
+				goto done;
+		}
+		if (TPP_TOK_IS_CMP_OPERAND(DeeParser_GetTok(self))){
+	TPP_CASE_TPP_TOK_CMP_OPERAND
+			lhs = DeeParser_ParseCmpOperandMany(self, lhs);
+			if unlikely(!lhs)
+				goto done;
+		}
+		if (TPP_TOK_IS_CMPEQ_OPERAND(DeeParser_GetTok(self))){
+	TPP_CASE_TPP_TOK_CMPEQ_OPERAND
+			lhs = DeeParser_ParseCmpEqOperandMany(self, lhs);
+			if unlikely(!lhs)
+				goto done;
+		}
+		if (TPP_TOK_IS_AND_OPERAND(DeeParser_GetTok(self))){
+	TPP_CASE_TPP_TOK_AND_OPERAND
+			lhs = DeeParser_ParseAndOperandMany(self, lhs);
+			if unlikely(!lhs)
+				goto done;
+		}
+		if (TPP_TOK_IS_XOR_OPERAND(DeeParser_GetTok(self))){
+	TPP_CASE_TPP_TOK_XOR_OPERAND
+			lhs = DeeParser_ParseXorOperandMany(self, lhs);
+			if unlikely(!lhs)
+				goto done;
+		}
+		if (TPP_TOK_IS_OR_OPERAND(DeeParser_GetTok(self))){
+	TPP_CASE_TPP_TOK_OR_OPERAND
+			lhs = DeeParser_ParseOrOperandMany(self, lhs);
+			if unlikely(!lhs)
+				goto done;
+		}
+		break;
+	default: break;
+	}
+#else /* Dee_PARSER_EXPR_OR_METHOD == Dee_PARSER_EXPR_METHOD_switch */
+	if (TPP_TOK_IS_UNARY_OPERAND(DeeParser_GetTok(self))) {
+		lhs = DeeParser_ParseUnaryOperandMany(self, lhs);
+		if unlikely(!lhs)
+			goto done;
+	}
+	if (TPP_TOK_IS_PROD_OPERAND(DeeParser_GetTok(self))) {
+		lhs = DeeParser_ParseProdOperandMany(self, lhs);
+		if unlikely(!lhs)
+			goto done;
+	}
+	if (TPP_TOK_IS_SUM_OPERAND(DeeParser_GetTok(self))) {
+		lhs = DeeParser_ParseSumOperandMany(self, lhs);
+		if unlikely(!lhs)
+			goto done;
+	}
+	if (TPP_TOK_IS_SHIFT_OPERAND(DeeParser_GetTok(self))) {
+		lhs = DeeParser_ParseShiftOperandMany(self, lhs);
+		if unlikely(!lhs)
+			goto done;
+	}
+	if (TPP_TOK_IS_CMP_OPERAND(DeeParser_GetTok(self))) {
+		lhs = DeeParser_ParseCmpOperandMany(self, lhs);
+		if unlikely(!lhs)
+			goto done;
+	}
+	if (TPP_TOK_IS_CMPEQ_OPERAND(DeeParser_GetTok(self))) {
+		lhs = DeeParser_ParseCmpEqOperandMany(self, lhs);
+		if unlikely(!lhs)
+			goto done;
+	}
+	if (TPP_TOK_IS_AND_OPERAND(DeeParser_GetTok(self))) {
+		lhs = DeeParser_ParseAndOperandMany(self, lhs);
+		if unlikely(!lhs)
+			goto done;
+	}
+	if (TPP_TOK_IS_XOR_OPERAND(DeeParser_GetTok(self))) {
+		lhs = DeeParser_ParseXorOperandMany(self, lhs);
+		if unlikely(!lhs)
+			goto done;
+	}
+	if (TPP_TOK_IS_OR_OPERAND(DeeParser_GetTok(self))) {
+		lhs = DeeParser_ParseOrOperandMany(self, lhs);
+		if unlikely(!lhs)
+			goto done;
+	}
+#endif /* Dee_PARSER_EXPR_OR_METHOD != Dee_PARSER_EXPR_METHOD_switch */
+done:
+	return lhs;
+}
+
+PRIVATE WUNUSED NONNULL((1)) DeeAst *DFCALL
+DeeParser_ParseOr(DeeParser *__restrict self) {
+	DeeAst *result = DeeParser_ParseUnaryHead(self);
+	if likely(result)
+		result = DeeParser_ParseOrOperand(self, result);
+	return result;
+}
+#endif /* Dee_PARSER_EXPR_OR_METHOD != Dee_PARSER_EXPR_METHOD_Os */
+
+
+/* >> As */
+PRIVATE WUNUSED NONNULL((1, 2)) DeeAst *DFCALL
+DeeParser_ParseAsOperandMany(DeeParser *__restrict self, /*inherit(always)*/ DeeAst *__restrict lhs) {
+	do {
+		lhs = DeeParser_ParseAsOperandOne(self, lhs);
+	} while (likely(lhs) && TPP_TOK_IS_AS_OPERAND(DeeParser_GetTok(self)));
+	return lhs;
+}
+
+#if Dee_PARSER_EXPR_AS_METHOD == Dee_PARSER_EXPR_METHOD_Os
+PRIVATE WUNUSED NONNULL((1)) DeeAst *DFCALL
+DeeParser_ParseAs(DeeParser *__restrict self) {
+	DeeAst *result = DeeParser_ParseOr(self);
+	if (likely(result) && TPP_TOK_IS_AS_OPERAND(DeeParser_GetTok(self)))
+		result = DeeParser_ParseAsOperandMany(self, result);
+	return result;
+}
+#else /* Dee_PARSER_EXPR_AS_METHOD == Dee_PARSER_EXPR_METHOD_Os */
+PRIVATE WUNUSED NONNULL((1, 2)) DeeAst *DFCALL
+DeeParser_ParseAsOperand(DeeParser *__restrict self, /*inherit(always)*/ DeeAst *__restrict lhs) {
+#if Dee_PARSER_EXPR_AS_METHOD == Dee_PARSER_EXPR_METHOD_switch
+	switch (DeeParser_GetTok(self)) {
+		{
+	TPP_CASE_TPP_TOK_UNARY_OPERAND
+			lhs = DeeParser_ParseUnaryOperandMany(self, lhs);
+			if unlikely(!lhs)
+				goto done;
+		}
+		if (TPP_TOK_IS_PROD_OPERAND(DeeParser_GetTok(self))){
+	TPP_CASE_TPP_TOK_PROD_OPERAND
+			lhs = DeeParser_ParseProdOperandMany(self, lhs);
+			if unlikely(!lhs)
+				goto done;
+		}
+		if (TPP_TOK_IS_SUM_OPERAND(DeeParser_GetTok(self))){
+	TPP_CASE_TPP_TOK_SUM_OPERAND
+			lhs = DeeParser_ParseSumOperandMany(self, lhs);
+			if unlikely(!lhs)
+				goto done;
+		}
+		if (TPP_TOK_IS_SHIFT_OPERAND(DeeParser_GetTok(self))){
+	TPP_CASE_TPP_TOK_SHIFT_OPERAND
+			lhs = DeeParser_ParseShiftOperandMany(self, lhs);
+			if unlikely(!lhs)
+				goto done;
+		}
+		if (TPP_TOK_IS_CMP_OPERAND(DeeParser_GetTok(self))){
+	TPP_CASE_TPP_TOK_CMP_OPERAND
+			lhs = DeeParser_ParseCmpOperandMany(self, lhs);
+			if unlikely(!lhs)
+				goto done;
+		}
+		if (TPP_TOK_IS_CMPEQ_OPERAND(DeeParser_GetTok(self))){
+	TPP_CASE_TPP_TOK_CMPEQ_OPERAND
+			lhs = DeeParser_ParseCmpEqOperandMany(self, lhs);
+			if unlikely(!lhs)
+				goto done;
+		}
+		if (TPP_TOK_IS_AND_OPERAND(DeeParser_GetTok(self))){
+	TPP_CASE_TPP_TOK_AND_OPERAND
+			lhs = DeeParser_ParseAndOperandMany(self, lhs);
+			if unlikely(!lhs)
+				goto done;
+		}
+		if (TPP_TOK_IS_XOR_OPERAND(DeeParser_GetTok(self))){
+	TPP_CASE_TPP_TOK_XOR_OPERAND
+			lhs = DeeParser_ParseXorOperandMany(self, lhs);
+			if unlikely(!lhs)
+				goto done;
+		}
+		if (TPP_TOK_IS_OR_OPERAND(DeeParser_GetTok(self))){
+	TPP_CASE_TPP_TOK_OR_OPERAND
+			lhs = DeeParser_ParseOrOperandMany(self, lhs);
+			if unlikely(!lhs)
+				goto done;
+		}
+		if (TPP_TOK_IS_AS_OPERAND(DeeParser_GetTok(self))){
+	TPP_CASE_TPP_TOK_AS_OPERAND
+			lhs = DeeParser_ParseAsOperandMany(self, lhs);
+			if unlikely(!lhs)
+				goto done;
+		}
+		break;
+	default: break;
+	}
+#else /* Dee_PARSER_EXPR_AS_METHOD == Dee_PARSER_EXPR_METHOD_switch */
+	if (TPP_TOK_IS_UNARY_OPERAND(DeeParser_GetTok(self))) {
+		lhs = DeeParser_ParseUnaryOperandMany(self, lhs);
+		if unlikely(!lhs)
+			goto done;
+	}
+	if (TPP_TOK_IS_PROD_OPERAND(DeeParser_GetTok(self))) {
+		lhs = DeeParser_ParseProdOperandMany(self, lhs);
+		if unlikely(!lhs)
+			goto done;
+	}
+	if (TPP_TOK_IS_SUM_OPERAND(DeeParser_GetTok(self))) {
+		lhs = DeeParser_ParseSumOperandMany(self, lhs);
+		if unlikely(!lhs)
+			goto done;
+	}
+	if (TPP_TOK_IS_SHIFT_OPERAND(DeeParser_GetTok(self))) {
+		lhs = DeeParser_ParseShiftOperandMany(self, lhs);
+		if unlikely(!lhs)
+			goto done;
+	}
+	if (TPP_TOK_IS_CMP_OPERAND(DeeParser_GetTok(self))) {
+		lhs = DeeParser_ParseCmpOperandMany(self, lhs);
+		if unlikely(!lhs)
+			goto done;
+	}
+	if (TPP_TOK_IS_CMPEQ_OPERAND(DeeParser_GetTok(self))) {
+		lhs = DeeParser_ParseCmpEqOperandMany(self, lhs);
+		if unlikely(!lhs)
+			goto done;
+	}
+	if (TPP_TOK_IS_AND_OPERAND(DeeParser_GetTok(self))) {
+		lhs = DeeParser_ParseAndOperandMany(self, lhs);
+		if unlikely(!lhs)
+			goto done;
+	}
+	if (TPP_TOK_IS_XOR_OPERAND(DeeParser_GetTok(self))) {
+		lhs = DeeParser_ParseXorOperandMany(self, lhs);
+		if unlikely(!lhs)
+			goto done;
+	}
+	if (TPP_TOK_IS_OR_OPERAND(DeeParser_GetTok(self))) {
+		lhs = DeeParser_ParseOrOperandMany(self, lhs);
+		if unlikely(!lhs)
+			goto done;
+	}
+	if (TPP_TOK_IS_AS_OPERAND(DeeParser_GetTok(self))) {
+		lhs = DeeParser_ParseAsOperandMany(self, lhs);
+		if unlikely(!lhs)
+			goto done;
+	}
+#endif /* Dee_PARSER_EXPR_AS_METHOD != Dee_PARSER_EXPR_METHOD_switch */
+done:
+	return lhs;
+}
+
+PRIVATE WUNUSED NONNULL((1)) DeeAst *DFCALL
+DeeParser_ParseAs(DeeParser *__restrict self) {
+	DeeAst *result = DeeParser_ParseUnaryHead(self);
+	if likely(result)
+		result = DeeParser_ParseAsOperand(self, result);
+	return result;
+}
+#endif /* Dee_PARSER_EXPR_AS_METHOD != Dee_PARSER_EXPR_METHOD_Os */
+
+
+/* >> Land */
+PRIVATE WUNUSED NONNULL((1, 2)) DeeAst *DFCALL
+DeeParser_ParseLandOperandMany(DeeParser *__restrict self, /*inherit(always)*/ DeeAst *__restrict lhs) {
+	do {
+		lhs = DeeParser_ParseLandOperandOne(self, lhs);
+	} while (likely(lhs) && TPP_TOK_IS_LAND_OPERAND(DeeParser_GetTok(self)));
+	return lhs;
+}
+
+#if Dee_PARSER_EXPR_LAND_METHOD == Dee_PARSER_EXPR_METHOD_Os
+PRIVATE WUNUSED NONNULL((1)) DeeAst *DFCALL
+DeeParser_ParseLand(DeeParser *__restrict self) {
+	DeeAst *result = DeeParser_ParseAs(self);
+	if (likely(result) && TPP_TOK_IS_LAND_OPERAND(DeeParser_GetTok(self)))
+		result = DeeParser_ParseLandOperandMany(self, result);
+	return result;
+}
+#else /* Dee_PARSER_EXPR_LAND_METHOD == Dee_PARSER_EXPR_METHOD_Os */
+PRIVATE WUNUSED NONNULL((1, 2)) DeeAst *DFCALL
+DeeParser_ParseLandOperand(DeeParser *__restrict self, /*inherit(always)*/ DeeAst *__restrict lhs) {
+#if Dee_PARSER_EXPR_LAND_METHOD == Dee_PARSER_EXPR_METHOD_switch
+	switch (DeeParser_GetTok(self)) {
+		{
+	TPP_CASE_TPP_TOK_UNARY_OPERAND
+			lhs = DeeParser_ParseUnaryOperandMany(self, lhs);
+			if unlikely(!lhs)
+				goto done;
+		}
+		if (TPP_TOK_IS_PROD_OPERAND(DeeParser_GetTok(self))){
+	TPP_CASE_TPP_TOK_PROD_OPERAND
+			lhs = DeeParser_ParseProdOperandMany(self, lhs);
+			if unlikely(!lhs)
+				goto done;
+		}
+		if (TPP_TOK_IS_SUM_OPERAND(DeeParser_GetTok(self))){
+	TPP_CASE_TPP_TOK_SUM_OPERAND
+			lhs = DeeParser_ParseSumOperandMany(self, lhs);
+			if unlikely(!lhs)
+				goto done;
+		}
+		if (TPP_TOK_IS_SHIFT_OPERAND(DeeParser_GetTok(self))){
+	TPP_CASE_TPP_TOK_SHIFT_OPERAND
+			lhs = DeeParser_ParseShiftOperandMany(self, lhs);
+			if unlikely(!lhs)
+				goto done;
+		}
+		if (TPP_TOK_IS_CMP_OPERAND(DeeParser_GetTok(self))){
+	TPP_CASE_TPP_TOK_CMP_OPERAND
+			lhs = DeeParser_ParseCmpOperandMany(self, lhs);
+			if unlikely(!lhs)
+				goto done;
+		}
+		if (TPP_TOK_IS_CMPEQ_OPERAND(DeeParser_GetTok(self))){
+	TPP_CASE_TPP_TOK_CMPEQ_OPERAND
+			lhs = DeeParser_ParseCmpEqOperandMany(self, lhs);
+			if unlikely(!lhs)
+				goto done;
+		}
+		if (TPP_TOK_IS_AND_OPERAND(DeeParser_GetTok(self))){
+	TPP_CASE_TPP_TOK_AND_OPERAND
+			lhs = DeeParser_ParseAndOperandMany(self, lhs);
+			if unlikely(!lhs)
+				goto done;
+		}
+		if (TPP_TOK_IS_XOR_OPERAND(DeeParser_GetTok(self))){
+	TPP_CASE_TPP_TOK_XOR_OPERAND
+			lhs = DeeParser_ParseXorOperandMany(self, lhs);
+			if unlikely(!lhs)
+				goto done;
+		}
+		if (TPP_TOK_IS_OR_OPERAND(DeeParser_GetTok(self))){
+	TPP_CASE_TPP_TOK_OR_OPERAND
+			lhs = DeeParser_ParseOrOperandMany(self, lhs);
+			if unlikely(!lhs)
+				goto done;
+		}
+		if (TPP_TOK_IS_AS_OPERAND(DeeParser_GetTok(self))){
+	TPP_CASE_TPP_TOK_AS_OPERAND
+			lhs = DeeParser_ParseAsOperandMany(self, lhs);
+			if unlikely(!lhs)
+				goto done;
+		}
+		if (TPP_TOK_IS_LAND_OPERAND(DeeParser_GetTok(self))){
+	TPP_CASE_TPP_TOK_LAND_OPERAND
+			lhs = DeeParser_ParseLandOperandMany(self, lhs);
+			if unlikely(!lhs)
+				goto done;
+		}
+		break;
+	default: break;
+	}
+#else /* Dee_PARSER_EXPR_LAND_METHOD == Dee_PARSER_EXPR_METHOD_switch */
+	if (TPP_TOK_IS_UNARY_OPERAND(DeeParser_GetTok(self))) {
+		lhs = DeeParser_ParseUnaryOperandMany(self, lhs);
+		if unlikely(!lhs)
+			goto done;
+	}
+	if (TPP_TOK_IS_PROD_OPERAND(DeeParser_GetTok(self))) {
+		lhs = DeeParser_ParseProdOperandMany(self, lhs);
+		if unlikely(!lhs)
+			goto done;
+	}
+	if (TPP_TOK_IS_SUM_OPERAND(DeeParser_GetTok(self))) {
+		lhs = DeeParser_ParseSumOperandMany(self, lhs);
+		if unlikely(!lhs)
+			goto done;
+	}
+	if (TPP_TOK_IS_SHIFT_OPERAND(DeeParser_GetTok(self))) {
+		lhs = DeeParser_ParseShiftOperandMany(self, lhs);
+		if unlikely(!lhs)
+			goto done;
+	}
+	if (TPP_TOK_IS_CMP_OPERAND(DeeParser_GetTok(self))) {
+		lhs = DeeParser_ParseCmpOperandMany(self, lhs);
+		if unlikely(!lhs)
+			goto done;
+	}
+	if (TPP_TOK_IS_CMPEQ_OPERAND(DeeParser_GetTok(self))) {
+		lhs = DeeParser_ParseCmpEqOperandMany(self, lhs);
+		if unlikely(!lhs)
+			goto done;
+	}
+	if (TPP_TOK_IS_AND_OPERAND(DeeParser_GetTok(self))) {
+		lhs = DeeParser_ParseAndOperandMany(self, lhs);
+		if unlikely(!lhs)
+			goto done;
+	}
+	if (TPP_TOK_IS_XOR_OPERAND(DeeParser_GetTok(self))) {
+		lhs = DeeParser_ParseXorOperandMany(self, lhs);
+		if unlikely(!lhs)
+			goto done;
+	}
+	if (TPP_TOK_IS_OR_OPERAND(DeeParser_GetTok(self))) {
+		lhs = DeeParser_ParseOrOperandMany(self, lhs);
+		if unlikely(!lhs)
+			goto done;
+	}
+	if (TPP_TOK_IS_AS_OPERAND(DeeParser_GetTok(self))) {
+		lhs = DeeParser_ParseAsOperandMany(self, lhs);
+		if unlikely(!lhs)
+			goto done;
+	}
+	if (TPP_TOK_IS_LAND_OPERAND(DeeParser_GetTok(self))) {
+		lhs = DeeParser_ParseLandOperandMany(self, lhs);
+		if unlikely(!lhs)
+			goto done;
+	}
+#endif /* Dee_PARSER_EXPR_LAND_METHOD != Dee_PARSER_EXPR_METHOD_switch */
+done:
+	return lhs;
+}
+
+PRIVATE WUNUSED NONNULL((1)) DeeAst *DFCALL
+DeeParser_ParseLand(DeeParser *__restrict self) {
+	DeeAst *result = DeeParser_ParseUnaryHead(self);
+	if likely(result)
+		result = DeeParser_ParseLandOperand(self, result);
+	return result;
+}
+#endif /* Dee_PARSER_EXPR_LAND_METHOD != Dee_PARSER_EXPR_METHOD_Os */
+
+
+/* >> Lor */
+PRIVATE WUNUSED NONNULL((1, 2)) DeeAst *DFCALL
+DeeParser_ParseLorOperandMany(DeeParser *__restrict self, /*inherit(always)*/ DeeAst *__restrict lhs) {
+	do {
+		lhs = DeeParser_ParseLorOperandOne(self, lhs);
+	} while (likely(lhs) && TPP_TOK_IS_LOR_OPERAND(DeeParser_GetTok(self)));
+	return lhs;
+}
+
+#if Dee_PARSER_EXPR_COND_METHOD == Dee_PARSER_EXPR_METHOD_Os
+#if Dee_PARSER_EXPR_LOR_METHOD == Dee_PARSER_EXPR_METHOD_Os
+PRIVATE WUNUSED NONNULL((1)) DeeAst *DFCALL
+DeeParser_ParseLor(DeeParser *__restrict self) {
+	DeeAst *result = DeeParser_ParseLand(self);
+	if (likely(result) && TPP_TOK_IS_LOR_OPERAND(DeeParser_GetTok(self)))
+		result = DeeParser_ParseLorOperandMany(self, result);
+	return result;
+}
+#else /* Dee_PARSER_EXPR_LOR_METHOD == Dee_PARSER_EXPR_METHOD_Os */
+PRIVATE WUNUSED NONNULL((1, 2)) DeeAst *DFCALL
+DeeParser_ParseLorOperand(DeeParser *__restrict self, /*inherit(always)*/ DeeAst *__restrict lhs) {
+#if Dee_PARSER_EXPR_LOR_METHOD == Dee_PARSER_EXPR_METHOD_switch
+	switch (DeeParser_GetTok(self)) {
+		{
+	TPP_CASE_TPP_TOK_UNARY_OPERAND
+			lhs = DeeParser_ParseUnaryOperandMany(self, lhs);
+			if unlikely(!lhs)
+				goto done;
+		}
+		if (TPP_TOK_IS_PROD_OPERAND(DeeParser_GetTok(self))){
+	TPP_CASE_TPP_TOK_PROD_OPERAND
+			lhs = DeeParser_ParseProdOperandMany(self, lhs);
+			if unlikely(!lhs)
+				goto done;
+		}
+		if (TPP_TOK_IS_SUM_OPERAND(DeeParser_GetTok(self))){
+	TPP_CASE_TPP_TOK_SUM_OPERAND
+			lhs = DeeParser_ParseSumOperandMany(self, lhs);
+			if unlikely(!lhs)
+				goto done;
+		}
+		if (TPP_TOK_IS_SHIFT_OPERAND(DeeParser_GetTok(self))){
+	TPP_CASE_TPP_TOK_SHIFT_OPERAND
+			lhs = DeeParser_ParseShiftOperandMany(self, lhs);
+			if unlikely(!lhs)
+				goto done;
+		}
+		if (TPP_TOK_IS_CMP_OPERAND(DeeParser_GetTok(self))){
+	TPP_CASE_TPP_TOK_CMP_OPERAND
+			lhs = DeeParser_ParseCmpOperandMany(self, lhs);
+			if unlikely(!lhs)
+				goto done;
+		}
+		if (TPP_TOK_IS_CMPEQ_OPERAND(DeeParser_GetTok(self))){
+	TPP_CASE_TPP_TOK_CMPEQ_OPERAND
+			lhs = DeeParser_ParseCmpEqOperandMany(self, lhs);
+			if unlikely(!lhs)
+				goto done;
+		}
+		if (TPP_TOK_IS_AND_OPERAND(DeeParser_GetTok(self))){
+	TPP_CASE_TPP_TOK_AND_OPERAND
+			lhs = DeeParser_ParseAndOperandMany(self, lhs);
+			if unlikely(!lhs)
+				goto done;
+		}
+		if (TPP_TOK_IS_XOR_OPERAND(DeeParser_GetTok(self))){
+	TPP_CASE_TPP_TOK_XOR_OPERAND
+			lhs = DeeParser_ParseXorOperandMany(self, lhs);
+			if unlikely(!lhs)
+				goto done;
+		}
+		if (TPP_TOK_IS_OR_OPERAND(DeeParser_GetTok(self))){
+	TPP_CASE_TPP_TOK_OR_OPERAND
+			lhs = DeeParser_ParseOrOperandMany(self, lhs);
+			if unlikely(!lhs)
+				goto done;
+		}
+		if (TPP_TOK_IS_AS_OPERAND(DeeParser_GetTok(self))){
+	TPP_CASE_TPP_TOK_AS_OPERAND
+			lhs = DeeParser_ParseAsOperandMany(self, lhs);
+			if unlikely(!lhs)
+				goto done;
+		}
+		if (TPP_TOK_IS_LAND_OPERAND(DeeParser_GetTok(self))){
+	TPP_CASE_TPP_TOK_LAND_OPERAND
+			lhs = DeeParser_ParseLandOperandMany(self, lhs);
+			if unlikely(!lhs)
+				goto done;
+		}
+		if (TPP_TOK_IS_LOR_OPERAND(DeeParser_GetTok(self))){
+	TPP_CASE_TPP_TOK_LOR_OPERAND
+			lhs = DeeParser_ParseLorOperandMany(self, lhs);
+			if unlikely(!lhs)
+				goto done;
+		}
+		break;
+	default: break;
+	}
+#else /* Dee_PARSER_EXPR_LOR_METHOD == Dee_PARSER_EXPR_METHOD_switch */
+	if (TPP_TOK_IS_UNARY_OPERAND(DeeParser_GetTok(self))) {
+		lhs = DeeParser_ParseUnaryOperandMany(self, lhs);
+		if unlikely(!lhs)
+			goto done;
+	}
+	if (TPP_TOK_IS_PROD_OPERAND(DeeParser_GetTok(self))) {
+		lhs = DeeParser_ParseProdOperandMany(self, lhs);
+		if unlikely(!lhs)
+			goto done;
+	}
+	if (TPP_TOK_IS_SUM_OPERAND(DeeParser_GetTok(self))) {
+		lhs = DeeParser_ParseSumOperandMany(self, lhs);
+		if unlikely(!lhs)
+			goto done;
+	}
+	if (TPP_TOK_IS_SHIFT_OPERAND(DeeParser_GetTok(self))) {
+		lhs = DeeParser_ParseShiftOperandMany(self, lhs);
+		if unlikely(!lhs)
+			goto done;
+	}
+	if (TPP_TOK_IS_CMP_OPERAND(DeeParser_GetTok(self))) {
+		lhs = DeeParser_ParseCmpOperandMany(self, lhs);
+		if unlikely(!lhs)
+			goto done;
+	}
+	if (TPP_TOK_IS_CMPEQ_OPERAND(DeeParser_GetTok(self))) {
+		lhs = DeeParser_ParseCmpEqOperandMany(self, lhs);
+		if unlikely(!lhs)
+			goto done;
+	}
+	if (TPP_TOK_IS_AND_OPERAND(DeeParser_GetTok(self))) {
+		lhs = DeeParser_ParseAndOperandMany(self, lhs);
+		if unlikely(!lhs)
+			goto done;
+	}
+	if (TPP_TOK_IS_XOR_OPERAND(DeeParser_GetTok(self))) {
+		lhs = DeeParser_ParseXorOperandMany(self, lhs);
+		if unlikely(!lhs)
+			goto done;
+	}
+	if (TPP_TOK_IS_OR_OPERAND(DeeParser_GetTok(self))) {
+		lhs = DeeParser_ParseOrOperandMany(self, lhs);
+		if unlikely(!lhs)
+			goto done;
+	}
+	if (TPP_TOK_IS_AS_OPERAND(DeeParser_GetTok(self))) {
+		lhs = DeeParser_ParseAsOperandMany(self, lhs);
+		if unlikely(!lhs)
+			goto done;
+	}
+	if (TPP_TOK_IS_LAND_OPERAND(DeeParser_GetTok(self))) {
+		lhs = DeeParser_ParseLandOperandMany(self, lhs);
+		if unlikely(!lhs)
+			goto done;
+	}
+	if (TPP_TOK_IS_LOR_OPERAND(DeeParser_GetTok(self))) {
+		lhs = DeeParser_ParseLorOperandMany(self, lhs);
+		if unlikely(!lhs)
+			goto done;
+	}
+#endif /* Dee_PARSER_EXPR_LOR_METHOD != Dee_PARSER_EXPR_METHOD_switch */
+done:
+	return lhs;
+}
+
+PRIVATE WUNUSED NONNULL((1)) DeeAst *DFCALL
+DeeParser_ParseLor(DeeParser *__restrict self) {
+	DeeAst *result = DeeParser_ParseUnaryHead(self);
+	if likely(result)
+		result = DeeParser_ParseLorOperand(self, result);
+	return result;
+}
+#endif /* Dee_PARSER_EXPR_LOR_METHOD != Dee_PARSER_EXPR_METHOD_Os */
+#endif /* Dee_PARSER_EXPR_COND_METHOD == Dee_PARSER_EXPR_METHOD_Os */
+
+
+/* >> Cond */
+#if Dee_PARSER_EXPR_COND_METHOD == Dee_PARSER_EXPR_METHOD_Os
+PRIVATE WUNUSED NONNULL((1)) DeeAst *DFCALL
+DeeParser_ParseCond(DeeParser *__restrict self) {
+	DeeAst *result = DeeParser_ParseLor(self);
+	if (likely(result) && TPP_TOK_IS_COND_OPERAND(DeeParser_GetTok(self)))
+		result = DeeParser_ParseCondOperandMany(self, result);
+	return result;
+}
+#else /* Dee_PARSER_EXPR_COND_METHOD == Dee_PARSER_EXPR_METHOD_Os */
+PRIVATE WUNUSED NONNULL((1, 2)) DeeAst *DFCALL
+DeeParser_ParseCondOperand(DeeParser *__restrict self, /*inherit(always)*/ DeeAst *__restrict lhs) {
+#if Dee_PARSER_EXPR_COND_METHOD == Dee_PARSER_EXPR_METHOD_switch
+	switch (DeeParser_GetTok(self)) {
+		{
+	TPP_CASE_TPP_TOK_UNARY_OPERAND
+			lhs = DeeParser_ParseUnaryOperandMany(self, lhs);
+			if unlikely(!lhs)
+				goto done;
+		}
+		if (TPP_TOK_IS_PROD_OPERAND(DeeParser_GetTok(self))){
+	TPP_CASE_TPP_TOK_PROD_OPERAND
+			lhs = DeeParser_ParseProdOperandMany(self, lhs);
+			if unlikely(!lhs)
+				goto done;
+		}
+		if (TPP_TOK_IS_SUM_OPERAND(DeeParser_GetTok(self))){
+	TPP_CASE_TPP_TOK_SUM_OPERAND
+			lhs = DeeParser_ParseSumOperandMany(self, lhs);
+			if unlikely(!lhs)
+				goto done;
+		}
+		if (TPP_TOK_IS_SHIFT_OPERAND(DeeParser_GetTok(self))){
+	TPP_CASE_TPP_TOK_SHIFT_OPERAND
+			lhs = DeeParser_ParseShiftOperandMany(self, lhs);
+			if unlikely(!lhs)
+				goto done;
+		}
+		if (TPP_TOK_IS_CMP_OPERAND(DeeParser_GetTok(self))){
+	TPP_CASE_TPP_TOK_CMP_OPERAND
+			lhs = DeeParser_ParseCmpOperandMany(self, lhs);
+			if unlikely(!lhs)
+				goto done;
+		}
+		if (TPP_TOK_IS_CMPEQ_OPERAND(DeeParser_GetTok(self))){
+	TPP_CASE_TPP_TOK_CMPEQ_OPERAND
+			lhs = DeeParser_ParseCmpEqOperandMany(self, lhs);
+			if unlikely(!lhs)
+				goto done;
+		}
+		if (TPP_TOK_IS_AND_OPERAND(DeeParser_GetTok(self))){
+	TPP_CASE_TPP_TOK_AND_OPERAND
+			lhs = DeeParser_ParseAndOperandMany(self, lhs);
+			if unlikely(!lhs)
+				goto done;
+		}
+		if (TPP_TOK_IS_XOR_OPERAND(DeeParser_GetTok(self))){
+	TPP_CASE_TPP_TOK_XOR_OPERAND
+			lhs = DeeParser_ParseXorOperandMany(self, lhs);
+			if unlikely(!lhs)
+				goto done;
+		}
+		if (TPP_TOK_IS_OR_OPERAND(DeeParser_GetTok(self))){
+	TPP_CASE_TPP_TOK_OR_OPERAND
+			lhs = DeeParser_ParseOrOperandMany(self, lhs);
+			if unlikely(!lhs)
+				goto done;
+		}
+		if (TPP_TOK_IS_AS_OPERAND(DeeParser_GetTok(self))){
+	TPP_CASE_TPP_TOK_AS_OPERAND
+			lhs = DeeParser_ParseAsOperandMany(self, lhs);
+			if unlikely(!lhs)
+				goto done;
+		}
+		if (TPP_TOK_IS_LAND_OPERAND(DeeParser_GetTok(self))){
+	TPP_CASE_TPP_TOK_LAND_OPERAND
+			lhs = DeeParser_ParseLandOperandMany(self, lhs);
+			if unlikely(!lhs)
+				goto done;
+		}
+		if (TPP_TOK_IS_LOR_OPERAND(DeeParser_GetTok(self))){
+	TPP_CASE_TPP_TOK_LOR_OPERAND
+			lhs = DeeParser_ParseLorOperandMany(self, lhs);
+			if unlikely(!lhs)
+				goto done;
+		}
+		if (TPP_TOK_IS_COND_OPERAND(DeeParser_GetTok(self))){
+	TPP_CASE_TPP_TOK_COND_OPERAND
+			lhs = DeeParser_ParseCondOperandMany(self, lhs);
+			if unlikely(!lhs)
+				goto done;
+		}
+		break;
+	default: break;
+	}
+#else /* Dee_PARSER_EXPR_COND_METHOD == Dee_PARSER_EXPR_METHOD_switch */
+	if (TPP_TOK_IS_UNARY_OPERAND(DeeParser_GetTok(self))) {
+		lhs = DeeParser_ParseUnaryOperandMany(self, lhs);
+		if unlikely(!lhs)
+			goto done;
+	}
+	if (TPP_TOK_IS_PROD_OPERAND(DeeParser_GetTok(self))) {
+		lhs = DeeParser_ParseProdOperandMany(self, lhs);
+		if unlikely(!lhs)
+			goto done;
+	}
+	if (TPP_TOK_IS_SUM_OPERAND(DeeParser_GetTok(self))) {
+		lhs = DeeParser_ParseSumOperandMany(self, lhs);
+		if unlikely(!lhs)
+			goto done;
+	}
+	if (TPP_TOK_IS_SHIFT_OPERAND(DeeParser_GetTok(self))) {
+		lhs = DeeParser_ParseShiftOperandMany(self, lhs);
+		if unlikely(!lhs)
+			goto done;
+	}
+	if (TPP_TOK_IS_CMP_OPERAND(DeeParser_GetTok(self))) {
+		lhs = DeeParser_ParseCmpOperandMany(self, lhs);
+		if unlikely(!lhs)
+			goto done;
+	}
+	if (TPP_TOK_IS_CMPEQ_OPERAND(DeeParser_GetTok(self))) {
+		lhs = DeeParser_ParseCmpEqOperandMany(self, lhs);
+		if unlikely(!lhs)
+			goto done;
+	}
+	if (TPP_TOK_IS_AND_OPERAND(DeeParser_GetTok(self))) {
+		lhs = DeeParser_ParseAndOperandMany(self, lhs);
+		if unlikely(!lhs)
+			goto done;
+	}
+	if (TPP_TOK_IS_XOR_OPERAND(DeeParser_GetTok(self))) {
+		lhs = DeeParser_ParseXorOperandMany(self, lhs);
+		if unlikely(!lhs)
+			goto done;
+	}
+	if (TPP_TOK_IS_OR_OPERAND(DeeParser_GetTok(self))) {
+		lhs = DeeParser_ParseOrOperandMany(self, lhs);
+		if unlikely(!lhs)
+			goto done;
+	}
+	if (TPP_TOK_IS_AS_OPERAND(DeeParser_GetTok(self))) {
+		lhs = DeeParser_ParseAsOperandMany(self, lhs);
+		if unlikely(!lhs)
+			goto done;
+	}
+	if (TPP_TOK_IS_LAND_OPERAND(DeeParser_GetTok(self))) {
+		lhs = DeeParser_ParseLandOperandMany(self, lhs);
+		if unlikely(!lhs)
+			goto done;
+	}
+	if (TPP_TOK_IS_LOR_OPERAND(DeeParser_GetTok(self))) {
+		lhs = DeeParser_ParseLorOperandMany(self, lhs);
+		if unlikely(!lhs)
+			goto done;
+	}
+	if (TPP_TOK_IS_COND_OPERAND(DeeParser_GetTok(self))) {
+		lhs = DeeParser_ParseCondOperandMany(self, lhs);
+		if unlikely(!lhs)
+			goto done;
+	}
+#endif /* Dee_PARSER_EXPR_COND_METHOD != Dee_PARSER_EXPR_METHOD_switch */
+done:
+	return lhs;
+}
+
+PRIVATE WUNUSED NONNULL((1)) DeeAst *DFCALL
+DeeParser_ParseCond(DeeParser *__restrict self) {
+	DeeAst *result = DeeParser_ParseUnaryHead(self);
+	if likely(result)
+		result = DeeParser_ParseCondOperand(self, result);
+	return result;
+}
+#endif /* Dee_PARSER_EXPR_COND_METHOD != Dee_PARSER_EXPR_METHOD_Os */
+
+
+/* >> Expr */
+PRIVATE WUNUSED NONNULL((1, 2)) DeeAst *DFCALL
+DeeParser_ParseExprOperandMany(DeeParser *__restrict self, /*inherit(always)*/ DeeAst *__restrict lhs) {
+	do {
+		lhs = DeeParser_ParseExprOperandOne(self, lhs);
+	} while (likely(lhs) && TPP_TOK_IS_EXPR_OPERAND(DeeParser_GetTok(self)));
+	return lhs;
+}
+
+#if Dee_PARSER_EXPR_EXPR_METHOD == Dee_PARSER_EXPR_METHOD_Os
+INTERN WUNUSED NONNULL((1)) DeeAst *DFCALL
+DeeParser_ParseExpr(DeeParser *__restrict self) {
+	DeeAst *result = DeeParser_ParseCond(self);
+	if (likely(result) && TPP_TOK_IS_EXPR_OPERAND(DeeParser_GetTok(self)))
+		result = DeeParser_ParseExprOperandMany(self, result);
+	return result;
+}
+#else /* Dee_PARSER_EXPR_EXPR_METHOD == Dee_PARSER_EXPR_METHOD_Os */
+INTERN WUNUSED NONNULL((1, 2)) DeeAst *DFCALL
+DeeParser_ParseExprOperand(DeeParser *__restrict self, /*inherit(always)*/ DeeAst *__restrict lhs) {
+#if Dee_PARSER_EXPR_EXPR_METHOD == Dee_PARSER_EXPR_METHOD_switch
+	switch (DeeParser_GetTok(self)) {
+		{
+	TPP_CASE_TPP_TOK_UNARY_OPERAND
+			lhs = DeeParser_ParseUnaryOperandMany(self, lhs);
+			if unlikely(!lhs)
+				goto done;
+		}
+		if (TPP_TOK_IS_PROD_OPERAND(DeeParser_GetTok(self))){
+	TPP_CASE_TPP_TOK_PROD_OPERAND
+			lhs = DeeParser_ParseProdOperandMany(self, lhs);
+			if unlikely(!lhs)
+				goto done;
+		}
+		if (TPP_TOK_IS_SUM_OPERAND(DeeParser_GetTok(self))){
+	TPP_CASE_TPP_TOK_SUM_OPERAND
+			lhs = DeeParser_ParseSumOperandMany(self, lhs);
+			if unlikely(!lhs)
+				goto done;
+		}
+		if (TPP_TOK_IS_SHIFT_OPERAND(DeeParser_GetTok(self))){
+	TPP_CASE_TPP_TOK_SHIFT_OPERAND
+			lhs = DeeParser_ParseShiftOperandMany(self, lhs);
+			if unlikely(!lhs)
+				goto done;
+		}
+		if (TPP_TOK_IS_CMP_OPERAND(DeeParser_GetTok(self))){
+	TPP_CASE_TPP_TOK_CMP_OPERAND
+			lhs = DeeParser_ParseCmpOperandMany(self, lhs);
+			if unlikely(!lhs)
+				goto done;
+		}
+		if (TPP_TOK_IS_CMPEQ_OPERAND(DeeParser_GetTok(self))){
+	TPP_CASE_TPP_TOK_CMPEQ_OPERAND
+			lhs = DeeParser_ParseCmpEqOperandMany(self, lhs);
+			if unlikely(!lhs)
+				goto done;
+		}
+		if (TPP_TOK_IS_AND_OPERAND(DeeParser_GetTok(self))){
+	TPP_CASE_TPP_TOK_AND_OPERAND
+			lhs = DeeParser_ParseAndOperandMany(self, lhs);
+			if unlikely(!lhs)
+				goto done;
+		}
+		if (TPP_TOK_IS_XOR_OPERAND(DeeParser_GetTok(self))){
+	TPP_CASE_TPP_TOK_XOR_OPERAND
+			lhs = DeeParser_ParseXorOperandMany(self, lhs);
+			if unlikely(!lhs)
+				goto done;
+		}
+		if (TPP_TOK_IS_OR_OPERAND(DeeParser_GetTok(self))){
+	TPP_CASE_TPP_TOK_OR_OPERAND
+			lhs = DeeParser_ParseOrOperandMany(self, lhs);
+			if unlikely(!lhs)
+				goto done;
+		}
+		if (TPP_TOK_IS_AS_OPERAND(DeeParser_GetTok(self))){
+	TPP_CASE_TPP_TOK_AS_OPERAND
+			lhs = DeeParser_ParseAsOperandMany(self, lhs);
+			if unlikely(!lhs)
+				goto done;
+		}
+		if (TPP_TOK_IS_LAND_OPERAND(DeeParser_GetTok(self))){
+	TPP_CASE_TPP_TOK_LAND_OPERAND
+			lhs = DeeParser_ParseLandOperandMany(self, lhs);
+			if unlikely(!lhs)
+				goto done;
+		}
+		if (TPP_TOK_IS_LOR_OPERAND(DeeParser_GetTok(self))){
+	TPP_CASE_TPP_TOK_LOR_OPERAND
+			lhs = DeeParser_ParseLorOperandMany(self, lhs);
+			if unlikely(!lhs)
+				goto done;
+		}
+		if (TPP_TOK_IS_COND_OPERAND(DeeParser_GetTok(self))){
+	TPP_CASE_TPP_TOK_COND_OPERAND
+			lhs = DeeParser_ParseCondOperandMany(self, lhs);
+			if unlikely(!lhs)
+				goto done;
+		}
+		if (TPP_TOK_IS_EXPR_OPERAND(DeeParser_GetTok(self))){
+	TPP_CASE_TPP_TOK_EXPR_OPERAND
+			lhs = DeeParser_ParseExprOperandMany(self, lhs);
+			if unlikely(!lhs)
+				goto done;
+		}
+		break;
+	default: break;
+	}
+#else /* Dee_PARSER_EXPR_EXPR_METHOD == Dee_PARSER_EXPR_METHOD_switch */
+	if (TPP_TOK_IS_UNARY_OPERAND(DeeParser_GetTok(self))) {
+		lhs = DeeParser_ParseUnaryOperandMany(self, lhs);
+		if unlikely(!lhs)
+			goto done;
+	}
+	if (TPP_TOK_IS_PROD_OPERAND(DeeParser_GetTok(self))) {
+		lhs = DeeParser_ParseProdOperandMany(self, lhs);
+		if unlikely(!lhs)
+			goto done;
+	}
+	if (TPP_TOK_IS_SUM_OPERAND(DeeParser_GetTok(self))) {
+		lhs = DeeParser_ParseSumOperandMany(self, lhs);
+		if unlikely(!lhs)
+			goto done;
+	}
+	if (TPP_TOK_IS_SHIFT_OPERAND(DeeParser_GetTok(self))) {
+		lhs = DeeParser_ParseShiftOperandMany(self, lhs);
+		if unlikely(!lhs)
+			goto done;
+	}
+	if (TPP_TOK_IS_CMP_OPERAND(DeeParser_GetTok(self))) {
+		lhs = DeeParser_ParseCmpOperandMany(self, lhs);
+		if unlikely(!lhs)
+			goto done;
+	}
+	if (TPP_TOK_IS_CMPEQ_OPERAND(DeeParser_GetTok(self))) {
+		lhs = DeeParser_ParseCmpEqOperandMany(self, lhs);
+		if unlikely(!lhs)
+			goto done;
+	}
+	if (TPP_TOK_IS_AND_OPERAND(DeeParser_GetTok(self))) {
+		lhs = DeeParser_ParseAndOperandMany(self, lhs);
+		if unlikely(!lhs)
+			goto done;
+	}
+	if (TPP_TOK_IS_XOR_OPERAND(DeeParser_GetTok(self))) {
+		lhs = DeeParser_ParseXorOperandMany(self, lhs);
+		if unlikely(!lhs)
+			goto done;
+	}
+	if (TPP_TOK_IS_OR_OPERAND(DeeParser_GetTok(self))) {
+		lhs = DeeParser_ParseOrOperandMany(self, lhs);
+		if unlikely(!lhs)
+			goto done;
+	}
+	if (TPP_TOK_IS_AS_OPERAND(DeeParser_GetTok(self))) {
+		lhs = DeeParser_ParseAsOperandMany(self, lhs);
+		if unlikely(!lhs)
+			goto done;
+	}
+	if (TPP_TOK_IS_LAND_OPERAND(DeeParser_GetTok(self))) {
+		lhs = DeeParser_ParseLandOperandMany(self, lhs);
+		if unlikely(!lhs)
+			goto done;
+	}
+	if (TPP_TOK_IS_LOR_OPERAND(DeeParser_GetTok(self))) {
+		lhs = DeeParser_ParseLorOperandMany(self, lhs);
+		if unlikely(!lhs)
+			goto done;
+	}
+	if (TPP_TOK_IS_COND_OPERAND(DeeParser_GetTok(self))) {
+		lhs = DeeParser_ParseCondOperandMany(self, lhs);
+		if unlikely(!lhs)
+			goto done;
+	}
+	if (TPP_TOK_IS_EXPR_OPERAND(DeeParser_GetTok(self))) {
+		lhs = DeeParser_ParseExprOperandMany(self, lhs);
+		if unlikely(!lhs)
+			goto done;
+	}
+#endif /* Dee_PARSER_EXPR_EXPR_METHOD != Dee_PARSER_EXPR_METHOD_switch */
+done:
+	return lhs;
+}
+
+INTERN WUNUSED NONNULL((1)) DeeAst *DFCALL
+DeeParser_ParseExpr(DeeParser *__restrict self) {
+	DeeAst *result = DeeParser_ParseUnaryHead(self);
+	if likely(result)
+		result = DeeParser_ParseExprOperand(self, result);
+	return result;
+}
+#endif /* Dee_PARSER_EXPR_EXPR_METHOD != Dee_PARSER_EXPR_METHOD_Os */
+/*[[[end]]]*/
+
+
+
+
+
 PRIVATE WUNUSED NONNULL((1, 2, 3)) DeeAst *DFCALL
 DeeParser_ParseUnaryOperandDotOperator(DeeParser *__restrict self,
                                        /*inherit(always)*/ DeeAst *__restrict lhs,
@@ -2112,7 +4161,7 @@ DeeParser_ParseUnaryOperandDotOperator(DeeParser *__restrict self,
 		DeeAst *operator_function = DeeAst_MakeOperatorFunction(&operator_loc, &operator_name, &self->p_lexer);
 		if unlikely(!operator_function)
 			goto err_lhs;
-		return DeeAst_MakeInstanceMethod(dot_loc, operator_function, lhs, &self->p_lexer);
+		return DeeAst_MakeInstanceMethod(dot_loc, operator_function, lhs);
 	}
 	DeeParser_NoLf_Push(self);
 	if (TPP_TOK_ISERR(DeeParser_Yield(self))) {
@@ -2146,295 +4195,74 @@ err:
 	return NULL;
 }
 
-INTERN WUNUSED NONNULL((1, 2)) DeeAst *DFCALL
-DeeParser_ParseUnaryOperand(DeeParser *__restrict self,
-                            /*inherit(always)*/ DeeAst *__restrict lhs) {
-	DeeAstLoc loc;
-again:
+PRIVATE WUNUSED NONNULL((1)) DeeAst *DFCALL
+DeeParser_ParseUnaryOperandDot(DeeParser *__restrict self,
+                               /*inherit(always)*/ DeeAst *__restrict lhs) {
+	DeeAstLoc dot_loc;
+	ASSERT(DeeParser_GetTok(self) == '.');
+	if (DeeParser_GetLoc(self, &dot_loc))
+		goto err_lhs;
+	if (TPP_TOK_ISERR(DeeParser_Yield(self)))
+		goto err_lhs;
 	switch (DeeParser_GetTok(self)) {
 
-	case TPP_TOK_COLON_COLON:
-		/* Backwards compatibility with deemon 100+ */
-		if (DeeParser_Warnf(self, TPP_W_DEPRECATED_ATTRIBUTE_SYNTAX))
-			goto err_lhs;
-		ATTR_FALLTHROUGH
-	case '.': /* Attribute lookup */
-		if (DeeParser_GetLoc(self, &loc))
-			goto err_lhs;
+	case TPP_KWD_this:
+		/* This is really just a no-op. */
+yield_and_done:
 		if (TPP_TOK_ISERR(DeeParser_Yield(self)))
 			goto err_lhs;
-		switch (DeeParser_GetTok(self)) {
+		return lhs;
 
-		case TPP_KWD_this:
-			/* This is really just a no-op. */
-yield_and_again:
-			if (TPP_TOK_ISERR(DeeParser_Yield(self)))
-				goto err_lhs;
-			goto again;
-
-		case TPP_KWD_class:
-			/* Return the real class of a type, properly unwinding super. */
-			lhs = DeeAst_NewAct1(Dee_AST_ACT1_CLASSOF, lhs);
-			if unlikely(!lhs)
-				goto err;
-			DeeAst_SetLoc(lhs, &loc);
-			goto yield_and_again;
-
-		case TPP_KWD_super:
-			/* Return the real class of a type, properly unwinding super. */
-			lhs = DeeAst_NewAct1(Dee_AST_ACT1_SUPEROF, lhs);
-			if unlikely(!lhs)
-				goto err;
-			DeeAst_SetLoc(lhs, &loc);
-			goto yield_and_again;
-
-		case TPP_KWD_operator:
-			lhs = DeeParser_ParseUnaryOperandDotOperator(self, lhs, &loc);
-			if unlikely(!lhs)
-				goto err;
-			goto again;
-
-		default:
-			break;
-		}
-
-		if (DeeParser_HasTokenKwd(self)) {
-			DREF DeeObject *attr_name;
-			DeeAst *attr_name_ast;
-			if (DeeParser_IsIdentifier(self, DeeParser_GetTokenKwd(self))) {
-				if (DeeParser_Warnf(self, TPP_W_RESERVED_ATTRIBUTE_NAME,
-				                   DeeParser_GetTokenKwdCStr(self)))
-					goto err_lhs;
-			}
-			attr_name = DeeString_NewSized(DeeParser_GetTokenKwdCStr(self),
-			                               DeeParser_GetTokenKwdLen(self));
-			if unlikely(!attr_name)
-				goto err_lhs;
-			attr_name_ast = DeeAst_NewConst(attr_name);
-			if unlikely(!attr_name_ast)
-				goto err_lhs;
-			if (DeeAst_SetLocHere(attr_name_ast, &self->p_lexer)) {
-				DeeAst_Destroy(attr_name_ast);
-				goto err_lhs;
-			}
-			lhs = DeeAst_NewOperator2(OPERATOR_GETATTR, lhs, attr_name_ast);
-			if unlikely(!lhs)
-				goto err;
-			DeeAst_SetLoc(lhs, &loc);
-			goto yield_and_again;
-		}
-
-		if (DeeParser_Warnf(self, TPP_W_EXPECTED_KEYWORD_AFTER_DOT))
-			goto err_lhs;
-		goto again;
-
-	case '[': {
-		DeeAst *range_start;
-
-		/* sequence operator */
-		if (DeeParser_GetLoc(self, &loc))
-			goto err_lhs;
-		DeeParser_NoLf_Push(self);
-		if (TPP_TOK_ISERR(DeeParser_Yield(self))) {
-err_lhs_lbracket_flags:
-			DeeParser_NoLf_Break(self);
-			goto err_lhs;
-		}
-		if (DeeParser_GetTok(self) == ':') {
-			range_start = DeeAst_NewConst(DeeNone_NewRef());
-		} else {
-			range_start = DeeParser_ParseExpr(self);
-		}
-		if unlikely(!range_start)
-			goto err_lhs_lbracket_flags;
-		if (DeeParser_GetTok(self) == ':') {
-			DeeAst *range_end;
-			if (TPP_TOK_ISERR(DeeParser_Yield(self))) {
-err_lhs_lbracket_flags_range_start:
-				DeeAst_Destroy(range_start);
-				goto err_lhs_lbracket_flags;
-			}
-			if (DeeParser_GetTok(self) == ']') {
-				range_end = DeeAst_NewConst(DeeNone_NewRef());
-			} else {
-				range_end = DeeParser_ParseExpr(self);
-			}
-			if unlikely(!range_end)
-				goto err_lhs_lbracket_flags_range_start;
-			lhs = DeeAst_NewOperator3(OPERATOR_GETRANGE, lhs, range_start, range_end);
-		} else {
-			lhs = DeeAst_NewOperator2(OPERATOR_GETITEM, lhs, range_start);
-		}
-		DeeParser_NoLf_Pop(self);
+	case TPP_KWD_class:
+		/* Return the real class of a type, properly unwinding super. */
+		lhs = DeeAst_NewAct1(Dee_AST_ACT1_CLASSOF, lhs);
 		if unlikely(!lhs)
 			goto err;
-		DeeAst_SetLoc(lhs, &loc);
-		if (TPP_TOK_ISERR(DeeParser_Skip(self, TPP_TOK_OFCHAR(']'))))
-			goto err_lhs;
-		goto again;
-	}	break;
+		DeeAst_SetLoc(lhs, &dot_loc);
+		goto yield_and_done;
 
-	case '{': { /* Brace initializers. */
-		if (DeeParser_GetLoc(self, &loc))
-			goto err_lhs;
-		/* TODO */
-	}	break;
+	case TPP_KWD_super:
+		/* Return the real class of a type, properly unwinding super. */
+		lhs = DeeAst_NewAct1(Dee_AST_ACT1_SUPEROF, lhs);
+		if unlikely(!lhs)
+			goto err;
+		DeeAst_SetLoc(lhs, &dot_loc);
+		goto yield_and_done;
 
-#if 0
-		case '{':
-			other = ast_parse_unaryhead(self, LOOKUP_SYM_SECONDARY);
-			if unlikely(!other)
-				goto err_r;
-			/* Use the brace AST in a single-argument call to `result` */
-			DREF struct ast **elemv;
-			elemv = (DREF struct ast **)Dee_Mallocc(1, sizeof(DREF struct ast *));
-			if unlikely(!elemv) {
-err_other:
-				ast_decref(other);
-				goto err_r;
-			}
-			elemv[0] = other;
-			merge    = ast_setddi(ast_multiple(AST_FMULTIPLE_TUPLE, 1, elemv), &loc);
-			if unlikely(!merge) {
-				Dee_Free(elemv);
-				goto err_other;
-			}
-			other = ast_setddi(ast_operator2(OPERATOR_CALL, 0, result, merge), &loc);
-			ast_decref(merge);
-			/* Override the result AST when a special type-initialization was performed. */
-			ast_decref(result);
-			result = other;
-			break;
-
-		case TPP_KWD_pack: {
-			int temp;
-			DREF struct ast *kw_labels;
-			bool inside_macro = tpp_file_ismacro(DeeParser_GetFile(self));
-			/* Call expression without parenthesis. */
-			if (DeeParser_GetLoc(self, &loc))
-				goto err_r;
-			if (TPP_TOK_ISERR(DeeParser_Yield(self)))
-				goto err_r;
-			if (DeeParser_GetTok(self) == '(')
-				goto do_normal_call_with_loc;
-			if (!inside_macro) {
-				if (DeeParser_WarnfLoc(self, &loc, TPP_W_PACK_USED_OUTSIDE_OF_MACRO))
-					goto err_r;
-			}
-			temp = maybe_expression_begin(self);
-			if (temp <= 0) {
-				if unlikely(temp < 0)
-					goto err_r;
-				other = ast_setddi(ast_constexpr(Dee_EmptyTuple), &loc);
-				kw_labels = NULL;
-			} else {
-				other = ast_parse_argument_list(self,
-				                                AST_COMMA_FORCEMULTIPLE |
-				                                AST_COMMA_STRICTCOMMA,
-				                                &kw_labels);
-			}
-			if unlikely(!other)
-				goto err_r;
-			if (kw_labels) {
-				merge = ast_action3(AST_FACTION_CALL_KW,
-				                    result,
-				                    other,
-				                    kw_labels);
-				ast_decref(kw_labels);
-			} else {
-				merge = ast_operator2(OPERATOR_CALL, 0, result, other);
-			}
-			merge = ast_setddi(merge, &loc);
-			ast_decref(other);
-			ast_decref(result);
-			if unlikely(!merge)
-				goto err;
-			result = merge;
-		}	break;
-
-		case '(': {
-			DREF struct ast *kw_labels;
-			/* Call expression. */
-			if (DeeParser_GetLoc(self, &loc))
-				goto err_r;
-do_normal_call_with_loc:
-			DeeParser_NoLf_Push(self);
-			if (TPP_TOK_ISERR(DeeParser_Yield(self))) {
-err_r_lparen_flags:
-				DeeParser_NoLf_Break(self);
-				goto err_r;
-			}
-			if (DeeParser_GetTok(self) == ')') {
-				other     = ast_setddi(ast_constexpr(Dee_EmptyTuple), &loc);
-				kw_labels = NULL;
-			} else {
-				other = ast_parse_argument_list(self, AST_COMMA_FORCEMULTIPLE, &kw_labels);
-			}
-			if unlikely(!other)
-				goto err_r_lparen_flags;
-			if (kw_labels) {
-				merge = ast_action3(AST_FACTION_CALL_KW,
-				                    result,
-				                    other,
-				                    kw_labels);
-				ast_decref(kw_labels);
-			} else {
-				merge = ast_operator2(OPERATOR_CALL, 0, result, other);
-			}
-			merge = ast_setddi(merge, &loc);
-			ast_decref(other);
-			ast_decref(result);
-			DeeParser_NoLf_Pop(self);
-			if unlikely(!merge)
-				goto err;
-			result = merge;
-			if (DeeParser_Skip2(self, TPP_TOK_OFCHAR(')'), W_EXPECTED_RPAREN_AFTER_CALL))
-				goto err_r;
-		}	break;
-
-		case TPP_TOK_PLUS_PLUS: {
-			Dee_operator_t opid;
-			/* Inplace operators. */
-			opid = OPERATOR_INC;
-			goto do_inplace_op;
-		case TPP_TOK_MINUS_MINUS:
-			opid = OPERATOR_DEC;
-do_inplace_op:
-			merge = ast_sethere(self, ast_operator1(opid, AST_OPERATOR_FPOSTOP, result));
-			ast_decref(result);
-			if unlikely(!merge)
-				goto err;
-			result = merge;
-			if (TPP_TOK_ISERR(DeeParser_Yield(self)))
-				goto err_r;
-		}	break;
-
-		case TPP_TOK_DOT_DOT_DOT: /* Expand expression. */
-			merge = ast_sethere(self, ast_expand(result));
-			ast_decref(result);
-			if unlikely(!merge)
-				goto err;
-			result = merge;
-			if (TPP_TOK_ISERR(DeeParser_Yield(self)))
-				goto err_r;
-			break;
-
-		default:
-			goto done;
-		}
-	} while (result);
-done:
-	return result;
-err_r_other:
-	ast_decref(other);
-err_r:
-	ast_decref(result);
-err:
-	return NULL;
-#endif
+	case TPP_KWD_operator:
+		return DeeParser_ParseUnaryOperandDotOperator(self, lhs, &dot_loc);
 
 	default: break;
 	}
+
+	if (DeeParser_HasTokenKwd(self)) {
+		DREF DeeObject *attr_name;
+		DeeAst *attr_name_ast;
+		if (DeeParser_IsIdentifier(self, DeeParser_GetTokenKwd(self))) {
+			if (DeeParser_Warnf(self, TPP_W_RESERVED_ATTRIBUTE_NAME,
+			                    DeeParser_GetTokenKwdCStr(self)))
+				goto err_lhs;
+		}
+		attr_name = DeeString_NewSized(DeeParser_GetTokenKwdCStr(self),
+		                               DeeParser_GetTokenKwdLen(self));
+		if unlikely(!attr_name)
+			goto err_lhs;
+		attr_name_ast = DeeAst_NewConst(attr_name);
+		if unlikely(!attr_name_ast)
+			goto err_lhs;
+		if (DeeAst_SetLocHere(attr_name_ast, &self->p_lexer)) {
+			DeeAst_Destroy(attr_name_ast);
+			goto err_lhs;
+		}
+		lhs = DeeAst_NewOperator2(OPERATOR_GETATTR, lhs, attr_name_ast);
+		if unlikely(!lhs)
+			goto err;
+		DeeAst_SetLoc(lhs, &dot_loc);
+		goto yield_and_done;
+	}
+
+	if (DeeParser_Warnf(self, TPP_W_EXPECTED_KEYWORD_AFTER_DOT))
+		goto err_lhs;
 	return lhs;
 err_lhs:
 	DeeAst_Destroy(lhs);
@@ -2442,33 +4270,669 @@ err:
 	return NULL;
 }
 
-INTERN WUNUSED NONNULL((1)) DeeAst *DFCALL
-DeeParser_ParseUnary(DeeParser *__restrict self) {
-	DeeAst *result = DeeParser_ParseUnaryHead(self);
-	if likely(result)
-		result = DeeParser_ParseUnaryOperand(self, result);
-	return result;
+PRIVATE WUNUSED NONNULL((1)) DeeAst *DFCALL
+DeeParser_ParseUnaryOperandItem(DeeParser *__restrict self,
+                                /*inherit(always)*/ DeeAst *__restrict lhs) {
+	DeeAstLoc bracket_loc;
+	DeeAst *range_start;
+	ASSERT(DeeParser_GetTok(self) == '[');
+
+	/* sequence operator */
+	if (DeeParser_GetLoc(self, &bracket_loc))
+		goto err_lhs;
+	DeeParser_NoLf_Push(self);
+	if (TPP_TOK_ISERR(DeeParser_Yield(self))) {
+err_lhs_nolf_break:
+		DeeParser_NoLf_Break(self);
+		goto err_lhs;
+	}
+	if (DeeParser_GetTok(self) == ':') {
+		range_start = DeeAst_NewConst(DeeNone_NewRef());
+	} else {
+		range_start = DeeParser_ParseExpr(self);
+	}
+	if unlikely(!range_start)
+		goto err_lhs_nolf_break;
+	if (DeeParser_GetTok(self) == ':') {
+		DeeAst *range_end;
+		if (TPP_TOK_ISERR(DeeParser_Yield(self))) {
+err_lhs_nolf_break_range_start:
+			DeeAst_Destroy(range_start);
+			goto err_lhs_nolf_break;
+		}
+		if (DeeParser_GetTok(self) == ']') {
+			range_end = DeeAst_NewConst(DeeNone_NewRef());
+		} else {
+			range_end = DeeParser_ParseExpr(self);
+		}
+		if unlikely(!range_end)
+			goto err_lhs_nolf_break_range_start;
+		lhs = DeeAst_NewOperator3(OPERATOR_GETRANGE, lhs, range_start, range_end);
+	} else {
+		lhs = DeeAst_NewOperator2(OPERATOR_GETITEM, lhs, range_start);
+	}
+	DeeParser_NoLf_Pop(self);
+	if unlikely(!lhs)
+		goto err;
+	DeeAst_SetLoc(lhs, &bracket_loc);
+	if (TPP_TOK_ISERR(DeeParser_Skip(self, TPP_TOK_OFCHAR(']'))))
+		goto err_lhs;
+	return lhs;
+err_lhs:
+	DeeAst_Destroy(lhs);
+err:
+	return NULL;
+}
+
+PRIVATE WUNUSED NONNULL((1)) DeeAst *DFCALL
+DeeParser_ParseUnaryOperandBrace(DeeParser *__restrict self,
+                                 /*inherit(always)*/ DeeAst *__restrict lhs) {
+	DeeAstLoc brace_loc;
+	DeeAst *brace_sequence;
+	ASSERT(DeeParser_GetTok(self) == '{');
+	/* sequence operator */
+	if (DeeParser_GetLoc(self, &brace_loc))
+		goto err_lhs;
+	DeeParser_NoLf_Push(self);
+	if (TPP_TOK_ISERR(DeeParser_Yield(self))) {
+/*err_lhs_nolf_break:*/
+		DeeParser_NoLf_Break(self);
+		goto err_lhs;
+	}
+	brace_sequence = DeeParser_ParseExprSequenceOrMapping(self);
+	DeeParser_NoLf_Pop(self);
+	if unlikely(!brace_sequence)
+		goto err_lhs;
+	lhs = DeeAst_MakeCall(&brace_loc, lhs, 1, &brace_sequence);
+	if unlikely(!lhs)
+		goto err;
+	if (TPP_TOK_ISERR(DeeParser_Skip(self, TPP_TOK_OFCHAR('}'))))
+		goto err_lhs;
+	return lhs;
+err_lhs:
+	DeeAst_Destroy(lhs);
+err:
+	return NULL;
+}
+
+PRIVATE WUNUSED NONNULL((1)) DeeAst *DFCALL
+DeeParser_ParseUnaryOperandParen(DeeParser *__restrict self,
+                                 /*inherit(always)*/ DeeAst *__restrict lhs) {
+	bool has_paren;
+	DeeAstLoc paren_loc;
+	struct Dee_parser_expr_arglist arglist;
+	ASSERT(DeeParser_GetTok(self) == '(' ||
+	       DeeParser_GetTok(self) == TPP_KWD_pack);
+	/* sequence operator */
+	if (DeeParser_GetLoc(self, &paren_loc))
+		goto err_lhs;
+	DeeParser_NoLf_Push(self);
+	if (DeeParser_ParenBegin(self, &has_paren)) {
+err_lhs_nolf_break:
+		DeeParser_NoLf_Break(self);
+		goto err_lhs;
+	}
+	if (DeeParser_ParseExprArgList(self, &arglist))
+		goto err_lhs_nolf_break;
+	DeeParser_NoLf_Pop(self);
+	lhs = arglist.peal_kwds ? DeeAst_NewOperator3(OPERATOR_CALL, lhs, arglist.peal_args, arglist.peal_kwds)
+	                        : DeeAst_NewOperator2(OPERATOR_CALL, lhs, arglist.peal_args);
+	if unlikely(!lhs)
+		goto err;
+	DeeAst_SetLoc(lhs, &paren_loc);
+	if (DeeParser_ParenEnd(self, has_paren))
+		goto err_lhs;
+	return lhs;
+/*
+err_lhs_arglist:
+	Dee_parser_expr_arglist_fini(&arglist);*/
+err_lhs:
+	DeeAst_Destroy(lhs);
+err:
+	return NULL;
+}
+
+/* TPP_TOK_IS_UNARY_OPERAND_OPERATOR */
+#define TPP_CASE_TPP_TOK_UNARY_OPERAND_OPERATOR \
+	case TPP_TOK_PLUS_PLUS:                     \
+	case TPP_TOK_MINUS_MINUS:
+#define TPP_TOK_IS_UNARY_OPERAND_OPERATOR(tok) \
+	((tok) == TPP_TOK_PLUS_PLUS ||             \
+	 (tok) == TPP_TOK_MINUS_MINUS)
+PRIVATE WUNUSED NONNULL((1)) DeeAst *DFCALL
+DeeParser_ParseUnaryOperandOperator(DeeParser *__restrict self,
+                                    /*inherit(always)*/ DeeAst *__restrict lhs) {
+	struct Dee_ast_operator_id opid;
+	ASSERT(TPP_TOK_IS_UNARY_OPERAND_OPERATOR(DeeParser_GetTok(self)));
+	Dee_ast_operator_id_initid(&opid,
+	                           DeeParser_GetTok(self) == TPP_TOK_PLUS_PLUS
+	                           ? OPERATOR_INC
+	                           : OPERATOR_DEC);
+	lhs = DeeAst_NewOperatorEx1(&opid, Dee_AST_OPERATOR_FLAG_POSTOP, lhs);
+	if unlikely(!lhs)
+		goto err;
+	if (DeeAst_SetLocHere(lhs, &self->p_lexer))
+		goto err_lhs;
+	if (TPP_TOK_ISERR(DeeParser_Yield(self)))
+		goto err_lhs;
+	return lhs;
+err_lhs:
+	DeeAst_Destroy(lhs);
+err:
+	return NULL;
+}
+
+/* TPP_TOK_DOT_DOT_DOT */
+PRIVATE WUNUSED NONNULL((1)) DeeAst *DFCALL
+DeeParser_ParseUnaryOperandDots(DeeParser *__restrict self,
+                                /*inherit(always)*/ DeeAst *__restrict lhs) {
+	ASSERT(DeeParser_GetTok(self) == TPP_TOK_DOT_DOT_DOT);
+	lhs = DeeAst_NewAct1(Dee_AST_ACT1_UNPACK, lhs);
+	if unlikely(!lhs)
+		goto err;
+	if (DeeAst_SetLocHere(lhs, &self->p_lexer))
+		goto err_lhs;
+	if (TPP_TOK_ISERR(DeeParser_Yield(self)))
+		goto err_lhs;
+	return lhs;
+err_lhs:
+	DeeAst_Destroy(lhs);
+err:
+	return NULL;
+}
+
+LOCAL WUNUSED NONNULL((1, 2)) DeeAst *DFCALL
+DeeParser_ParseUnaryOperandOne(DeeParser *__restrict self,
+                               /*inherit(always)*/ DeeAst *__restrict lhs) {
+	ASSERT(TPP_TOK_IS_UNARY_OPERAND(DeeParser_GetTok(self)));
+	switch (DeeParser_GetTok(self)) {
+	case TPP_TOK_COLON_COLON:
+		/* Backwards compatibility with deemon 100+ */
+		if (DeeParser_Warnf(self, TPP_W_DEPRECATED_ATTRIBUTE_SYNTAX))
+			goto err_lhs;
+		ATTR_FALLTHROUGH
+	case '.': /* ATTR lookup */
+		return DeeParser_ParseUnaryOperandDot(self, lhs);
+	case '[': /* ITEM / RANGE lookup */
+		return DeeParser_ParseUnaryOperandItem(self, lhs);
+	case '{': /* Brace initializers. */
+		return DeeParser_ParseUnaryOperandBrace(self, lhs);
+	case '(': /* Function call */
+	case TPP_KWD_pack:
+		return DeeParser_ParseUnaryOperandParen(self, lhs);
+	TPP_CASE_TPP_TOK_UNARY_OPERAND_OPERATOR
+		return DeeParser_ParseUnaryOperandOperator(self, lhs);
+	case TPP_TOK_DOT_DOT_DOT:
+		return DeeParser_ParseUnaryOperandDots(self, lhs);
+	default: __builtin_unreachable();
+	}
+	__builtin_unreachable();
+err_lhs:
+	DeeAst_Destroy(lhs);
+/*err:*/
+	return NULL;
 }
 
 
-INTERN WUNUSED NONNULL((1, 2)) DeeAst *DFCALL
-DeeParser_ParseProdOperand(DeeParser *__restrict self, /*inherit(always)*/ DeeAst *__restrict lhs) {
-
+/* >> Prod */
+LOCAL WUNUSED NONNULL((1, 2)) DeeAst *DFCALL
+DeeParser_ParseProdOperandOne(DeeParser *__restrict self,
+                              /*inherit(always)*/ DeeAst *__restrict lhs) {
+	DeeAst *rhs;
+	DeeAstLoc prod_loc;
+	tpp_token_id const prod_mode = DeeParser_GetTok(self);
+	Dee_operator_t prod_op;
+	ASSERT(TPP_TOK_IS_PROD_OPERAND(prod_mode));
+	switch (prod_mode) {
+	case '*': prod_op = OPERATOR_MUL; break;
+	case '/': prod_op = OPERATOR_DIV; break;
+	case '%': prod_op = OPERATOR_MOD; break;
+	case TPP_TOK_STAR_STAR: prod_op = OPERATOR_POW; break;
+	default: __builtin_unreachable();
+	}
+	if (DeeParser_GetLoc(self, &prod_loc))
+		goto err_lhs;
+	if (TPP_TOK_ISERR(DeeParser_Yield(self)))
+		goto err_lhs;
+	rhs = DeeParser_ParseUnary(self);
+	if unlikely(!rhs)
+		goto err_lhs;
+	lhs = DeeAst_NewOperator2(prod_op, lhs, rhs);
+	lhs = DeeAst_TrySetLoc(lhs, &prod_loc);
+	return lhs;
+err_lhs:
+	DeeAst_Destroy(lhs);
+/*err:*/
+	return NULL;
 }
 
-INTERN WUNUSED NONNULL((1, 2)) DeeAst *DFCALL DeeParser_ParseSumOperand(DeeParser *__restrict self, /*inherit(always)*/ DeeAst *__restrict lhs);
-INTERN WUNUSED NONNULL((1, 2)) DeeAst *DFCALL DeeParser_ParseShiftOperand(DeeParser *__restrict self, /*inherit(always)*/ DeeAst *__restrict lhs);
-INTERN WUNUSED NONNULL((1, 2)) DeeAst *DFCALL DeeParser_ParseCmpOperand(DeeParser *__restrict self, /*inherit(always)*/ DeeAst *__restrict lhs);
-INTERN WUNUSED NONNULL((1, 2)) DeeAst *DFCALL DeeParser_ParseCmpeqOperand(DeeParser *__restrict self, /*inherit(always)*/ DeeAst *__restrict lhs);
-INTERN WUNUSED NONNULL((1, 2)) DeeAst *DFCALL DeeParser_ParseAndOperand(DeeParser *__restrict self, /*inherit(always)*/ DeeAst *__restrict lhs);
-INTERN WUNUSED NONNULL((1, 2)) DeeAst *DFCALL DeeParser_ParseXorOperand(DeeParser *__restrict self, /*inherit(always)*/ DeeAst *__restrict lhs);
-INTERN WUNUSED NONNULL((1, 2)) DeeAst *DFCALL DeeParser_ParseOrOperand(DeeParser *__restrict self, /*inherit(always)*/ DeeAst *__restrict lhs);
-INTERN WUNUSED NONNULL((1, 2)) DeeAst *DFCALL DeeParser_ParseAsOperand(DeeParser *__restrict self, /*inherit(always)*/ DeeAst *__restrict lhs);
-INTERN WUNUSED NONNULL((1, 2)) DeeAst *DFCALL DeeParser_ParseLandOperand(DeeParser *__restrict self, /*inherit(always)*/ DeeAst *__restrict lhs);
-INTERN WUNUSED NONNULL((1, 2)) DeeAst *DFCALL DeeParser_ParseLorOperand(DeeParser *__restrict self, /*inherit(always)*/ DeeAst *__restrict lhs);
-INTERN WUNUSED NONNULL((1, 2)) DeeAst *DFCALL DeeParser_ParseCondOperand(DeeParser *__restrict self, /*inherit(always)*/ DeeAst *__restrict lhs);
-INTERN WUNUSED NONNULL((1, 2)) DeeAst *DFCALL DeeParser_ParseAssignOperand(DeeParser *__restrict self, /*inherit(always)*/ DeeAst *__restrict lhs);
+/* >> Sum */
+LOCAL WUNUSED NONNULL((1, 2)) DeeAst *DFCALL
+DeeParser_ParseSumOperandOne(DeeParser *__restrict self,
+                             /*inherit(always)*/ DeeAst *__restrict lhs) {
+	DeeAst *rhs;
+	DeeAstLoc sum_loc;
+	tpp_token_id const sum_mode = DeeParser_GetTok(self);
+	Dee_operator_t sum_op;
+	ASSERT(TPP_TOK_IS_SUM_OPERAND(sum_mode));
+	switch (sum_mode) {
+	case '+': sum_op = OPERATOR_ADD; break;
+	case '-': sum_op = OPERATOR_SUB; break;
+	default: __builtin_unreachable();
+	}
+	if (DeeParser_GetLoc(self, &sum_loc))
+		goto err_lhs;
+	if (TPP_TOK_ISERR(DeeParser_Yield(self)))
+		goto err_lhs;
+	rhs = DeeParser_ParseProd(self);
+	if unlikely(!rhs)
+		goto err_lhs;
+	lhs = DeeAst_NewOperator2(sum_op, lhs, rhs);
+	lhs = DeeAst_TrySetLoc(lhs, &sum_loc);
+	return lhs;
+err_lhs:
+	DeeAst_Destroy(lhs);
+/*err:*/
+	return NULL;
+}
 
+/* >> Shift */
+LOCAL WUNUSED NONNULL((1, 2)) DeeAst *DFCALL
+DeeParser_ParseShiftOperandOne(DeeParser *__restrict self,
+                               /*inherit(always)*/ DeeAst *__restrict lhs) {
+	DeeAst *rhs;
+	DeeAstLoc shift_loc;
+	tpp_token_id const shift_mode = DeeParser_GetTok(self);
+	Dee_operator_t shift_op;
+	ASSERT(TPP_TOK_IS_SHIFT_OPERAND(shift_mode));
+	switch (shift_mode) {
+	case TPP_TOK_LANGLE_LANGLE: shift_op = OPERATOR_SHL; break;
+	case TPP_TOK_RANGLE_RANGLE: shift_op = OPERATOR_SHR; break;
+	default: __builtin_unreachable();
+	}
+	if (DeeParser_GetLoc(self, &shift_loc))
+		goto err_lhs;
+	if (TPP_TOK_ISERR(DeeParser_Yield(self)))
+		goto err_lhs;
+	rhs = DeeParser_ParseSum(self);
+	if unlikely(!rhs)
+		goto err_lhs;
+	lhs = DeeAst_NewOperator2(shift_op, lhs, rhs);
+	lhs = DeeAst_TrySetLoc(lhs, &shift_loc);
+	return lhs;
+err_lhs:
+	DeeAst_Destroy(lhs);
+/*err:*/
+	return NULL;
+}
+
+/* >> Cmp */
+LOCAL WUNUSED NONNULL((1, 2)) DeeAst *DFCALL
+DeeParser_ParseCmpOperandOne(DeeParser *__restrict self,
+                             /*inherit(always)*/ DeeAst *__restrict lhs) {
+	DeeAst *rhs;
+	DeeAstLoc cmp_loc;
+	tpp_token_id const cmp_mode = DeeParser_GetTok(self);
+	Dee_operator_t cmp_op;
+	ASSERT(TPP_TOK_IS_CMP_OPERAND(cmp_mode));
+	switch (cmp_mode) {
+	case '<': cmp_op = OPERATOR_LO; break;
+	case '>': cmp_op = OPERATOR_GR; break;
+	case TPP_TOK_LANGLE_EQUAL: cmp_op = OPERATOR_LE; break;
+	case TPP_TOK_RANGLE_EQUAL: cmp_op = OPERATOR_GE; break;
+	default: __builtin_unreachable();
+	}
+	if (DeeParser_GetLoc(self, &cmp_loc))
+		goto err_lhs;
+	if (TPP_TOK_ISERR(DeeParser_Yield(self)))
+		goto err_lhs;
+	rhs = DeeParser_ParseShift(self);
+	if unlikely(!rhs)
+		goto err_lhs;
+	lhs = DeeAst_NewOperator2(cmp_op, lhs, rhs);
+	lhs = DeeAst_TrySetLoc(lhs, &cmp_loc);
+	return lhs;
+err_lhs:
+	DeeAst_Destroy(lhs);
+/*err:*/
+	return NULL;
+}
+
+/* >> CmpEq */
+LOCAL WUNUSED NONNULL((1, 2)) DeeAst *DFCALL
+DeeParser_ParseCmpEqOperandOne(DeeParser *__restrict self,
+                               /*inherit(always)*/ DeeAst *__restrict lhs) {
+	DeeAst *rhs;
+	DeeAstLoc cmpeq_loc;
+	tpp_token_id const cmpeq_mode = DeeParser_GetTok(self);
+	ASSERT(TPP_TOK_IS_CMPEQ_OPERAND(cmpeq_mode));
+	if (DeeParser_GetLoc(self, &cmpeq_loc))
+		goto err_lhs;
+	if (cmpeq_mode == '!') {
+		/* Special case: `lhs !in rhs` */
+		bool negate;
+		DeeAstLoc action_loc;
+		tpp_token_id action;
+		action = tpp_peek_next_non_exclaim(&self->p_lexer.dl_lexer);
+		if (TPP_TOK_ISERR(action))
+			goto err_lhs;
+		if unlikely(action != TPP_KWD_in &&
+		            action != TPP_KWD_is) {
+			/* Special case to prevent problems in `f"foo = {foo!r}"`
+			 * In this case, we'd be peeking `r` at this point, which
+			 * we mustn't consume so-as to allow the caller to eventually
+			 * parse the `!r` part as a format-specifier */
+			return lhs;
+		}
+
+		negate = false;
+		do {
+			if (TPP_TOK_ISERR(DeeParser_Yield(self)))
+				goto err_lhs;
+			negate = !negate;
+		} while (DeeParser_GetTok(self) == '!');
+		action = DeeParser_GetTok(self);
+		if (DeeParser_GetLoc(self, &action_loc))
+			goto err_lhs;
+		if (action == TPP_KWD_in || action == TPP_KWD_is) {
+			if (TPP_TOK_ISERR(DeeParser_Yield(self)))
+				goto err_lhs;
+		} else {
+			if (DeeParser_Warnf(self, TPP_W_EXPECTED_IS_OR_IN_AFTER_EXCLAIM))
+				goto err_lhs;
+			action = TPP_KWD_is;
+		}
+		rhs = DeeParser_ParseCmp(self);
+		if unlikely(!rhs)
+			goto err_lhs;
+		lhs = DeeAst_NewAct2(action == TPP_KWD_is
+		                     ? Dee_AST_ACT2_IS
+		                     : Dee_AST_ACT2_IN,
+		                     lhs, rhs);
+		if unlikely(!lhs)
+			goto err;
+		DeeAst_SetLoc(lhs, &action_loc);
+		if (negate) {
+			lhs = DeeAst_NewAct1(Dee_AST_ACT1_NOT, lhs);
+			lhs = DeeAst_TrySetLoc(lhs, &cmpeq_loc);
+		}
+		return lhs;
+	}
+
+	if (TPP_TOK_ISERR(DeeParser_Yield(self)))
+		goto err_lhs;
+	rhs = DeeParser_ParseCmp(self);
+	if unlikely(!rhs)
+		goto err_lhs;
+	switch (cmpeq_mode) {
+	case TPP_KWD_is:
+		lhs = DeeAst_NewAct2(Dee_AST_ACT2_IS, lhs, rhs);
+		break;
+	case TPP_KWD_in:
+		lhs = DeeAst_NewAct2(Dee_AST_ACT2_IN, lhs, rhs);
+		break;
+	case TPP_TOK_QMARK_QMARK:
+		lhs = DeeAst_NewIf(Dee_AST_IF_FLAG_COND_ISNONE, lhs, rhs, lhs);
+		break;
+	case TPP_TOK_EQUAL_EQUAL_EQUAL:
+		lhs = DeeAst_NewAct2(Dee_AST_ACT2_SAMEOBJ, lhs, rhs);
+		break;
+	case TPP_TOK_EXCLAIM_EQUAL_EQUAL:
+		lhs = DeeAst_NewAct2(Dee_AST_ACT2_DIFFOBJ, lhs, rhs);
+		break;
+	case TPP_TOK_EQUAL_EQUAL:
+		lhs = DeeAst_NewOperator2(OPERATOR_EQ, lhs, rhs);
+		break;
+	case TPP_TOK_EXCLAIM_EQUAL:
+		lhs = DeeAst_NewOperator2(OPERATOR_NE, lhs, rhs);
+		break;
+	default: __builtin_unreachable();
+	}
+	lhs = DeeAst_TrySetLoc(lhs, &cmpeq_loc);
+	return lhs;
+err_lhs:
+	DeeAst_Destroy(lhs);
+err:
+	return NULL;
+}
+
+/* >> And */
+LOCAL WUNUSED NONNULL((1, 2)) DeeAst *DFCALL
+DeeParser_ParseAndOperandOne(DeeParser *__restrict self,
+                             /*inherit(always)*/ DeeAst *__restrict lhs) {
+	DeeAst *rhs;
+	DeeAstLoc and_loc;
+	ASSERT(TPP_TOK_IS_AND_OPERAND(DeeParser_GetTok(self)));
+	if (DeeParser_GetLoc(self, &and_loc))
+		goto err_lhs;
+	if (TPP_TOK_ISERR(DeeParser_Yield(self)))
+		goto err_lhs;
+	rhs = DeeParser_ParseCmpEq(self);
+	if unlikely(!rhs)
+		goto err_lhs;
+	lhs = DeeAst_NewOperator2(OPERATOR_AND, lhs, rhs);
+	lhs = DeeAst_TrySetLoc(lhs, &and_loc);
+	return lhs;
+err_lhs:
+	DeeAst_Destroy(lhs);
+/*err:*/
+	return NULL;
+}
+
+/* >> Xor */
+LOCAL WUNUSED NONNULL((1, 2)) DeeAst *DFCALL
+DeeParser_ParseXorOperandOne(DeeParser *__restrict self,
+                             /*inherit(always)*/ DeeAst *__restrict lhs) {
+	DeeAst *rhs;
+	DeeAstLoc xor_loc;
+	ASSERT(TPP_TOK_IS_XOR_OPERAND(DeeParser_GetTok(self)));
+	if (DeeParser_GetLoc(self, &xor_loc))
+		goto err_lhs;
+	if (TPP_TOK_ISERR(DeeParser_Yield(self)))
+		goto err_lhs;
+	rhs = DeeParser_ParseAnd(self);
+	if unlikely(!rhs)
+		goto err_lhs;
+	lhs = DeeAst_NewOperator2(OPERATOR_XOR, lhs, rhs);
+	lhs = DeeAst_TrySetLoc(lhs, &xor_loc);
+	return lhs;
+err_lhs:
+	DeeAst_Destroy(lhs);
+/*err:*/
+	return NULL;
+}
+
+/* >> Or */
+LOCAL WUNUSED NONNULL((1, 2)) DeeAst *DFCALL
+DeeParser_ParseOrOperandOne(DeeParser *__restrict self,
+                            /*inherit(always)*/ DeeAst *__restrict lhs) {
+	DeeAst *rhs;
+	DeeAstLoc or_loc;
+	ASSERT(TPP_TOK_IS_OR_OPERAND(DeeParser_GetTok(self)));
+	if (DeeParser_GetLoc(self, &or_loc))
+		goto err_lhs;
+	if (TPP_TOK_ISERR(DeeParser_Yield(self)))
+		goto err_lhs;
+	rhs = DeeParser_ParseXor(self);
+	if unlikely(!rhs)
+		goto err_lhs;
+	lhs = DeeAst_NewOperator2(OPERATOR_OR, lhs, rhs);
+	lhs = DeeAst_TrySetLoc(lhs, &or_loc);
+	return lhs;
+err_lhs:
+	DeeAst_Destroy(lhs);
+/*err:*/
+	return NULL;
+}
+
+/* >> As */
+LOCAL WUNUSED NONNULL((1, 2)) DeeAst *DFCALL
+DeeParser_ParseAsOperandOne(DeeParser *__restrict self,
+                            /*inherit(always)*/ DeeAst *__restrict lhs) {
+	DeeAst *rhs;
+	DeeAstLoc ad_loc;
+	ASSERT(TPP_TOK_IS_AS_OPERAND(DeeParser_GetTok(self)));
+	if (DeeParser_GetLoc(self, &ad_loc))
+		goto err_lhs;
+	if (TPP_TOK_ISERR(DeeParser_Yield(self)))
+		goto err_lhs;
+	rhs = DeeParser_ParseOr(self);
+	if unlikely(!rhs)
+		goto err_lhs;
+	lhs = DeeAst_NewAct2(Dee_AST_ACT2_AS, lhs, rhs);
+	lhs = DeeAst_TrySetLoc(lhs, &ad_loc);
+	return lhs;
+err_lhs:
+	DeeAst_Destroy(lhs);
+/*err:*/
+	return NULL;
+}
+
+/* >> Land */
+LOCAL WUNUSED NONNULL((1, 2)) DeeAst *DFCALL
+DeeParser_ParseLandOperandOne(DeeParser *__restrict self,
+                              /*inherit(always)*/ DeeAst *__restrict lhs) {
+	DeeAst *rhs;
+	DeeAstLoc land_loc;
+	ASSERT(TPP_TOK_IS_LAND_OPERAND(DeeParser_GetTok(self)));
+	if (DeeParser_GetLoc(self, &land_loc))
+		goto err_lhs;
+	lhs = DeeAst_NewOperator1(OPERATOR_BOOL, lhs);
+	if unlikely(!lhs)
+		goto err;
+	DeeAst_SetLoc(lhs, &land_loc);
+	if (TPP_TOK_ISERR(DeeParser_Yield(self)))
+		goto err_lhs;
+	rhs = DeeParser_ParseAs(self);
+	if unlikely(!rhs)
+		goto err_lhs;
+	rhs = DeeAst_NewOperator1(OPERATOR_BOOL, rhs);
+	if unlikely(!rhs)
+		goto err_lhs;
+	DeeAst_SetLoc(rhs, &land_loc);
+	lhs = DeeAst_NewIf(Dee_AST_IF_FLAG_COND_ASBOOL, lhs, rhs, lhs);
+	lhs = DeeAst_TrySetLoc(lhs, &land_loc);
+	return lhs;
+err_lhs:
+	DeeAst_Destroy(lhs);
+err:
+	return NULL;
+}
+
+/* >> Lor */
+LOCAL WUNUSED NONNULL((1, 2)) DeeAst *DFCALL
+DeeParser_ParseLorOperandOne(DeeParser *__restrict self,
+                             /*inherit(always)*/ DeeAst *__restrict lhs) {
+	DeeAst *rhs;
+	DeeAstLoc lor_loc;
+	ASSERT(TPP_TOK_IS_LOR_OPERAND(DeeParser_GetTok(self)));
+	if (DeeParser_GetLoc(self, &lor_loc))
+		goto err_lhs;
+	lhs = DeeAst_NewOperator1(OPERATOR_BOOL, lhs);
+	if unlikely(!lhs)
+		goto err;
+	DeeAst_SetLoc(lhs, &lor_loc);
+	if (TPP_TOK_ISERR(DeeParser_Yield(self)))
+		goto err_lhs;
+	rhs = DeeParser_ParseLand(self);
+	if unlikely(!rhs)
+		goto err_lhs;
+	rhs = DeeAst_NewOperator1(OPERATOR_BOOL, rhs);
+	if unlikely(!rhs)
+		goto err_lhs;
+	DeeAst_SetLoc(rhs, &lor_loc);
+	lhs = DeeAst_NewIf(Dee_AST_IF_FLAG_COND_ASBOOL, lhs, lhs, rhs);
+	lhs = DeeAst_TrySetLoc(lhs, &lor_loc);
+	return lhs;
+err_lhs:
+	DeeAst_Destroy(lhs);
+err:
+	return NULL;
+}
+
+/* >> Cond */
+PRIVATE WUNUSED NONNULL((1, 2)) DeeAst *DFCALL
+DeeParser_ParseCondOperandMany(DeeParser *__restrict self,
+                               /*inherit(always)*/ DeeAst *__restrict lhs) {
+	DeeAst *tt_branch;
+	DeeAst *ff_branch;
+	DeeAstLoc qmark_loc;
+	ASSERT(TPP_TOK_IS_COND_OPERAND(DeeParser_GetTok(self)));
+	if (DeeParser_GetLoc(self, &qmark_loc))
+		goto err_lhs;
+	if (TPP_TOK_ISERR(DeeParser_Yield(self)))
+		goto err_lhs;
+	if (DeeParser_GetTok(self) == ':') {
+		tt_branch = lhs;
+	} else {
+		tt_branch = DeeParser_ParseExpr(self);
+		if unlikely(!tt_branch)
+			goto err_lhs;
+	}
+	if (DeeParser_GetTok(self) == ':') {
+		if (TPP_TOK_ISERR(DeeParser_Yield(self)))
+			goto err_lhs_tt_branch;
+		if (TPP_TOK_MAYBE_EXPR_START(DeeParser_GetTok(self))) {
+			ff_branch = DeeParser_ParseExpr(self);
+			if unlikely(!tt_branch)
+				goto err_lhs_tt_branch;
+		} else {
+			ff_branch = lhs;
+		}
+	} else {
+		ff_branch = NULL;
+	}
+	lhs = DeeAst_NewIf(Dee_AST_IF_FLAG_COND_ASBOOL, lhs, tt_branch, ff_branch);
+	lhs = DeeAst_TrySetLoc(lhs, &qmark_loc);
+	return lhs;
+err_lhs_tt_branch:
+	if (tt_branch != lhs)
+		DeeAst_Destroy(tt_branch);
+err_lhs:
+	DeeAst_Destroy(lhs);
+/*err:*/
+	return NULL;
+}
+
+/* >> Expr */
+LOCAL WUNUSED NONNULL((1, 2)) DeeAst *DFCALL
+DeeParser_ParseExprOperandOne(DeeParser *__restrict self,
+                              /*inherit(always)*/ DeeAst *__restrict lhs) {
+	DeeAst *rhs;
+	DeeAstLoc expr_loc;
+	tpp_token_id const expr_mode = DeeParser_GetTok(self);
+	Dee_operator_t expr_op;
+	ASSERT(TPP_TOK_IS_EXPR_OPERAND(expr_mode));
+	switch (expr_mode) {
+	case TPP_TOK_COLON_EQUAL: expr_op = OPERATOR_ASSIGN; break;
+	case TPP_TOK_PLUS_EQUAL: expr_op = OPERATOR_INPLACE_ADD; break;
+	case TPP_TOK_MINUS_EQUAL: expr_op = OPERATOR_INPLACE_SUB; break;
+	case TPP_TOK_STAR_EQUAL: expr_op = OPERATOR_INPLACE_MUL; break;
+	case TPP_TOK_SLASH_EQUAL: expr_op = OPERATOR_INPLACE_DIV; break;
+	case TPP_TOK_PERCENT_EQUAL: expr_op = OPERATOR_INPLACE_MOD; break;
+	case TPP_TOK_LANGLE_LANGLE_EQUAL: expr_op = OPERATOR_INPLACE_SHL; break;
+	case TPP_TOK_RANGLE_RANGLE_EQUAL: expr_op = OPERATOR_INPLACE_SHR; break;
+	case TPP_TOK_AMP_EQUAL: expr_op = OPERATOR_INPLACE_AND; break;
+	case TPP_TOK_PIPE_EQUAL: expr_op = OPERATOR_INPLACE_OR; break;
+	case TPP_TOK_HAT_EQUAL: expr_op = OPERATOR_INPLACE_XOR; break;
+	case TPP_TOK_STAR_STAR_EQUAL: expr_op = OPERATOR_INPLACE_POW; break;
+	default: __builtin_unreachable();
+	}
+	if (DeeParser_GetLoc(self, &expr_loc))
+		goto err_lhs;
+	if (TPP_TOK_ISERR(DeeParser_Yield(self)))
+		goto err_lhs;
+	rhs = DeeParser_ParseCond(self);
+	if unlikely(!rhs)
+		goto err_lhs;
+	lhs = DeeAst_NewOperator2(expr_op, lhs, rhs);
+	lhs = DeeAst_TrySetLoc(lhs, &expr_loc);
+	return lhs;
+err_lhs:
+	DeeAst_Destroy(lhs);
+/*err:*/
+	return NULL;
+}
 
 #else /* CONFIG_EXPERIMENTAL_USE_STATELESS_PARSER */
 #ifndef CONFIG_HAVE_memrchr

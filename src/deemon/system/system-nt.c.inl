@@ -3110,7 +3110,7 @@ not_a_drive_prefix:
 			    Dee_UNICODE_PRINTER_GETCHAR(printer, length + 6) == 'C' &&
 			    Dee_UNICODE_PRINTER_GETCHAR(printer, length + 7) == '\\') {
 				Dee_unicode_printer_memmove(printer, length + 2, length + 8,
-				                        (new_length - length) - 6);
+				                            (new_length - length) - 6);
 				Dee_unicode_printer_truncate(printer, new_length - 6);
 				return 0;
 			}
