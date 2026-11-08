@@ -31,7 +31,7 @@
 #include <deemon/error.h>              /* DeeError_Handled, ERROR_HANDLED_RESTORE */
 #include <deemon/object.h>             /* DREF, DeeObject, Dee_Decref */
 #include <deemon/objmethod.h>          /* DeeObjMethod* */
-#include <deemon/string.h>             /* DeeString*, Dee_EmptyString, STRING_ERROR_FSTRICT, WSTR_LENGTH */
+#include <deemon/string.h>             /* DeeString*, Dee_EmptyString, Dee_STRING_ERROR_FSTRICT, WSTR_LENGTH */
 #include <deemon/system-features.h>    /* memcpyc, memset */
 #include <deemon/tuple.h>              /* DeeTuple*, Dee_EmptyTuple */
 #include <deemon/type.h>               /* Dee_objmethod_t, OPERATOR_* */

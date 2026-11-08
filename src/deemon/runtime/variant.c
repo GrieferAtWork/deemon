@@ -27,7 +27,7 @@
 #include <deemon/int.h>             /* DeeInt_* */
 #include <deemon/object.h>          /* DeeObject_*, Dee_COMPARE_*, Dee_CompareFromDiff, Dee_Decref, Dee_Decref_unlikely, Dee_Incref, Dee_XDecref, Dee_XIncref, Dee_return_compareT */
 #include <deemon/serial.h>          /* DeeSerial*, Dee_seraddr_t */
-#include <deemon/string.h>          /* DeeString* */
+#include <deemon/string.h>          /* DeeString*, Dee_STRING_ERROR_FSTRICT */
 #include <deemon/system-features.h> /* bcmp, memcmp, memcpy, strcmp, strlen */
 #include <deemon/system.h>          /* DeeSystem_IsStaticPointer */
 #include <deemon/type.h>            /* Dee_visit_t */

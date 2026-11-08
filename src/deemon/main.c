@@ -51,7 +51,7 @@
 #include <deemon/notify.h>             /* DeeNotify_BroadcastClass, Dee_NOTIFICATION_CLASS_PWD */
 #include <deemon/object.h>             /* DREF, DeeObject, DeeObject_*, Dee_AsObject, Dee_Decref*, Dee_XDecref, Dee_formatprinter_t, Dee_pos_t, Dee_ssize_t, ITER_DONE, ITER_ISOK */
 #include <deemon/serial.h>             /* DeeSerial, Dee_serial */
-#include <deemon/string.h>             /* DeeString*, DeeUni_IsSpace, Dee_UNICODE_PRINTER_INIT, STRING_ERROR_FIGNORE */
+#include <deemon/string.h>             /* DeeString*, DeeUni_IsSpace, Dee_UNICODE_PRINTER_INIT */
 #include <deemon/system-features.h>    /* CONFIG_HAVE_chdir, DeeSystem_DEFINE_strcasecmp, DeeSystem_DEFINE_strcmp, EXIT_FAILURE, EXIT_SUCCESS, bcmp, bcmpc, bzero, chdir, memcpy*, mempcpyc, strchr, strend, strlen */
 #include <deemon/system.h>             /* DeeNTSystem_FixUncPath, DeeNTSystem_IsUncError, DeeSystem_* */
 #include <deemon/tuple.h>              /* DeeTuple*, Dee_EmptyTuple */

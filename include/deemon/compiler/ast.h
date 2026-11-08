@@ -32,24 +32,30 @@
 /*!export AST_OPERATOR_**/
 /*!export CATCH_EXPR_F**/
 /*!export ast_**/
+/*!export Dee_ast_**/
+/*!export Dee_AST_**/
+/*!export DeeAst_**/
+/*!export DeeAst_New**/
+/*!export DeeAst_Make**/
+/*!export _DeeAst_**/
 #ifndef GUARD_DEEMON_COMPILER_AST_H
 #define GUARD_DEEMON_COMPILER_AST_H 1 /*!export-*/
 
 #include "../api.h"
 
-#include <hybrid/__minmax.h>
-#include <hybrid/sequence/list.h>
+#include <hybrid/__minmax.h>      /* __hybrid_max_c4 */
+#include <hybrid/sequence/list.h> /* LIST_* */
 
-#include "../alloc.h"  /* DeeDbgObject_MALLOC, DeeObject_FREE, DeeObject_MALLOC */
+#include "../alloc.h"  /* DeeDbgObject_*, DeeDbg_*, DeeObject_*, Dee_*alloc*, Dee_Free */
 #include "../module.h" /* DeeModule_Deemon, Dee_module_symbol_getindex */
 #include "../none.h"   /* DeeNone_Check */
 #include "../object.h" /* ASSERT_OBJECT_TYPE_EXACT, ASSERT_OBJECT_TYPE_EXACT_OPT, Dee_Decref*, Dee_Incref, Dee_XDecref, Dee_XDecref_unlikely, Dee_XIncref */
 #include "../type.h"   /* DeeObject_IsShared, Dee_operator_t, OPERATOR_COPY */
-#include "../types.h"  /* DREF, DeeObject, DeeTypeObject, Dee_AsObject, Dee_OBJECT_HEAD, Dee_refcnt_t */
-#include "lexer.h"     /* DeeLexer, TPP_REF, ast_loc, tpp_* */
+#include "../types.h"  /* DREF, DeeObject, DeeTypeObject, Dee_AsObject, Dee_OBJECT_HEAD, Dee_formatprinter_t, Dee_refcnt_t, Dee_ssize_t */
+#include "lexer.h"     /* DeeAstLoc, DeeLexer, DeeLexer_GetLoc, TPP_REF, ast_loc, ast_loc_init_empty, tpp_* */
 #include "symbol.h"    /* DeeBaseScopeObject, DeeScopeObject, SYMBOL_TYPE_EXTERN, symbol, text_label */
 
-#include <stddef.h> /* NULL, size_t */
+#include <stddef.h> /* NULL, offsetof, size_t */
 #include <stdint.h> /* uint16_t */
 
 

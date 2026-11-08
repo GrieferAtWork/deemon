@@ -34,7 +34,7 @@
 #include <deemon/regex.h>              /* DeeRegex*, DeeString_GetRegex, DeeString_GetRegexFlags, Dee_RE_* */
 #include <deemon/seq.h>                /* DeeIterator_Type, DeeSeq_Type */
 #include <deemon/serial.h>             /* DeeSerial*, Dee_seraddr_t */
-#include <deemon/string.h>             /* DeeString*, Dee_EmptyString, STRING_ERROR_FSTRICT */
+#include <deemon/string.h>             /* DeeString*, Dee_EmptyString, Dee_STRING_ERROR_FSTRICT */
 #include <deemon/system-features.h>    /* bzero, memcpy */
 #include <deemon/type.h>               /* DeeObject_InitStatic, DeeType_GetName, DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, Dee_visit_t, METHOD_FNOREFESCAPE, STRUCT_*, TF_NONLOOPING, TP_F*, TYPE_*, type_* */
 #include <deemon/util/atomic.h>        /* atomic_read, atomic_write */

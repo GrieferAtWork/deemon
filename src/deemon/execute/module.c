@@ -39,7 +39,7 @@
 #include <deemon/object.h>             /* ASSERT_OBJECT, ASSERT_OBJECT_TYPE, ASSERT_OBJECT_TYPE_EXACT, DREF, DeeObject, DeeObject_*, DeeTypeObject, Dee_AsObject, Dee_BOUND_*, Dee_Decref*, Dee_HAS_*, Dee_Incref, Dee_Movrefv, Dee_TYPE, Dee_WEAKREF_SUPPORT_ADDR, Dee_WEAKREF_SUPPORT_INIT, Dee_XDecref, Dee_XDecrefv, Dee_XIncref, Dee_XMovrefv, Dee_formatprinter_t, Dee_hash_t, Dee_ssize_t, Dee_uint128_t, Dee_weakref_support_fini, ITER_DONE, ITER_ISOK, OBJECT_HEAD_INIT */
 #include <deemon/seq.h>                /* DeeRefVector_NewReadonly */
 #include <deemon/serial.h>             /* DeeSerial*, Dee_SERADDR_INVALID, Dee_SERADDR_ISOK, Dee_seraddr_t */
-#include <deemon/string.h>             /* DeeString*, STRING_ERROR_FIGNORE, WSTR_LENGTH */
+#include <deemon/string.h>             /* DeeString*, WSTR_LENGTH */
 #include <deemon/system-features.h>    /* DeeSystem_DEFINE_*, bcmpc, memcpy*, memset, strlen */
 #include <deemon/system.h>             /* DeeSystem_HAVE_FS_ICASE */
 #include <deemon/thread.h>             /* DeeThreadObject, DeeThread_Self */

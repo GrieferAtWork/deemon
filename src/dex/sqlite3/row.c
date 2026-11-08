@@ -39,7 +39,7 @@
 #include <deemon/object.h>          /* DREF, DeeObject, DeeObject_*, DeeTypeObject, Dee_AsObject, Dee_BOUND_*, Dee_Decref, Dee_Decref_unlikely, Dee_Incref, Dee_WEAKREF_SUPPORT_ADDR, Dee_XIncref, Dee_formatprinter_t, Dee_hash_t, Dee_ssize_t, Dee_weakref_support_fini, OBJECT_HEAD_INIT, return_reference, return_reference_ */
 #include <deemon/seq.h>             /* DeeSeq_Type */
 #include <deemon/serial.h>          /* DeeSerial*, Dee_SERADDR_INVALID, Dee_SERADDR_ISOK, Dee_seraddr_t */
-#include <deemon/string.h>          /* DeeString*, STRING_ERROR_FIGNORE */
+#include <deemon/string.h>          /* DeeString*, Dee_STRING_ERROR_FIGNORE */
 #include <deemon/system-features.h> /* strcmp */
 #include <deemon/type.h>            /* DeeObject_InitStatic, DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, Dee_TYPE_CONSTRUCTOR_INIT_VAR, Dee_Visit, Dee_visit_t, METHOD_FCONSTCALL, METHOD_FNOREFESCAPE, STRUCT_OBJECT_AB, TF_NONE, TP_FNORMAL, TP_FVARIABLE, TYPE_*, type_* */
 

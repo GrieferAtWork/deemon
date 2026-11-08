@@ -33,7 +33,8 @@
 
 #include "api.h"
 
-#include <hybrid/typecore.h> /* __BYTE_TYPE__, __SIZEOF_POINTER__, __SIZEOF_SIZE_T__ */
+#include <hybrid/limitcore.h> /* __UINT32_MAX__ */
+#include <hybrid/typecore.h>  /* __BYTE_TYPE__, __SIZEOF_POINTER__, __SIZEOF_SIZE_T__ */
 
 #include "alloc.h"  /* Dee_Free */
 #include "object.h" /* Dee_Decref_unlikely, Dee_XDecref_likely */
@@ -41,7 +42,7 @@
 #include "types.h"  /* DREF, DeeObject */
 
 #include <stddef.h> /* NULL, size_t */
-#include <stdint.h> /* int32_t, uintN_t, uintptr_t */
+#include <stdint.h> /* UINT32_MAX, int32_t, uintN_t, uintptr_t */
 
 #ifdef DEE_SOURCE
 #include <hybrid/byteorder.h> /* __BYTE_ORDER__, __ORDER_BIG_ENDIAN__, __ORDER_LITTLE_ENDIAN__, __ORDER_PDP_ENDIAN__ */

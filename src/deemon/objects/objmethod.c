@@ -34,11 +34,11 @@
 #include <deemon/module.h>             /* DeeModule*, Dee_module_symbol */
 #include <deemon/mro.h>                /* Dee_ATTRINFO_*, Dee_ATTRPERM_F_*, type_member_* */
 #include <deemon/none.h>               /* return_none */
-#include <deemon/object.h>             /* ASSERT_OBJECT, ASSERT_OBJECT_TYPE, DREF, DeeObject, DeeObject_*, DeeTypeObject, Dee_AsObject, Dee_BOUND_*, Dee_COMPARE_ERR, Dee_Decref, Dee_Decref_unlikely, Dee_Incref, Dee_TYPE, Dee_XDecref, Dee_formatprinter_t, Dee_hash_t, Dee_return_compareT, Dee_return_compare_if_ne, Dee_ssize_t, ITER_DONE, OBJECT_HEAD_INIT, return_reference_ */
+#include <deemon/object.h>             /* ASSERT_OBJECT, ASSERT_OBJECT_TYPE, DREF, DeeObject, DeeObject_*, DeeTypeObject, Dee_AsObject, Dee_BOUND_*, Dee_COMPARE_ERR, Dee_Decref, Dee_Decref_unlikely, Dee_HAS_FROMBOOL, Dee_Incref, Dee_TYPE, Dee_XDecref, Dee_formatprinter_t, Dee_hash_t, Dee_return_compareT, Dee_return_compare_if_ne, Dee_ssize_t, ITER_DONE, OBJECT_HEAD_INIT, return_reference_ */
 #include <deemon/objmethod.h>          /* DeeCMethod*_*, DeeCMethodObject, DeeClsMemberObject, DeeClsMethod*, DeeClsProperty*, DeeKwCMethod_CallFunc, DeeKwCMethod_Check, DeeKwClsMethod_Check, DeeKwClsMethod_GetOrigin, DeeKwObjMethod_CallFunc, DeeKwObjMethod_Check, DeeKwObjMethod_GetOrigin, DeeObjMethod*, Dee_clsproperty_origin, Dee_cmethod*, Dee_kwcmethod_t, Dee_objmethod_origin */
 #include <deemon/seq.h>                /* DeeIterator_Type, DeeSeq_NewEmpty, DeeSeq_Type, Dee_EmptySeq */
 #include <deemon/serial.h>             /* DeeSerial*, Dee_seraddr_t */
-#include <deemon/string.h>             /* DeeString*, Dee_UNICODE_PRINTER_INIT, Dee_unicode_printer*, STRING_ERROR_FIGNORE */
+#include <deemon/string.h>             /* DeeString*, Dee_STRING_ERROR_FSTRICT, Dee_UNICODE_PRINTER_INIT, Dee_unicode_printer* */
 #include <deemon/system-features.h>    /* CONFIG_HAVE_*, EXIT_FAILURE, _Exit, abort, bzero, stpcpy, strcpy */
 #include <deemon/thread.h>             /* DeeThreadObject, DeeThread_Self */
 #include <deemon/tuple.h>              /* DeeTuple* */

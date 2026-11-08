@@ -36,7 +36,7 @@
 #include <deemon/object.h>          /* DREF, DeeObject, DeeObject_*, DeeTypeObject, Dee_BOUND_*, Dee_Decref, Dee_Decref_likely, Dee_Incref, Dee_TYPE, Dee_hash_t, Dee_ssize_t */
 #include <deemon/objmethod.h>       /* DeeClsMember_New, DeeClsMember_Type, DeeClsMethod_New, DeeClsMethod_Type, DeeClsProperty_New, DeeClsProperty_Type, DeeKwClsMethod_New, DeeKwClsMethod_Type, DeeKwObjMethod_CallFunc, DeeKwObjMethod_New, DeeKwObjMethod_Type, DeeObjMethod* */
 #include <deemon/property.h>        /* DeeProperty_Type */
-#include <deemon/string.h>          /* DeeString_New, DeeString_STR */
+#include <deemon/string.h>          /* DeeString_NewAscii, DeeString_STR */
 #include <deemon/system-features.h> /* CONFIG_HAVE_VA_LIST_IS_NOT_ARRAY, DeeSystem_DEFINE_strcmp, DeeSystem_DEFINE_strcmpz, bzero*, memcpy, memset */
 #include <deemon/type.h>            /* DeeType_Type, Dee_TYPE_METHOD_FKWDS, Dee_kwobjmethod_t, Dee_membercache, Dee_visit_t, STRUCT_CONST, TYPE_MEMBER_ISCONST, TYPE_METHOD_FKWDS, type_* */
 #include <deemon/util/atomic.h>     /* atomic_* */

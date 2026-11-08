@@ -25,7 +25,7 @@
 #include <deemon/alloc.h>           /* DeeObject_FREE, DeeObject_MALLOC, Dee_*alloc*, Dee_Free, Dee_Freea */
 #include <deemon/code.h>            /* DeeCodeObject, DeeCode_Type */
 #include <deemon/compiler/lexer.h>  /* tpp_lcinfo_of */
-#include <deemon/dec.h>             /* DFILE_LIMIT, Dec_Ehdr, DeeDecWriter, DeeDecWriter_*, DeeDec_*, Dee_DEC_TYPE_IMAGE, Dee_DEC_TYPE_RELOC */
+#include <deemon/dec.h>             /* DFILE_LIMIT, Dec_Ehdr, DeeDecWriter, DeeDecWriter_*, DeeDec_*, Dee_DEC_TYPE_IMAGE, Dee_DEC_TYPE_RELOC, Dee_SIZEOF_DEC_ADDR32 */
 #include <deemon/error-rt.h>        /* DeeRT_ATTRIBUTE_ACCESS_GET, DeeRT_Err* */
 #include <deemon/error.h>           /* DeeError_*, Dee_ERROR_HANDLED_NORMAL, Dee_ERROR_HANDLED_RESTORE */
 #include <deemon/format.h>          /* DeeFormat_Repeat, Dee_sprintf, PRFuSIZ */
@@ -37,7 +37,7 @@
 #include <deemon/object.h>          /* ASSERT_OBJECT, ASSERT_OBJECT_*, DeeObject_*, Dee_BOUND_*, Dee_Clear, Dee_Compare, Dee_Decref*, Dee_Incref*, Dee_Movrefv, Dee_XDecref_likely, Dee_XDecref_unlikely, Dee_XIncrefv, return_reference, return_reference_ */
 #include <deemon/objmethod.h>       /* DeeCMethod*_*, DeeCMethodObject, DeeKwCMethod_Type */
 #include <deemon/serial.h>          /* DeeSerial, Dee_serial */
-#include <deemon/string.h>          /* DeeString*, DeeUni_IsSpace, DeeUni_ToLower, Dee_UNICODE_PRINTER_*, Dee_string_object, Dee_unicode_printer*, Dee_wchar_t, STRING_ERROR_F*, WSTR_LENGTH */
+#include <deemon/string.h>          /* DeeString*, DeeUni_IsSpace, DeeUni_ToLower, Dee_STRING_ERROR_FIGNORE, Dee_STRING_ERROR_FSTRICT, Dee_UNICODE_PRINTER_*, Dee_string_object, Dee_unicode_printer*, Dee_wchar_t, STRING_ERROR_FIGNORE, STRING_ERROR_FREPLAC, WSTR_LENGTH */
 #include <deemon/stringutils.h>     /* DeeString_GetChar, DeeString_SetChar, Dee_unicode_* */
 #include <deemon/system-features.h> /* CONFIG_HAVE_*, CONFIG_PREFER_WCHAR_FUNCTIONS, DeeSystem_DEFINE_*, DeeSystem_DlOpen_USE_LoadLibrary, DeeSystem_DlOpen_USE_dlopen, ENV_(LOCK|UNLOCK), RTLD_GLOBAL, RTLD_LOCAL, basename, bcmp, bzero, dl*, environ, getenv, memchr, memcmp, memcpy*, memmovedownc, memmoveupc, mempcpyc, strchr, strcpy, strend, strlen, to(lower|upper), wenviron, wgetenv */
 #include <deemon/system.h>          /* DeeNTSystem_HandleGenericError, DeeNTSystem_IsBufferTooSmall, DeeSystem_*, DeeUnixSystem_PrintLinkString */

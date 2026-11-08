@@ -49,6 +49,7 @@
 #include "../api.h"
 
 #ifndef CONFIG_EXPERIMENTAL_USE_TPP3
+#include "ast.h"    /* DeeAst, Dee_ast_function_param, Dee_ast_function_param_base */
 #include "parser.h" /* PARSE_FLFSTMT, parser_flags */
 #include "symbol.h" /* SYMBOL_*, symbol_ambig_foreach_decl */
 #endif /* !CONFIG_EXPERIMENTAL_USE_TPP3 */
@@ -62,7 +63,7 @@
 #include "../file.h"            /* DeeFile_*, Dee_FILEIO_FNONBLOCKING, Dee_FILEIO_FNORMAL, Dee_OPEN_F*, Dee_STDIN, Dee_STDOUT */
 #include "../int.h"             /* DeeIntObject, DeeInt_*, Dee_INT_PRINT_DEC, _DeeInt_NewU */
 #include "../object.h"          /* DeeObject_*, Dee_COMPARE_ISERR, Dee_Decref, Dee_Incref */
-#include "../string.h"          /* DeeAscii_*, DeeString*, DeeUni_*, Dee_STRING_ERROR_FIGNORE */
+#include "../string.h"          /* DeeAscii_*, DeeString*, DeeUni_*, Dee_STRING_ERROR_FREPLAC */
 #include "../stringutils.h"     /* Dee_unicode_utf8seqlen_safe */
 #include "../system-features.h" /* CONFIG_HAVE_memmem, DeeSystem_DEFINE_*, STDIN_FILENO, STDOUT_FILENO, _alloca, alloca, bzero, free, localtime_s, malloc, memchr, memcmp, memcpy, memmem, memmove, memmovedown, memmoveup, mempcpy, memset, stdin, stdout, strchr, strlen, time */
 #include "../system.h"          /* DeeSystem_* */

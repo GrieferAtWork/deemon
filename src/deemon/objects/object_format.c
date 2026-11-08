@@ -28,7 +28,7 @@
 #include <deemon/format.h>   /* DeeFormat_RepeatUtf8 */
 #include <deemon/mro.h>      /* DeeType_Get*Attr*, DeeType_QueryAttributeHash */
 #include <deemon/object.h>   /* ASSERT_OBJECT, DREF, DeeObject, DeeObject_*, DeeTypeObject, Dee_AsObject, Dee_Decref, Dee_TYPE, Dee_formatprinter_t, Dee_hash_t, Dee_ssize_t, ITER_DONE */
-#include <deemon/string.h>   /* DeeString*, DeeUni_AsDigit, STRING_ERROR_FIGNORE, WSTR_LENGTH */
+#include <deemon/string.h>   /* DeeString*, DeeUni_AsDigit, Dee_STRING_ERROR_FSTRICT, WSTR_LENGTH */
 #include <deemon/super.h>    /* DeeSuper* */
 #include <deemon/type.h>     /* DeeTypeMRO, DeeTypeMRO_Init, DeeTypeMRO_Next, DeeType_Check, DeeType_IsClass */
 

@@ -36,7 +36,7 @@
 #include <deemon/notify.h>          /* DeeNotify_BroadcastClass, Dee_NOTIFICATION_CLASS_PWD */
 #include <deemon/object.h>          /* DREF, DeeObject, DeeObject_AssertTypeExact, Dee_AsObject, Dee_Decref, ITER_DONE, return_reference_ */
 #include <deemon/objmethod.h>       /*  */
-#include <deemon/string.h>          /* DeeString*, Dee_UNICODE_PRINTER_INIT, Dee_unicode_printer*, Dee_wchar_t, STRING_ERROR_FREPLAC */
+#include <deemon/string.h>          /* DeeString*, Dee_STRING_ERROR_FREPLAC, Dee_UNICODE_PRINTER_INIT, Dee_unicode_printer*, Dee_wchar_t */
 #include <deemon/system-features.h> /* CONFIG_HAVE_*, CONFIG_PREFER_WCHAR_FUNCTIONS, DeeSystem_DEFINE_strnlen, DeeSystem_GetErrno, chdir, fchdir, fchdirat, gethostname, wchdir */
 #include <deemon/system.h>          /* DeeNTSystem_*, DeeSystem_HAVE_FS_DRIVES, DeeSystem_PrintPwd, DeeUnixSystem_* */
 #include <deemon/type.h>            /* METHOD_FNORMAL */

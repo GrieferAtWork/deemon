@@ -82,7 +82,7 @@
 #ifndef __INTELLISENSE__
 #include "none.h"      /* Dee_None */
 #include "objmethod.h" /* DeeClsMember_New, DeeClsMethod_New, DeeClsProperty_New, DeeKwClsMethod_New, DeeKwObjMethod_CallFunc, DeeKwObjMethod_New, DeeKwObjMethod_VCallFuncf, DeeObjMethod* */
-#include "string.h"    /* DeeString*, STRING_ERROR_FIGNORE */
+#include "string.h"    /* DeeString* */
 #endif /* !__INTELLISENSE__ */
 
 #ifndef __INTELLISENSE__

@@ -42,8 +42,8 @@
 #include "../api.h"
 
 #ifdef CONFIG_EXPERIMENTAL_USE_STATELESS_PARSER
-#include "../alloc.h"           /* DeeObject_FREE, DeeObject_MALLOC */
-#include "ast.h"
+#include "../alloc.h" /* DeeObject_FREE, DeeObject_MALLOC */
+#include "ast.h"      /* Dee_ast_symref_byname_flag */
 
 DECL_BEGIN
 
@@ -106,7 +106,7 @@ DECL_END
 #include "../util/weakref.h"    /* Dee_WEAKREF, Dee_weakref_* */
 
 #ifdef CONFIG_BUILDING_DEEMON
-#include "lexer.h" /* DeeLexer, __ATOMIC_SEQ_CST, ast_loc, ast_loc_isempty, tpp_keyword, tpp_keyword_getcstr */
+#include "lexer.h" /* DeeAstLoc, DeeLexer, __ATOMIC_SEQ_CST, ast_loc, ast_loc_isempty, tpp_keyword, tpp_keyword_getcstr */
 #ifndef CONFIG_NO_THREADS
 #include <hybrid/__atomic.h> /* __ATOMIC_SEQ_CST, __hybrid_atomic_decfetch, __hybrid_atomic_fetchinc */
 #endif /* !CONFIG_NO_THREADS */

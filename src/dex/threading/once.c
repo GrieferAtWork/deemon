@@ -35,7 +35,7 @@
 #include <deemon/format.h>      /* DeeFormat_PRINT, DeeFormat_Printf */
 #include <deemon/gc.h>          /* Dee_TYPE_CONSTRUCTOR_INIT_FIXED_GC */
 #include <deemon/none.h>        /* return_none */
-#include <deemon/object.h>      /* DREF, DeeObject, DeeObject_*, DeeTypeObject, Dee_Decref, Dee_Incref, Dee_XDecref, Dee_XIncref, Dee_formatprinter_t, Dee_ssize_t, OBJECT_HEAD, OBJECT_HEAD_INIT */
+#include <deemon/object.h>      /* DREF, DeeObject, DeeObject_*, DeeTypeObject, Dee_Decref, Dee_HAS_FROMBOOL, Dee_Incref, Dee_XDecref, Dee_XIncref, Dee_formatprinter_t, Dee_ssize_t, OBJECT_HEAD, OBJECT_HEAD_INIT */
 #include <deemon/tuple.h>       /* DeeTuple_Type, Dee_EmptyTuple */
 #include <deemon/type.h>        /* DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_FIXED_GC, Dee_XVisit, Dee_visit_t, METHOD_FNOREFESCAPE, TF_NONE, TP_FGC, TP_FNORMAL, TYPE_*, type_* */
 #include <deemon/util/atomic.h> /* atomic_read, atomic_xch */

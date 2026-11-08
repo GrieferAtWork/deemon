@@ -29,7 +29,7 @@
 #include <deemon/format.h>          /* DeeFormat_VPrintf, Dee_vsnprintf, PRFuSIZ, PRFxSIZ */
 #include <deemon/gc.h>              /* DeeGC_Collect */
 #include <deemon/heap.h>            /* DeeHeap_Trim */
-#include <deemon/object.h>          /* DeeObject_Check, Dee_TYPE, Dee_formatprinter_t, Dee_int128_t, Dee_ssize_t, Dee_uint128_t */
+#include <deemon/object.h>          /* DeeObject_Check, Dee_TYPE, Dee_formatprinter_t, Dee_ssize_t */
 #include <deemon/system-features.h> /* CONFIG_HAVE_*, EXIT_FAILURE, _Exit, abort, getenv, mempcpy, strlen */
 #include <deemon/thread.h>          /* DeeThreadObject, DeeThread_Self */
 
@@ -65,9 +65,6 @@ DECL_BEGIN
 
 #undef byte_t
 #define byte_t __BYTE_TYPE__
-
-STATIC_ASSERT(sizeof(Dee_uint128_t) == 16);
-STATIC_ASSERT(sizeof(Dee_int128_t) == 16);
 
 typedef size_t (DCALL *pcacheclr)(size_t max_clear);
 #ifdef CONFIG_STRING_LATIN1_CACHED

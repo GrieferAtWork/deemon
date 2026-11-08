@@ -35,7 +35,7 @@
 #include <deemon/dex.h>             /* DEXSYM_READONLY, DEX_MEMBER, DEX_MEMBER_F */
 #include <deemon/object.h>          /* ASSERT_OBJECT_TYPE_EXACT, ASSERT_OBJECT_TYPE_EXACT_OPT, DREF, DeeObject, DeeObject_Add, DeeObject_AssertTypeExact, Dee_AsObject, Dee_Decref, Dee_Incref, return_reference_ */
 #include <deemon/objmethod.h>       /*  */
-#include <deemon/string.h>          /* DeeString*, DeeUni_IsSpace, DeeUni_ToUpper, Dee_EmptyString, Dee_UNICODE_PRINTER_*, Dee_unicode_printer*, Dee_STRING_ERROR_FREPLAC, STRING_ERROR_FSTRICT, WSTR_LENGTH */
+#include <deemon/string.h>          /* DeeString*, DeeUni_IsSpace, DeeUni_ToUpper, Dee_EmptyString, Dee_STRING_ERROR_FREPLAC, Dee_UNICODE_PRINTER_*, Dee_unicode_printer*, STRING_ERROR_FSTRICT, WSTR_LENGTH */
 #include <deemon/stringutils.h>     /* DeeString_GetChar, Dee_unicode_* */
 #include <deemon/system-features.h> /* DeeSystem_DEFINE_memrchr, link, memchr, memcpyc, mempcpyc */
 #include <deemon/system.h>          /* CONFIG_WANT_WINDOWS_STD_FILES, DeeSystem_* */

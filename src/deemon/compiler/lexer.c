@@ -23,9 +23,10 @@
 #include <deemon/api.h>
 
 #include <deemon/alloc.h>             /* DeeObject_*, Dee_*alloc*, Dee_Alloca, Dee_Free */
+#include <deemon/compiler/ast.h>      /* Dee_ast_function_param, Dee_ast_function_param_base */
 #include <deemon/compiler/compiler.h> /* DeeCompiler_DelItem, _DeeLexer_Current */
 #include <deemon/compiler/error.h>    /* DeeCompilerErrorObject, Dee_compiler_error_loc */
-#include <deemon/compiler/lexer.h>    /* DeeLexer, DeeLexerWarning, DeeLexerWarningLoc, DeeLexerWarningLoc_Free, DeeLexerWarnings, DeeLexer_*, TPP*, _TPP_*, _tpp_*, ast_loc, ast_loc_*, parser_warnf, tpp_* */
+#include <deemon/compiler/lexer.h>    /* DeeAstLoc_GetLc, DeeAstLoc_GetName, DeeAstLoc_IsEmpty, DeeLexer, DeeLexerWarning, DeeLexerWarningLoc, DeeLexerWarningLoc_Free, DeeLexerWarnings, DeeLexer_*, TPP*, _TPP_*, _tpp_*, ast_loc, ast_loc_*, parser_warnf, tpp_* */
 #include <deemon/compiler/symbol.h>   /* SYMBOL_*, current_basescope, symbol, symbol_ambig_foreach_decl */
 #include <deemon/error.h>             /* DeeError_* */
 #include <deemon/exec.h>              /* DeeModule_GetLibPath */
@@ -33,7 +34,7 @@
 #include <deemon/format.h>            /* DeeFormat_Printf, Dee_sprintf, Dee_vsprintf */
 #include <deemon/module.h>            /* DeeModule_GetShortName, Dee_COMPILER_ERROR_FATALITY_WARNING, Dee_COMPILER_FLAG_FORMAT, Dee_COMPILER_FLAG_MAIN */
 #include <deemon/object.h>            /* ASSERT_OBJECT_TYPE_EXACT, DeeObject_Print, DeeObject_PrintRepr, Dee_Decref*, Dee_XDecref */
-#include <deemon/string.h>            /* DeeString*, Dee_string_utf_fini, Dee_string_utf_free, Dee_unicode_printer*, STRING_ERROR_FIGNORE, WSTR_LENGTH */
+#include <deemon/string.h>            /* DeeString*, Dee_STRING_ERROR_FREPLAC, Dee_string_utf_fini, Dee_string_utf_free, Dee_unicode_printer*, WSTR_LENGTH */
 #include <deemon/system-features.h>   /* DeeSystem_DEFINE_memrchr, O_*, basename, close, fclose, ferror, fopen, fread, fstat, fwrite, getenv, memcpy*, mempcpyc, open, read, select, stat, stderr, write */
 #include <deemon/system.h>            /* DeeSystem_* */
 #include <deemon/thread.h>            /* DeeThread_CheckInterrupt */

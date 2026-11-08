@@ -22,11 +22,8 @@
 
 #include <deemon/api.h>
 
-#include <deemon/compiler/ast.h>
-#include <deemon/compiler/symbol.h>
-
-#include "../runtime/strings.h"
 #include "../runtime/builtin.h"
+#include "../runtime/strings.h"
 
 DECL_BEGIN
 

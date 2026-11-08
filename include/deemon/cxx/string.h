@@ -26,7 +26,7 @@
 #include "../format.h"          /* Dee_PCKdSIZ, Dee_PCKuSIZ */
 #include "../object.h"          /* DeeObject_* */
 #include "../string.h"          /* DeeString*, Dee_STRING_ERROR_FSTRICT, Dee_wchar_t */
-#include "../system-features.h" /* DeeSystem_DEFINE_wcslen, close, isalnum, isalpha, isdigit, islower, isupper, open, strlen */
+#include "../system-features.h" /* DeeSystem_DEFINE_wcslen, close, isalnum, isalpha, isdigit, islower, isupper, open */
 #include "../types.h"           /* DREF, DeeObject, Dee_hash_t, Dee_ssize_t, _Dee_HashSelectC */
 #include "object.h"
 #include "sequence.h"

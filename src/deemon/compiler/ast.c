@@ -24,25 +24,31 @@
 
 #include <deemon/alloc.h>             /* Dee_Free, Dee_Mallocc, Dee_TYPE_CONSTRUCTOR_INIT_FIXED */
 #include <deemon/code.h>              /* Dee_EXCEPTION_HANDLER_FFINALLY */
-#include <deemon/compiler/ast.h>      /* ASM_OPERAND_IS_INOUT, ASSERT_AST, ASSERT_AST_OPT, AST_*, CONFIG_NO_AST_DEBUG, PRIVATE_AST_GENERATOR_UNPACK_ARGS, asm_operand, ast, ast_*, catch_expr, class_member */
+#include <deemon/compiler/ast.h>      /* ASM_OPERAND_IS_INOUT, ASSERT_AST, ASSERT_AST_OPT, AST_*, CONFIG_NO_AST_DEBUG, DeeAst, DeeAstRValue, DeeAst_*, Dee_AST_*, Dee_asm_symbol_fini, Dee_asm_symbol_init, Dee_ast_*, Dee_link_symbol_decref, Dee_link_symbol_incref, Dee_link_symbol_rd_dec, Dee_link_symbol_rd_inc, Dee_link_symbol_rdwr_dec, Dee_link_symbol_wr_dec, Dee_link_symbol_wr_inc, Dee_link_symbol_xdecref, PRIVATE_AST_GENERATOR_UNPACK_ARGS, _DeeAst_*, asm_operand, ast, ast_*, catch_expr, class_member */
 #include <deemon/compiler/compiler.h> /* DeeCompiler_DelItem, DeeCompiler_LockReading */
-#include <deemon/compiler/lexer.h>    /* DeeLexer, DeeLexer_GetLoc, ast_loc, ast_loc_init_empty, ast_loc_isempty, loc_here, tpp_* */
-#include <deemon/compiler/parser.h>   /* current_tags */
-#include <deemon/compiler/symbol.h>   /* DeeBaseScopeObject, DeeBaseScope_Type, SYMBOL_DEC_N*, SYMBOL_INC_N*, current_scope, lbl_free, symbol, text_label */
+#include <deemon/compiler/lexer.h>    /* DeeAstLoc, DeeLexer, DeeLexer_GetLoc, DeeLexer_WarnfAst, TPP_W_ASM_STORE_TO_RVALUE, ast_loc, ast_loc_init_empty, ast_loc_isempty, loc_here, tpp_* */
+#include <deemon/compiler/parser.h>   /* DeeLexer_GetModuleSymbol, DeeLexer_OpenModule, current_tags */
+#include <deemon/compiler/symbol.h>   /* DeeBaseScopeObject, DeeBaseScope_Type, Dee_link_symbol, SYMBOL_DEC_N*, SYMBOL_INC_N*, current_scope, lbl_free, symbol, text_label */
+#include <deemon/format.h>            /* PRFuSIZ */
+#include <deemon/int.h>               /* DeeInt_NEWU */
 #include <deemon/map.h>               /* Dee_EmptyMap */
-#include <deemon/none.h>              /* Dee_None */
-#include <deemon/format.h>              /* Dee_None */
-#include <deemon/object.h>            /* ASSERT_OBJECT, ASSERT_OBJECT_TYPE, DREF, DeeObject, DeeTypeObject, Dee_Decref, Dee_DecrefNokill, Dee_Incref, OBJECT_HEAD_INIT */
+#include <deemon/module.h>            /* DeeModuleObject, DeeModule_NewDeemon, Dee_module_object, Dee_module_symbol */
+#include <deemon/none.h>              /* DeeNone_Check, Dee_None */
+#include <deemon/object.h>            /* ASSERT_OBJECT, ASSERT_OBJECT_TYPE, DREF, DeeObject, DeeTypeObject, Dee_AsObject, Dee_Decref, Dee_DecrefNokill, Dee_Incref, ITER_ISOK, OBJECT_HEAD_INIT */
 #include <deemon/seq.h>               /* Dee_EmptySeq */
 #include <deemon/set.h>               /* Dee_EmptySet */
+#include <deemon/string.h>            /* DeeDbgString_NewUtf8Ex, DeeStringObject, STRING_ERROR_FIGNORE */
+#include <deemon/system-features.h>   /* memcpyc, strlen */
 #include <deemon/tuple.h>             /* Dee_EmptyTuple */
-#include <deemon/type.h>              /* DeeObject_InitStatic, DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, Dee_Visit, Dee_operator_t, Dee_visit_t, OPERATOR_ISINPLACE, TF_NONE, TP_FNORMAL */
+#include <deemon/type.h>              /* DeeObject_InitStatic, DeeTypeType_GetOperatorById, DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, Dee_Visit, Dee_operator_t, Dee_opinfo, Dee_visit_t, OPCC_FINPLACE, OPERATOR_*, TF_NONE, TP_FNORMAL */
 
-#include <stddef.h> /* NULL, size_t */
-#include <stdint.h> /* uint16_t */
+#include <hybrid/sequence/list.h> /* LIST_* */
 
-#include "../runtime/strings.h"
 #include "../runtime/builtin.h"
+#include "../runtime/strings.h"
+
+#include <stddef.h> /* NULL, offsetof, size_t */
+#include <stdint.h> /* uint16_t */
 
 DECL_BEGIN
 

@@ -207,7 +207,7 @@
 #include <deemon/mapfile.h>         /* DeeMapFile* */
 #include <deemon/none.h>            /* DeeNone_Check, Dee_None */
 #include <deemon/object.h>          /* ASSERT_OBJECT_TYPE_EXACT, DREF, DeeObject, DeeObject_*, Dee_AsObject, Dee_Decref, Dee_Decref_likely, Dee_Incref, Dee_int128_t, Dee_pos_t, Dee_ssize_t, ITER_DONE, return_reference_ */
-#include <deemon/string.h>          /* DeeString*, Dee_STRING_ERROR_FREPLAC, Dee_UNICODE_PRINTER_*, Dee_unicode_printer*, Dee_wchar_t, Dee_STRING_ERROR_FREPLAC, STRING_ERROR_FREPLAC, WSTR_LENGTH */
+#include <deemon/string.h>          /* DeeString*, Dee_STRING_ERROR_FREPLAC, Dee_UNICODE_PRINTER_*, Dee_unicode_printer*, Dee_wchar_t, STRING_ERROR_FREPLAC, WSTR_LENGTH */
 #include <deemon/system-features.h> /* *utim*, AT_FDCWD, CONFIG_HAVE_*, DeeSystem_GetErrno, DeeSystem_IF_E2, bcmp, bzero, memcpy, mempcpyc, sendfile, strchr, strlen */
 #include <deemon/system.h>          /* DeeNTSystem_*, DeeSystem_*, DeeUnixSystem_GetFD, DeeUnixSystem_ThrowErrorf */
 #include <deemon/thread.h>          /* DeeThread_CheckInterrupt */

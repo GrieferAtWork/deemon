@@ -33,8 +33,8 @@
 #include <hybrid/typecore.h> /* __*_TYPE__, __SIZEOF_SIZE_T__ */
 
 #include "gc.h"              /* Dee_gc_head */
-#include "object.h"          /* DeeObject_NewRef */
-#include "string.h"          /* DeeString*, Dee_STRING_ERROR_FIGNORE */
+#include "object.h"          /* DeeObject_NewRef, Dee_Incref */
+#include "string.h"          /* DeeString* */
 #include "system-features.h" /* bcmp, strlen */
 #include "types.h"           /* DREF, DeeObject, DeeObject_InstanceOf, DeeTypeObject, Dee_AsObject, Dee_OBJECT_HEAD, Dee_REQUIRES_OBJECT, Dee_TYPE, Dee_WEAKREF_SUPPORT, Dee_formatprinter_t, Dee_hash_t, Dee_ssize_t, ITER_DONE */
 #include "util/hash.h"       /* Dee_HashPtr, Dee_HashStr */

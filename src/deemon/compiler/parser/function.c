@@ -24,13 +24,14 @@
 
 #include <deemon/alloc.h>             /* Dee_*alloc*, Dee_CollectMemoryc, Dee_Free */
 #include <deemon/code.h>              /* Dee_CODE_F* */
-#include <deemon/compiler/ast.h>      /* AST_*, ast, ast_* */
-#include <deemon/compiler/lexer.h>    /* DeeLexer, DeeLexer_*, TPP_*, ast_loc, tpp_* */
+#include <deemon/compiler/ast.h>      /* AST_*, DeeAst, DeeAst_*, Dee_AST_*, Dee_ast_*, ast, ast_* */
+#include <deemon/compiler/lexer.h>    /* DeeAstLoc, DeeLexer, DeeLexer_*, TPP_*, ast_loc, tpp_* */
 #include <deemon/compiler/optimize.h> /* ast_optimize_all */
-#include <deemon/compiler/parser.h>   /* AST_PARSE_WASEXPR_NO, ast_annotation*, ast_parse_*, current_tags */
+#include <deemon/compiler/parser.h>   /* AST_PARSE_WASEXPR_NO, DeeParser, DeeParser_*, Dee_PARSER_*, Dee_ast_*, Dee_parser_functionparam_flag, ast_annotation*, ast_parse_*, current_tags */
 #include <deemon/compiler/symbol.h>   /* BASESCOPE_FRETURN, DAST_NONE, DeeScopeObject, LOOKUP_SYM_NORMAL, SYMBOL_F*, SYMBOL_TYPE_*, basescope_pop, basescope_push, current_basescope, current_scope, decl_ast*, has_local_symbol, new_local_symbol, new_unnamed_symbol, symbol */
 #include <deemon/none.h>              /* DeeNone_NewRef */
 #include <deemon/object.h>            /* DREF, DeeObject, Dee_Clear, Dee_Decref, Dee_Incref */
+#include <deemon/system-features.h>   /* memset */
 
 #include <stdbool.h> /* bool, false, true */
 #include <stddef.h>  /* NULL, size_t */

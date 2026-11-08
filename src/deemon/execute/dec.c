@@ -24,7 +24,7 @@
 
 #include <deemon/alloc.h>            /* DeeSlab_Free, Dee_*alloc*, Dee_BadAlloc, Dee_Free, Dee_Memalign */
 #include <deemon/bool.h>             /* DeeBool_Check, DeeBool_IsTrue, Dee_CONFIG_BOOL_TLS, Dee_FalseTrue */
-#include <deemon/dec.h>              /* DECMAG*, DFILE_LIMIT, DI_MAG*, DVERSION_CUR, Dec_*, DeeDecWriter, DeeDecWriter_*, DeeDec_Ehdr, DeeDec_Ehdr_*, Dee_ALIGNOF_DEC_*, Dee_DEC_ENDIAN, Dee_DEC_MACH, Dee_DEC_TYPE_IMAGE, Dee_DEC_TYPE_RELOC, Dee_dec_* */
+#include <deemon/dec.h>              /* DECMAG*, DFILE_LIMIT, DI_MAG*, DVERSION_CUR, Dec_*, DeeDecWriter, DeeDecWriter_*, DeeDec_Ehdr, DeeDec_Ehdr_*, Dee_ALIGNOF_DEC_*, Dee_DEC_ADDR32_MAX, Dee_DEC_ENDIAN, Dee_DEC_MACH, Dee_DEC_TYPE_IMAGE, Dee_DEC_TYPE_RELOC, Dee_SIZEOF_DEC_ADDR32, Dee_SIZEOF_DEC_OFF32, Dee_dec_* */
 #include <deemon/error-rt.h>         /* DeeRT_ErrCannotSerialize */
 #include <deemon/error.h>            /* DeeError_* */
 #include <deemon/format.h>           /* PRF* */
@@ -46,7 +46,6 @@
 #include <deemon/util/weakref.h>     /* Dee_weakref, Dee_weakref_callback_t, Dee_weakref_initempty */
 
 #include <hybrid/align.h>            /* CEIL_ALIGN, IS_ALIGNED, IS_POWER_OF_TWO */
-#include <hybrid/limitcore.h>        /* __UINT32_MAX__ */
 #include <hybrid/overflow.h>         /* OVERFLOW_UADD */
 #include <hybrid/sequence/bsearch.h> /* BSEARCH */
 #include <hybrid/typecore.h>         /* __BYTE_TYPE__, __SIZEOF_POINTER__ */

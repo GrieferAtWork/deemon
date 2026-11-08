@@ -22,6 +22,9 @@
 
 #include <deemon/api.h>
 
+#include <deemon/module.h> /* Dee_module_symbol */
+#include <deemon/types.h>  /* _Dee_HashSelect */
+
 #define BUILTIN(name, object, flags)
 #include "builtins.def"
 

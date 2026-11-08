@@ -22,11 +22,16 @@
 
 #include <deemon/api.h>
 
+#include <stddef.h> /* NULL */
+
 #ifdef CONFIG_EXPERIMENTAL_USE_STATELESS_PARSER
+#include <deemon/compiler/lexer.h>  /* DeeAstLoc, DeeAstLoc_GetName, DeeLexer, DeeLexer_GetFile, DeeLexer_WarnfLoc, TPP_W_*, tpp_file_getrealfilename */
 #include <deemon/compiler/parser.h>
-#include <deemon/string.h>
-#include <deemon/module.h>
-#include <deemon/thread.h>
+#include <deemon/module.h>          /* DeeModule*, Dee_module_object, Dee_module_symbol */
+#include <deemon/object.h>          /* Dee_Incref */
+#include <deemon/system-features.h> /* strlen */
+#include <deemon/thread.h>          /* DeeThread_Self, Dee_import_frame */
+#include <deemon/types.h>           /* DREF, ITER_DONE */
 
 DECL_BEGIN
 

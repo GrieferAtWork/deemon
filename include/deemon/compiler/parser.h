@@ -30,6 +30,9 @@
 /*!export ast_tags**/
 /*!export astlist**/
 /*!export parse_**/
+/*!export DeeParser_**/
+/*!export Dee_PARSER_**/
+/*!export Dee_ast_**/
 #ifndef GUARD_DEEMON_COMPILER_PARSER_H
 #define GUARD_DEEMON_COMPILER_PARSER_H 1 /*!export-*/
 
@@ -41,8 +44,8 @@
 #include "../system-features.h" /* bzero, memcpy */
 #include "../type.h"            /* Dee_operator_t */
 #include "../types.h"           /* DREF, DeeObject, ITER_DONE */
-#include "ast.h"                /* ast */
-#include "lexer.h"              /* DeeLexer, TPP_KWD_*, ast_loc, tpp_keyword, tpp_token_id */
+#include "ast.h"                /* DeeAst, DeeAst_Destroy, DeeAst_XDestroy, Dee_AST_*, Dee_ast_*, ast */
+#include "lexer.h"              /* DeeAstLoc, DeeLexer, DeeLexer_*, TPP_KWD_*, ast_loc, tpp_* */
 #include "symbol.h"             /* LOOKUP_SYM_NORMAL, decl_ast, symbol */
 
 #include <stdbool.h> /* bool, false */

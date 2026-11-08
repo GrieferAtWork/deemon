@@ -35,7 +35,7 @@
 #include <deemon/map.h>             /* DeeMap_Type */
 #include <deemon/none.h>            /* return_none */
 #include <deemon/notify.h>          /* DeeNotify_Broadcast, Dee_NOTIFICATION_CLASS_ENVIRON */
-#include <deemon/object.h>          /* ASSERT_OBJECT, DREF, DeeObject, DeeObject_AssertTypeExact, DeeObject_NewDefault, DeeTypeObject, Dee_AsObject, Dee_Decref, Dee_Decref_likely, Dee_Incref, Dee_TYPE, Dee_XDecref, ITER_DONE, OBJECT_HEAD, OBJECT_HEAD_INIT, return_reference_ */
+#include <deemon/object.h>          /* ASSERT_OBJECT, DREF, DeeObject, DeeObject_AssertTypeExact, DeeObject_NewDefault, DeeTypeObject, Dee_AsObject, Dee_Decref, Dee_Decref_likely, Dee_HAS_*, Dee_Incref, Dee_TYPE, Dee_XDecref, ITER_DONE, OBJECT_HEAD, OBJECT_HEAD_INIT, return_reference_ */
 #include <deemon/objmethod.h>       /*  */
 #include <deemon/seq.h>             /* DeeIterator_Type */
 #include <deemon/string.h>          /* DeeString*, Dee_wchar_t, STRING_ERROR_FREPLAC, STRING_ERROR_FSTRICT */

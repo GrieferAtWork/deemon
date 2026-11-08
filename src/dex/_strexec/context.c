@@ -36,7 +36,7 @@
 #include <deemon/module.h>          /* DeeModule*, Dee_module_symbol */
 #include <deemon/object.h>          /* ASSERT_OBJECT, DREF, DeeObject, DeeObject_*, DeeTypeObject, Dee_AsObject, Dee_BOUND_ISBOUND, Dee_BOUND_ISERR, Dee_Decref*, Dee_HAS_ISERR, Dee_Incref, Dee_TYPE, Dee_XDecref, Dee_XIncref, Dee_hash_t, ITER_DONE */
 #include <deemon/seq.h>             /* DeeSeq_Unpack */
-#include <deemon/string.h>          /* DeeString*, STRING_ERROR_FSTRICT, WSTR_LENGTH */
+#include <deemon/string.h>          /* DeeString*, Dee_STRING_ERROR_FSTRICT, WSTR_LENGTH */
 #include <deemon/system-features.h> /* bcmpc, memcpy */
 #include <deemon/type.h>            /* DeeType_*, Dee_Visit, Dee_visit_t */
 #include <deemon/util/atomic.h>     /* atomic_read */

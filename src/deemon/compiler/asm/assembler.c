@@ -41,7 +41,7 @@
 #include <deemon/object.h>             /* ASSERT_OBJECT, ASSERT_OBJECT_TYPE, DREF, DeeObject, DeeObject_*, DeeTypeObject, Dee_AsObject, Dee_COMPARE_ERR, Dee_Decref*, Dee_Incref, Dee_Incref_n, Dee_Setrefv, Dee_XDecref, Dee_hash_t, OBJECT_HEAD_INIT */
 #include <deemon/objmethod.h>          /* DeeCMethod_Check, DeeKwCMethod_Check */
 #include <deemon/rodict.h>             /* DeeRoDictObject, DeeRoDict_Check, _DeeRoDict_GetRealVTab */
-#include <deemon/string.h>             /* DeeString*, Dee_EmptyString, Dee_STRING_ERROR_FIGNORE, STRING_ERROR_FIGNORE */
+#include <deemon/string.h>             /* DeeString*, Dee_EmptyString, Dee_STRING_ERROR_FSTRICT */
 #include <deemon/system-features.h>    /* bcmpc, bzero, memcpy*, memmovedownc, memmoveupc, mempcpyc, memset, trunc */
 #include <deemon/thread.h>             /* DeeThread_CheckInterrupt */
 #include <deemon/tuple.h>              /* DeeTuple* */

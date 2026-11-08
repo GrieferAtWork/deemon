@@ -35,7 +35,7 @@
 #include <deemon/format.h>          /* DeeFormat_PRINT, DeeFormat_Printf, PRFuSIZ, PRFxN */
 #include <deemon/int.h>             /* DeeInt_NEWU */
 #include <deemon/object.h>          /* DREF, DeeObject, Dee_AsObject, Dee_Decref, Dee_Incref, Dee_TYPE, Dee_formatprinter_t, Dee_off_t, Dee_pos_t, Dee_ssize_t, OBJECT_HEAD_INIT */
-#include <deemon/string.h>          /* DeeString_New */
+#include <deemon/string.h>          /* DeeString_NewAscii */
 #include <deemon/system-features.h> /* memcpy, memmovedown, mempcpy */
 #include <deemon/type.h>            /* DeeType_GetName, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, Dee_Visit, Dee_visit_t, STRUCT_*, TF_NONE, TP_FNORMAL, TYPE_*, type_getset, type_member */
 #include <deemon/util/nrlock.h>     /* Dee_NRLOCK_ALREADY, Dee_NRLOCK_ERR, Dee_nrshared_lock_* */

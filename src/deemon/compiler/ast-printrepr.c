@@ -22,21 +22,18 @@
 
 #include <deemon/api.h>
 
-#include <deemon/alloc.h>             /* Dee_Free, Dee_Mallocc, Dee_TYPE_CONSTRUCTOR_INIT_FIXED */
-#include <deemon/code.h>              /* Dee_EXCEPTION_HANDLER_FFINALLY */
-#include <deemon/compiler/ast.h>      /* ASM_OPERAND_IS_INOUT, ASSERT_AST, ASSERT_AST_OPT, AST_*, CONFIG_NO_AST_DEBUG, PRIVATE_AST_GENERATOR_UNPACK_ARGS, asm_operand, ast, ast_*, catch_expr, class_member */
-#include <deemon/compiler/compiler.h> /* DeeCompiler_DelItem, DeeCompiler_LockReading */
-#include <deemon/compiler/lexer.h>    /* DeeLexer, DeeLexer_GetLoc, ast_loc, ast_loc_init_empty, ast_loc_isempty, loc_here, tpp_* */
-#include <deemon/compiler/parser.h>   /* current_tags */
-#include <deemon/compiler/symbol.h>   /* DeeBaseScopeObject, DeeBaseScope_Type, SYMBOL_DEC_N*, SYMBOL_INC_N*, current_scope, lbl_free, symbol, text_label */
-#include <deemon/map.h>               /* Dee_EmptyMap */
-#include <deemon/none.h>              /* Dee_None */
-#include <deemon/format.h>              /* Dee_None */
-#include <deemon/object.h>            /* ASSERT_OBJECT, ASSERT_OBJECT_TYPE, DREF, DeeObject, DeeTypeObject, Dee_Decref, Dee_DecrefNokill, Dee_Incref, OBJECT_HEAD_INIT */
-#include <deemon/seq.h>               /* Dee_EmptySeq */
-#include <deemon/set.h>               /* Dee_EmptySet */
-#include <deemon/tuple.h>             /* Dee_EmptyTuple */
-#include <deemon/type.h>              /* DeeObject_InitStatic, DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, Dee_Visit, Dee_operator_t, Dee_visit_t, OPERATOR_ISINPLACE, TF_NONE, TP_FNORMAL */
+#include <deemon/class.h>           /* DeeClassDescriptorObject, DeeClassDescriptor_Check, Dee_CLASS_ATTRIBUTE_*, Dee_CLASS_GETSET_COUNT, Dee_TP_FCLASS_AUTOINIT, Dee_class_attribute, Dee_class_operator */
+#include <deemon/compiler/ast.h>    /* DeeAst, DeeAstRValue, DeeAst_HAVE_PRINT_REPR, Dee_AST_*, Dee_asm_symbol_getname, Dee_ast_* */
+#include <deemon/compiler/lexer.h>  /* tpp_* */
+#include <deemon/compiler/symbol.h> /* Dee_link_symbol */
+#include <deemon/format.h>          /* DeeFormat_*, PRFu16, PRFuSIZ */
+#include <deemon/module.h>          /* DeeModule_GetShortName */
+#include <deemon/none.h>            /* DeeNone_Check */
+#include <deemon/object.h>          /* DeeObject, DeeObject_PrintRepr, Dee_AsObject, Dee_formatprinter_t, Dee_ssize_t */
+#include <deemon/string.h>          /* DeeString_Check, DeeString_PrintUtf8 */
+#include <deemon/system-features.h> /* strlen */
+#include <deemon/tuple.h>           /* DeeTuple* */
+#include <deemon/type.h>            /* DeeTypeType_GetOperatorById, DeeType_Type, Dee_operator_t, Dee_opinfo, OPERATOR_* */
 
 #include <stddef.h> /* NULL, size_t */
 #include <stdint.h> /* uint16_t */

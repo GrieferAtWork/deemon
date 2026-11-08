@@ -33,8 +33,8 @@
 #include <deemon/none.h>            /* return_none */
 #include <deemon/object.h>          /* DREF, DeeObject, DeeObject_AsInt */
 #include <deemon/objmethod.h>       /*  */
-#include <deemon/string.h>          /* DeeString_New, DeeString_NewUtf8Ex, STRING_ERROR_FIGNORE */
-#include <deemon/system-features.h> /* CONFIG_HAVE_*, DeeSystem_GetErrno, DeeSystem_SetErrno, EOK, isdigit, isupper, strerror, strerrordesc_np, strerrorname_np, strlen, sys_errlist, sys_nerr */
+#include <deemon/string.h>          /* DeeString_NewAscii, DeeString_NewUtf8 */
+#include <deemon/system-features.h> /* CONFIG_HAVE_*, DeeSystem_GetErrno, DeeSystem_SetErrno, EOK, isdigit, isupper, strerror, strerrordesc_np, strerrorname_np, sys_errlist, sys_nerr */
 #include <deemon/type.h>            /* METHOD_FNORMAL, METHOD_FPURECALL */
 
 #include <stddef.h> /* NULL, size_t */
