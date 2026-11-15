@@ -187,7 +187,8 @@ function _assertIteratorConstructor(iterType: Type, x: Sequence) {
 }
 
 
-@@Assert that @x is a generic sequence in every way, shape, and form
+@@Assert that @x is a generic sequence in every way, shape, or form
+@@If non-@none, also assert that its elements match @expected
 function assertSequence(x: Sequence, expected: {Object...} | none = none) {
 	assert x is Sequence;
 	assert x !is Set;

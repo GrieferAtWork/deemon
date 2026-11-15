@@ -96,8 +96,8 @@ DECL_BEGIN
  * --------------------------------------------------------------------------------
  * If an implementation should choose to provide this module, the purpose of it
  * is to expose implementation-specific internals, such as controls for max
- * stack recursion, objects and types used to implement the compiler, as well
- * as other internal types.
+ * stack recursion, objects and types used to implement the compiler, runtime,
+ * as well as other internal types.
  * --------------------------------------------------------------------------------
  * Since the `rt` module as a whole is non-portable, exported symbols are not
  * required to include the `_np` suffix normally required to indicate non-portable. */

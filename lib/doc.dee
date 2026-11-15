@@ -4285,7 +4285,11 @@ set_is_type:
 	@@in a basic, but neat (and human-readable) format
 	operator str(fp: File) {
 		print fp: ("-" * 80);
-		print fp: ("| Documentation for `", prettypath, "'");
+		print fp: ("| Documentation for `", prettypath, "'"),;
+		local bases = objectbases;
+		if (bases)
+			print fp: (" (extends: ", ", ".join(bases), ")"),;
+		print fp:;
 		for (local sec: docsections) {
 			print fp: "-" * 80;
 			for (local seg: sec.segments) {
