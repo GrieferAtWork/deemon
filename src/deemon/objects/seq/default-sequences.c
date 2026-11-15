@@ -2251,7 +2251,7 @@ err:
 
 PRIVATE struct type_seq ds_i_seq = {
 	/* .tp_iter                       = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&ds_i_iter,
-	/* .tp_sizeob                     = */ DEFIMPL(&default__seq_operator_sizeob__with__seq_operator_size),
+	/* .tp_sizeob                     = */ DEFIMPL(&default__sizeob__with__size),
 	/* .tp_contains                   = */ DEFIMPL(&default__seq_operator_contains__with__seq_contains),
 	/* .tp_getitem                    = */ DEFIMPL(&default__seq_operator_getitem__with__seq_operator_getitem_index),
 	/* .tp_delitem                    = */ DEFIMPL(&default__seq_operator_delitem__unsupported),
@@ -2262,7 +2262,7 @@ PRIVATE struct type_seq ds_i_seq = {
 	/* .tp_foreach                    = */ DEFIMPL(&default__foreach__with__iter),
 	/* .tp_foreach_pair               = */ DEFIMPL(&default__foreach_pair__with__iter),
 	/* .tp_bounditem                  = */ DEFIMPL(&default__seq_operator_bounditem__with__seq_operator_getitem),
-	/* .tp_hasitem                    = */ DEFIMPL(&default__seq_operator_hasitem__with__seq_operator_getitem),
+	/* .tp_hasitem                    = */ DEFIMPL(&default__seq_operator_hasitem__with__seq_operator_hasitem_index),
 	/* .tp_size                       = */ (size_t (DCALL *)(DeeObject *__restrict))&ds_i_size,
 	/* .tp_size_fast                  = */ NULL,
 	/* .tp_getitem_index              = */ DEFIMPL(&default__seq_operator_getitem_index__with__seq_operator_foreach),
@@ -2270,7 +2270,7 @@ PRIVATE struct type_seq ds_i_seq = {
 	/* .tp_delitem_index              = */ DEFIMPL(&default__seq_operator_delitem_index__unsupported),
 	/* .tp_setitem_index              = */ DEFIMPL(&default__seq_operator_setitem_index__unsupported),
 	/* .tp_bounditem_index            = */ DEFIMPL(&default__seq_operator_bounditem_index__with__seq_operator_getitem_index),
-	/* .tp_hasitem_index              = */ DEFIMPL(&default__seq_operator_hasitem_index__with__seq_operator_getitem_index),
+	/* .tp_hasitem_index              = */ DEFIMPL(&default__seq_operator_hasitem_index__with__seq_operator_size),
 	/* .tp_getrange_index             = */ (DREF DeeObject *(DCALL *)(DeeObject *, Dee_ssize_t, Dee_ssize_t))&ds_i_getrange_index,
 	/* .tp_delrange_index             = */ DEFIMPL(&default__seq_operator_delrange_index__unsupported),
 	/* .tp_setrange_index             = */ DEFIMPL(&default__seq_operator_setrange_index__unsupported),
@@ -2375,7 +2375,7 @@ INTERN DeeTypeObject DefaultSequence_WithIter_Type = {
 	/* .tp_cast = */ {
 		/* .tp_str  = */ DEFIMPL(&object_str),
 		/* .tp_repr = */ DEFIMPL(&default__repr__with__printrepr),
-		/* .tp_bool = */ DEFIMPL(&default__seq_operator_bool__with__seq_operator_iter),
+		/* .tp_bool = */ DEFIMPL(&default__seq_operator_bool__with__seq_operator_size),
 		/* .tp_print     = */ DEFIMPL(&default__print__with__str),
 		/* .tp_printrepr = */ DEFIMPL(&default_seq_printrepr),
 	},

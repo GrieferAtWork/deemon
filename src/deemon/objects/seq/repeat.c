@@ -27,10 +27,12 @@
 #include <deemon/bool.h>               /* Dee_True, return_false */
 #include <deemon/computed-operators.h> /* DEFIMPL, DEFIMPL_UNSUPPORTED */
 #include <deemon/error-rt.h>           /* DeeRT_Err* */
+#include <deemon/error.h>              /* DeeError_* */
+#include <deemon/format.h>             /* DeeFormat_Printf, PRFuSIZ */
 #include <deemon/gc.h>                 /* DeeGCObject_FREE, DeeGCObject_MALLOC, DeeGC_TRACK, Dee_TYPE_CONSTRUCTOR_INIT_FIXED_GC */
 #include <deemon/int.h>                /* DeeInt_NewSize */
 #include <deemon/none.h>               /* DeeNone_NewRef, Dee_None */
-#include <deemon/object.h>             /* DREF, DeeObject, DeeObject_*, DeeTypeObject, Dee_AsObject, Dee_COMPARE_ERR, Dee_COMPARE_NE, Dee_Decref*, Dee_HAS_FROMBOOL, Dee_Incref, Dee_Setrefv, Dee_TYPE, Dee_foreach_pair_t, Dee_foreach_t, Dee_hash_t, Dee_return_compareT, Dee_return_compare_if_ne, Dee_ssize_t, ITER_DONE, OBJECT_HEAD_INIT, return_reference_ */
+#include <deemon/object.h>             /* DREF, DeeObject, DeeObject_*, DeeTypeObject, Dee_AsObject, Dee_COMPARE_*, Dee_Decref*, Dee_HAS_FROMBOOL, Dee_Incref, Dee_Setrefv, Dee_TYPE, Dee_foreach_pair_t, Dee_foreach_t, Dee_formatprinter_t, Dee_hash_t, Dee_return_compareT, Dee_return_compare_if_ne, Dee_ssize_t, ITER_DONE, OBJECT_HEAD_INIT, return_reference_ */
 #include <deemon/operator-hints.h>     /* DeeNO_foreach_pair_t, DeeNO_foreach_t, DeeType_RequireNativeOperator */
 #include <deemon/seq.h>                /* DeeIterator_Type, DeeSeqRange_Clamp, DeeSeqRange_Clamp_n, DeeSeq_*, Dee_EmptySeq, Dee_seq_range */
 #include <deemon/serial.h>             /* DeeSerial*, Dee_seraddr_t */
@@ -144,6 +146,72 @@ STATIC_ASSERT(offsetof(RepeatIterator, rpi_iter) == offsetof(ProxyObject2, po_ob
               offsetof(RepeatIterator, rpi_iter) == offsetof(ProxyObject2, po_obj2));
 #define repeatiter_fini  generic_proxy2__fini
 #define repeatiter_visit generic_proxy2__visit
+
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
+repeatiter_print(RepeatIterator *__restrict self, Dee_formatprinter_t printer, void *arg) {
+	Dee_ssize_t result;
+	DREF DeeObject *iter;
+	size_t remaining_iterations;
+	RepeatIterator_LockWrite(self);
+	iter = self->rpi_iter;
+	Dee_Incref(iter);
+	remaining_iterations = self->rpi_num;
+	RepeatIterator_LockEndWrite(self);
+	result = DeeFormat_Printf(printer, arg,
+	                          "<Iterator reading from %k, then repeating %k another %" PRFuSIZ " times>",
+	                          iter, self->rpi_rep->rp_seq,
+	                          remaining_iterations);
+	Dee_Decref(iter);
+	return result;
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
+repeatiter_printrepr(RepeatIterator *__restrict self, Dee_formatprinter_t printer, void *arg) {
+	Dee_ssize_t result;
+	DREF DeeObject *iter;
+	DREF DeeObject *raw_iter;
+	int iter_eq_raw_iter;
+	size_t remaining_iterations;
+	RepeatIterator_LockWrite(self);
+	iter = self->rpi_iter;
+	Dee_Incref(iter);
+	remaining_iterations = self->rpi_num;
+	RepeatIterator_LockEndWrite(self);
+	raw_iter = DeeObject_Iter(self->rpi_rep->rp_seq);
+	if unlikely(!raw_iter)
+		goto err_iter;
+	if (Dee_TYPE(iter) != Dee_TYPE(raw_iter)) {
+		iter_eq_raw_iter = Dee_COMPARE_NE;
+	} else {
+		iter_eq_raw_iter = DeeObject_CompareEq(iter, raw_iter);
+	}
+	Dee_Decref(raw_iter);
+	if (Dee_COMPARE_ISERR(iter_eq_raw_iter)) {
+		if (DeeError_Catch(&DeeError_NotImplemented) ||
+		    DeeError_Catch(&DeeError_TypeError) ||
+		    DeeError_Catch(&DeeError_ValueError)) {
+			iter_eq_raw_iter = Dee_COMPARE_NE;
+		} else {
+			goto err_iter;
+		}
+	}
+	result = DeeFormat_Printf(printer, arg,
+	                          "Sequence.repeat(%r, %" PRFuSIZ ").operator iter()",
+	                          self->rpi_rep->rp_seq, remaining_iterations);
+	if (result >= 0 && Dee_COMPARE_ISNE(iter_eq_raw_iter)) {
+		/* If "iter" isn't the equal to the start of a
+		 * repetition, then include its representation */
+		Dee_ssize_t temp;
+		temp = DeeFormat_Printf(printer, arg, " <curIter:%r>", iter);
+		result = unlikely(temp < 0) ? temp : (result + temp);
+	}
+	Dee_Decref(iter);
+	return result;
+err_iter:
+	Dee_Decref(iter);
+	return -1;
+}
+
 
 PRIVATE NONNULL((1)) void DCALL
 repeatiter_clear(RepeatIterator *__restrict self) {
@@ -361,11 +429,11 @@ INTERN DeeTypeObject SeqRepeatIterator_Type = {
 		/* .tp_move_assign = */ NULL,
 	},
 	/* .tp_cast = */ {
-		/* .tp_str  = */ DEFIMPL(&object_str),
+		/* .tp_str  = */ DEFIMPL(&default__str__with__print),
 		/* .tp_repr = */ DEFIMPL(&default__repr__with__printrepr),
 		/* .tp_bool = */ DEFIMPL(&default__iter_operator_bool__with__iter_peek),
-		/* .tp_print     = */ DEFIMPL(&default__print__with__str),
-		/* .tp_printrepr = */ DEFIMPL(&iterator_printrepr),
+		/* .tp_print     = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_formatprinter_t, void *))&repeatiter_print,
+		/* .tp_printrepr = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_formatprinter_t, void *))&repeatiter_printrepr,
 	},
 	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, Dee_visit_t, void *))&repeatiter_visit,
 	/* .tp_gc            = */ &repeatiter_gc,
@@ -569,7 +637,17 @@ err_temp:
 	return temp;
 }
 
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
+repeat_print(Repeat *__restrict self, Dee_formatprinter_t printer, void *arg) {
+	return DeeFormat_Printf(printer, arg, "<Sequence %k repeated %" PRFuSIZ " times>",
+	                        self->rp_seq, self->rp_num);
+}
 
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
+repeat_printrepr(Repeat *__restrict self, Dee_formatprinter_t printer, void *arg) {
+	return DeeFormat_Printf(printer, arg, "Sequence.repeat(%r, %" PRFuSIZ ")",
+	                        self->rp_seq, self->rp_num);
+}
 
 PRIVATE struct type_seq repeat_seq = {
 	/* .tp_iter                       = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&repeat_iter,
@@ -679,11 +757,11 @@ INTERN DeeTypeObject SeqRepeat_Type = {
 		/* .tp_move_assign = */ NULL,
 	},
 	/* .tp_cast = */ {
-		/* .tp_str  = */ DEFIMPL(&object_str),
+		/* .tp_str  = */ DEFIMPL(&default__str__with__print),
 		/* .tp_repr = */ DEFIMPL(&default__repr__with__printrepr),
 		/* .tp_bool = */ (int (DCALL *)(DeeObject *__restrict))&repeat_bool,
-		/* .tp_print     = */ DEFIMPL(&default__print__with__str),
-		/* .tp_printrepr = */ DEFIMPL(&default_seq_printrepr),
+		/* .tp_print     = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_formatprinter_t, void *))&repeat_print,
+		/* .tp_printrepr = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_formatprinter_t, void *))&repeat_printrepr,
 	},
 	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, Dee_visit_t, void *))&repeat_visit,
 	/* .tp_gc            = */ NULL,
@@ -773,6 +851,18 @@ err:
 	return -1;
 }
 
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
+repeatitemiter_print(RepeatItemIterator *__restrict self, Dee_formatprinter_t printer, void *arg) {
+	return DeeFormat_Printf(printer, arg, "<Iterator that will repeat object %k another %" PRFuSIZ " times>",
+	                        self->rii_obj, atomic_read(&self->rii_num));
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
+repeatitemiter_printrepr(RepeatItemIterator *__restrict self, Dee_formatprinter_t printer, void *arg) {
+	return DeeFormat_Printf(printer, arg, "Sequence.repeatitem(%r, %" PRFuSIZ ").operator iter()",
+	                        self->rii_obj, atomic_read(&self->rii_num));
+}
+
 STATIC_ASSERT(offsetof(RepeatItemIterator, rii_rep) == offsetof(ProxyObject, po_obj));
 #define repeatitemiter_fini  generic_proxy__fini
 #define repeatitemiter_visit generic_proxy__visit
@@ -849,11 +939,11 @@ INTERN DeeTypeObject SeqRepeatItemIterator_Type = {
 		/* .tp_move_assign = */ NULL,
 	},
 	/* .tp_cast = */ {
-		/* .tp_str  = */ DEFIMPL(&object_str),
+		/* .tp_str  = */ DEFIMPL(&default__str__with__print),
 		/* .tp_repr = */ DEFIMPL(&default__repr__with__printrepr),
 		/* .tp_bool = */ DEFIMPL(&default__iter_operator_bool__with__iter_peek),
-		/* .tp_print     = */ DEFIMPL(&default__print__with__str),
-		/* .tp_printrepr = */ DEFIMPL(&iterator_printrepr),
+		/* .tp_print     = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_formatprinter_t, void *))&repeatitemiter_print,
+		/* .tp_printrepr = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_formatprinter_t, void *))&repeatitemiter_printrepr,
 	},
 	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, Dee_visit_t, void *))&repeatitemiter_visit,
 	/* .tp_gc            = */ NULL,
@@ -922,6 +1012,18 @@ STATIC_ASSERT(offsetof(RepeatItem, rpit_obj) == offsetof(ProxyObject, po_obj));
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 repeatitem_bool(RepeatItem *__restrict self) {
 	return Dee_HAS_FROMBOOL(self->rpit_num != 0);
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
+repeatitem_print(RepeatItem *__restrict self, Dee_formatprinter_t printer, void *arg) {
+	return DeeFormat_Printf(printer, arg, "<Object %k repeated %" PRFuSIZ " times>",
+	                        self->rpit_obj, self->rpit_num);
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
+repeatitem_printrepr(RepeatItem *__restrict self, Dee_formatprinter_t printer, void *arg) {
+	return DeeFormat_Printf(printer, arg, "Sequence.repeatitem(%r, %" PRFuSIZ ")",
+	                        self->rpit_obj, self->rpit_num);
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF RepeatItemIterator *DCALL
@@ -1134,11 +1236,11 @@ INTERN DeeTypeObject SeqRepeatItem_Type = {
 		/* .tp_move_assign = */ NULL,
 	},
 	/* .tp_cast = */ {
-		/* .tp_str  = */ DEFIMPL(&object_str),
+		/* .tp_str  = */ DEFIMPL(&default__str__with__print),
 		/* .tp_repr = */ DEFIMPL(&default__repr__with__printrepr),
 		/* .tp_bool = */ (int (DCALL *)(DeeObject *__restrict))&repeatitem_bool,
-		/* .tp_print     = */ DEFIMPL(&default__print__with__str),
-		/* .tp_printrepr = */ DEFIMPL(&default_seq_printrepr),
+		/* .tp_print     = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_formatprinter_t, void *))&repeatitem_print,
+		/* .tp_printrepr = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_formatprinter_t, void *))&repeatitem_printrepr,
 	},
 	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, Dee_visit_t, void *))&repeatitem_visit,
 	/* .tp_gc            = */ NULL,
