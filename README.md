@@ -23,6 +23,7 @@ Deemon is designed with the following features in mind:
 - Being portable to any Unix-like operating system (obviously including Linux), as well as Windows
 - Working with, and processing data via sequences and sequence proxies, rather than individually or by always creating new list objects
 - Being faster than python while still offering similar runtime functionality (mainly by not having a GIL, a more powerful instruction set, and using static symbol resolution, rather than having locals/globals be runtime hash-mappings)
+- For more information on syntax, see [/lib/LANGUAGE.md](./lib/LANGUAGE.md)
 
 
 ## Building
