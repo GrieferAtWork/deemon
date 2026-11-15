@@ -494,7 +494,7 @@ class Table {
 		local nColumns = this.columns;
 		local perColumn = availWidth / nColumns;
 		local unused = availWidth % nColumns;
-		local result = [perColumn] * nColumns;
+		local result = (List from deemon)(nColumns, perColumn);
 		for (local i: [:unused])
 			++result[i];
 		local nRows = this.rows;
@@ -592,7 +592,7 @@ class Table {
 					[isThick]);
 				p.appendNormal("\n");
 			}
-			local cellLines = [none] * nColumns;
+			local cellLines = (List from deemon)(nColumns, none);
 			local reqLines = 0;
 			/* Print the lines for all cells & figure out
 			 * how many lines will be needed in total. */
@@ -718,7 +718,12 @@ class ExternalReference {
 	private member m_name: string;
 
 	function printConsoleString(p: ConsolePrinter) {
-		p << ">" << name << "<";
+		local prettyPath = path.lstrip("/")
+			.rpartition("/").first
+			.replace("i:", "")
+			.replace("c:", "")
+			.replace("/", ".");
+		p << "[" << prettyPath << "." << name << "]";
 	}
 
 	operator str(out: File) {

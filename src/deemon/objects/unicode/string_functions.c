@@ -10381,17 +10381,17 @@ INTERN_TPCONST struct type_method tpconst string_methods[] = {
 
 	              "Like most other ways of formatting strings, all text outside of format "
 	              /**/ "specifiers is simply copied into the output string. Special rules "
-	              /**/ "are applied to text found inside or curly-braces ($\"{...}\")\n"
+	              /**/ "are applied to text found inside or curly-braces ($\"{...}\").\n"
 
-	              "In order to escape either $\"{\" or $\"}\" characters, use $\"{{\" and $\"}}\" respectively\n"
+	              "In order to escape either $\"{\" or $\"}\" characters, use $\"{{\" and $\"}}\" respectively.\n"
 
 	              "Processing of text inside of curly-brace is split into 2 parts, "
 	              /**/ "both of which are optional and separated by $\":\":\n"
 
 	              "#L-{"
-	              "The object selection expression part|"
+	              "The object selection expression part.|"
 	              "The object spec string portion (which may contain further "
-	              /**/ "$\"{...}\"-blocks that are expanded beforehand)"
+	              /**/ "$\"{...}\"-blocks that are expanded beforehand)."
 	              "}\n"
 
 	              "#T{Selection expression|Description~"
@@ -10433,7 +10433,7 @@ INTERN_TPCONST struct type_method tpconst string_methods[] = {
 	              /*              */ "$\"?\" is ignored)}\n"
 
 	              "Sub-expressions in selections strings (the ${<expr>} above). "
-	              /**/ "Note however that the angle brackets are not part of the syntax, "
+	              /**/ "Note however that the <angle brackets> are not part of the syntax, "
 	              /**/ "but used to highlight association:\n"
 
 	              "#T{Sub-expression|Description~"
@@ -10442,11 +10442,11 @@ INTERN_TPCONST struct type_method tpconst string_methods[] = {
 	              "$\"{x}\"|Evaluates to the object selected by another selection expression $x}\n"
 
 	              "Once an object to-be formatted has been selected, the way in which it should "
-	              /**/ "then be formatted can be altered through use of spec string portion\n"
+	              /**/ "then be formatted can be altered through use of the spec string portion.\n"
 
 	              "If a spec portion is not present, ${str selected_object} is simply appended "
 	              /**/ "to the resulting ?.. Otherwise, ${selected_object.__format__(spec_string)} "
-	              /**/ "is invoked, and the resulting object is appended instead\n"
+	              /**/ "is invoked, and the resulting object is appended instead.\n"
 
 	              "For this purpose, ?DObject implements a function ?A__format__?DObject that provides "
 	              /**/ "some basic spec options, which are also used for types not derived from ?DObject, "
@@ -10455,7 +10455,7 @@ INTERN_TPCONST struct type_method tpconst string_methods[] = {
 
 	              "When used, ?A__format__?DObject provides the following functionality, with a "
 	              /**/ ":ValueError being thrown for anything else, or anything not matching these "
-	              /**/ "criteria\n"
+	              /**/ "criteria.\n"
 
 	              "#T{Spec option|Description~"
 	              /**/ "$\"{:42}\"|Will append ${selected_object.operator str().ljust(42)} to the resulting ?. (s.a. ?#ljust)&"
@@ -11167,10 +11167,10 @@ INTERN_TPCONST struct type_method tpconst string_methods[] = {
 	              "(" string_indent_params ")->?.\n"
 	              "Using @this ?. as result, insert @filler at the front, as well as after "
 	              /**/ "every linefeed with the exception of one that may be located at its end\n"
-	              "The intended use is for generating strings from structured data, such as HTML:\n"
+	              "The intended use is for adding indentation to strings forming structured data, such as HTML:\n"
 	              "${"
 	              /**/ "text = getHtmlText();\n"
-	              /**/ "text = f\"<html>\n{text.strip().indent()}\n</html>\";"
+	              /**/ "text = f\"\"\"\n\t<html>\n\t{text.strip().indent()}\n\t</html>\"\"\";"
 	              "}"),
 	TYPE_METHOD_F("dedent", &string_dedent,
 	              METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST,
