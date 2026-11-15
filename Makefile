@@ -626,3 +626,33 @@ cxx-generated:
 		include/deemon/cxx/tuple.h \
 		include/deemon/cxx/type.h
 .PHONY: cxx-generated
+
+
+# Use this after building deemon with `make CFLAGS=--coverage LDFLAGS=--coverage`
+ifndef GENINFO
+GENINFO := /usr/local/bin/geninfo
+endif
+ifndef GENHTML
+GENHTML := /usr/local/bin/genhtml
+endif
+ifndef COVERAGE_OUTPUT
+COVERAGE_OUTPUT := build/coverage
+endif
+coverage:
+	@echo "Running tests"
+	@cd "$(SRC_ROOT)"
+	@$(DEEMON) util/test.dee
+	@echo "Creating report directory"
+	@mkdir -p "$(COVERAGE_OUTPUT)/report"
+	@echo "Running $(GENINFO)..."
+	@$(GENINFO) build/deemon/src \
+		--ignore-errors inconsistent \
+		--ignore-errors empty \
+		--rc check_data_consistency=0 \
+		-b . -o "$(COVERAGE_OUTPUT)/coverage.info"
+	@echo "Running $(GENHTML)..."
+	@$(GENHTML) "$(COVERAGE_OUTPUT)/coverage.info" \
+		--ignore-errors inconsistent \
+		-o "$(COVERAGE_OUTPUT)/report"
+	@echo "Done. Report written to $(COVERAGE_OUTPUT)/report/index.html"
+.PHONY: coverage
