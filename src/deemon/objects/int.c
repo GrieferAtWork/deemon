@@ -202,6 +202,9 @@ typedef Dee_sdigit_t sdigit;
 typedef Dee_twodigits_t twodigits;
 typedef Dee_stwodigits_t stwodigits;
 
+/* Suppress: warning: comparison of unsigned expression in ‘< 0’ is always false [-Wtype-limits] */
+__pragma_GCC_diagnostic_push_ignored(Wtype_limits)
+
 /* Make sure that comparison helper macros work. */
 STATIC_ASSERT(Dee_CompareNe(10, 20) == Dee_COMPARE_LO);
 STATIC_ASSERT(Dee_CompareNe(20, 10) == Dee_COMPARE_GR);
@@ -337,6 +340,8 @@ STATIC_ASSERT_COMPARE_PREDICATE(Dee_COMPARE_FROM_loTT_grFF, Dee_COMPARE_LO ==, D
 STATIC_ASSERT_COMPARE_PREDICATE(Dee_COMPARE_FROM_grTT_loFF, Dee_COMPARE_ISGR, Dee_COMPARE_ISLO);
 STATIC_ASSERT_COMPARE_PREDICATE(Dee_COMPARE_FROM_grTT_loFF, Dee_COMPARE_GR ==, Dee_COMPARE_LO ==);
 #undef STATIC_ASSERT_COMPARE_PREDICATE
+
+__pragma_GCC_diagnostic_pop_ignored(Wtype_limits)
 
 #ifndef CONFIG_HAVE_memend
 #define CONFIG_HAVE_memend

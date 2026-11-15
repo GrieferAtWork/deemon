@@ -258,7 +258,7 @@ The following operators are defined. Every operator can be referenced by `operat
 
 ## Module System
 
-Every `.dee` script is its own module. During instantiation, a module's root scope is executed as code, though it is expected that modules meant for import are written such that executing their global scope has no side-effects.
+Every `.dee` script is its own module. During instantiation, a module's root scope is executed as code, though it is expected that modules meant for import are written such that executing their root scope has no side-effects.
 
 Scripts that are meant to behave different when imported (`import .otherModule;`), vs. executed directly (`deemon otherModule.dee`) can wrap any code that should only be compiled in the later case in `#ifdef __MAIN__` (similar to python's `if __name__ == '__main__':`)
 
