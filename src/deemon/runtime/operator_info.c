@@ -2035,7 +2035,7 @@ INTERN DeeTypeObject TypeOperatorsIterator_Type = {
 		/* .tp_str  = */ DEFIMPL(&object_str),
 		/* .tp_repr = */ DEFIMPL(&default__repr__with__printrepr),
 		/* .tp_bool = */ DEFIMPL(&default__iter_operator_bool__with__iter_peek),
-		/* .tp_print     = */ DEFIMPL(&default__print__with__str),
+		/* .tp_print     = */ DEFIMPL(&object_print),
 		/* .tp_printrepr = */ DEFIMPL(&iterator_printrepr),
 	},
 	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, Dee_visit_t, void *))&toi_visit,

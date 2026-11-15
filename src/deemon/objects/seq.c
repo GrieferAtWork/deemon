@@ -4090,7 +4090,7 @@ PUBLIC DeeTypeObject DeeSeq_Type = {
 		/* .tp_str       = */ DEFIMPL(&object_str),
 		/* .tp_repr      = */ DEFIMPL(&default__repr__with__printrepr),
 		/* .tp_bool      = */ &default__seq_operator_bool,
-		/* .tp_print     = */ DEFIMPL(&default__print__with__str),
+		/* .tp_print     = */ DEFIMPL(&object_print),
 		/* .tp_printrepr = */ &default_seq_printrepr,
 	},
 	/* .tp_visit         = */ NULL,

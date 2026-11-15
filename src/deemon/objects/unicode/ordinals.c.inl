@@ -228,7 +228,7 @@ INTERN DeeTypeObject StringOrdinals_Type = {
 		/* .tp_str  = */ DEFIMPL(&object_str),
 		/* .tp_repr = */ DEFIMPL(&default__repr__with__printrepr),
 		/* .tp_bool = */ (int (DCALL *)(DeeObject *__restrict))&stringordinals_bool,
-		/* .tp_print     = */ DEFIMPL(&default__print__with__str),
+		/* .tp_print     = */ DEFIMPL(&object_print),
 		/* .tp_printrepr = */ DEFIMPL(&default_seq_printrepr),
 	},
 	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, Dee_visit_t, void *))&stringordinals_visit,

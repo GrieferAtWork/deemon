@@ -134,6 +134,7 @@ INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL iterator_sub(DeeObject *lhs
 INTDEF WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL map_printrepr(DeeObject *__restrict self, Dee_formatprinter_t printer, void *arg);
 INTDEF WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL module_printrepr(DeeObject *__restrict self, Dee_formatprinter_t printer, void *arg);
 INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL module_str(DeeObject *__restrict self);
+INTDEF WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL object_print(DeeObject *__restrict self, Dee_formatprinter_t printer, void *arg);
 INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL object_repr(DeeObject *__restrict self);
 INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL object_str(DeeObject *__restrict self);
 INTDEF WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL sysfile_print(DeeObject *__restrict self, Dee_formatprinter_t printer, void *arg);

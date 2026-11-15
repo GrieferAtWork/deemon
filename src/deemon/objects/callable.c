@@ -421,7 +421,7 @@ PUBLIC DeeTypeObject DeeCallable_Type = {
 		/* .tp_str  = */ DEFIMPL(&object_str),
 		/* .tp_repr = */ DEFIMPL(&object_repr),
 		/* .tp_bool = */ DEFIMPL_UNSUPPORTED(&default__bool__unsupported),
-		/* .tp_print     = */ DEFIMPL(&default__print__with__str),
+		/* .tp_print     = */ DEFIMPL(&object_print),
 		/* .tp_printrepr = */ DEFIMPL(&default__printrepr__with__repr),
 	},
 	/* .tp_visit         = */ NULL,

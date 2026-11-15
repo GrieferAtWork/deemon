@@ -687,7 +687,7 @@ PUBLIC DeeTypeObject DeeProperty_Type = {
 		/* .tp_str       = */ DEFIMPL(&object_str),
 		/* .tp_repr      = */ DEFIMPL(&default__repr__with__printrepr),
 		/* .tp_bool      = */ DEFIMPL_UNSUPPORTED(&default__bool__unsupported),
-		/* .tp_print     = */ DEFIMPL(&default__print__with__str),
+		/* .tp_print     = */ DEFIMPL(&object_print),
 		/* .tp_printrepr = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_formatprinter_t, void *))&property_printrepr,
 	},
 	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, Dee_visit_t, void *))&property_visit,

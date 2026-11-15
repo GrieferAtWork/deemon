@@ -265,28 +265,21 @@ object_any_ctor(DeeObject *__restrict UNUSED(self),
 	return 0;
 }
 
+DEFAULT_OPIMP WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
+object_print(DeeObject *__restrict self, Dee_formatprinter_t printer, void *arg) {
+	return DeeFormat_Printf(printer, arg, "<instance of %k@%" PRFxPTR ">",
+	                        Dee_TYPE(self), DeeObject_Id(self));
+}
+
 DEFAULT_OPIMP WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 object_str(DeeObject *__restrict self) {
-#if 1
-	DeeTypeObject *tp_self = Dee_TYPE(self);
-	if (tp_self->tp_name) {
-		if (tp_self->tp_flags & TP_FNAMEOBJECT) {
-			DREF DeeStringObject *result;
-			result = container_of(tp_self->tp_name, DeeStringObject, s_str);
-			Dee_Incref(result);
-			return Dee_AsObject(result);
-		}
-		return DeeString_NewAscii(tp_self->tp_name);
-	}
-	return_reference(&str_Object);
-#else
-	if (Dee_TYPE(self) != &DeeObject_Type)
-		goto err_noimp;
-	return_reference(&str_Object);
-err_noimp:
-	err_unimplemented_operator(Dee_TYPE(self), OPERATOR_STR);
+	struct Dee_unicode_printer printer = Dee_UNICODE_PRINTER_INIT;
+	if (object_print(self, &Dee_unicode_printer_print, &printer) < 0)
+		goto err_printer;
+	return Dee_unicode_printer_pack(&printer);
+err_printer:
+	Dee_unicode_printer_fini(&printer);
 	return NULL;
-#endif
 }
 
 DEFAULT_OPIMP WUNUSED NONNULL((1)) DREF DeeObject *DCALL
@@ -2030,7 +2023,7 @@ PUBLIC DeeTypeObject DeeObject_Type = {
 		/* .tp_str  = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&object_str,
 		/* .tp_repr = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&object_repr,
 		/* .tp_bool = */ DEFIMPL_UNSUPPORTED(&default__bool__unsupported),
-		/* .tp_print     = */ DEFIMPL(&default__print__with__str),
+		/* .tp_print     = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_formatprinter_t, void *))&object_print,
 		/* .tp_printrepr = */ DEFIMPL(&default__printrepr__with__repr),
 	},
 	/* .tp_visit         = */ NULL,
