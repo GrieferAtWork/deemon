@@ -173,7 +173,7 @@ print repr p; // "Point(x: 10, y: 20)"
 	- `EXPR...`: Simulate to a `,`-separated expansion of `EXPR` at the point of use:
 		- Python equivalent would be `*EXPR`
 		- `foo(10, ARGS..., 20)` calls foo with `2 + #ARGS` arguments `{ 10, ARGS[0], ARGS[1], ..., ARGS[#ARGS-1], 20 }`
-		- `{ "before", ITEMS1..., "middle", ITEMS2... }`
+		- `{ "before", ITEMS1..., "middle", ITEMS2..., "end" }`
 		- Special case: `local first, none, third = ITEMS...;` unpack `ITEMS` into 3 objects and assign to variables. (same as python `first, _, third = ITEMS`)
 - Range generators: `[:END]`, `[START:END]`, `[START:END,STEP]`
 	- `START` defaults to `0` (or rather: `(type END)()`)
@@ -283,5 +283,4 @@ For more information, run `deemon --help /MODULE`. For more information on indiv
 - `errors` (Aliases for all builtin sub-classes of `deemon.Error`)
 	- Types: `AppExit`, `ArithmeticError`, `AssertionError`, `AttributeError`, `BufferError`, `BusyFile`, `CannotWeakReference`, `CompilerError`, `CrossDeviceLink`, `DirectoryNotEmpty`, `DivideByZero`, `EmptySequence`, `EmptyWeakReference`, `Error`, `FSError`, `FileAccessError`, `FileClosed`, `FileExists`, `FileNotFound`, `IllegalInstruction`, `IndexError`, `IntegerOverflow`, `Interrupt`, `IsDirectory`, `ItemNotFound`, `KeyError`, `KeyboardInterrupt`, `NegativeShift`, `NoDirectory`, `NoMemory`, `NoSymlink`, `NotImplemented`, `ReadOnlyFile`, `ReadOnlyKey`, `ReferenceError`, `RegexNotFound`, `RestrictedAttribute`, `RuntimeError`, `SegFault`, `SequenceError`, `Signal`, `StackOverflow`, `StopIteration`, `SymbolError`, `SyntaxError`, `SystemError`, `ThreadCrash`, `ThreadExit`, `TypeError`, `UnboundAttribute`, `UnboundItem`, `UnboundLocal`, `UnicodeDecodeError`, `UnicodeEncodeError`, `UnicodeError`, `UnknownAttribute`, `UnknownKey`, `UnpackError`, `UnsupportedAPI`, `ValueError`
 
-For information on other modules, use `deemon --help`
-
+For information on other modules, use `deemon --help` as described above. For example, to get help on `deemon.string.find`, run `deemon --help /deemon/string/find`.
