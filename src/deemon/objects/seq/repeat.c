@@ -1161,7 +1161,7 @@ struct repeat_range_desc {
 
 /* Modify `self` such that elements are never enumerated more than once.
  * Upon return, you're allowed to assume that `repeat_range_desc_getbodyrep(self) == 0` */
-PRIVATE WUNUSED NONNULL((1)) void DCALL
+PRIVATE NONNULL((1)) void DCALL
 repeat_range_desc_makeonce(struct repeat_range_desc *__restrict self) {
 	if (repeat_range_desc_hasbody(self)) {
 		/* - Keep `rrd_head_start` unchanged -> range still starts on same element
@@ -1180,7 +1180,7 @@ repeat_range_desc_makeonce(struct repeat_range_desc *__restrict self) {
 }
 
 /* Same as `repeat_range_desc_makeonce()`, but retain `rrd_tail_end` */
-PRIVATE WUNUSED NONNULL((1)) void DCALL
+PRIVATE NONNULL((1)) void DCALL
 repeat_range_desc_makeonce_rev(struct repeat_range_desc *__restrict self) {
 	if (repeat_range_desc_hasbody(self)) {
 		self->rrd_head_start = self->rrd_tail_end;
@@ -1666,7 +1666,7 @@ err:
 	return -1;
 }
 
-PRIVATE WUNUSED NONNULL((1, 4, 5)) DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1, 4)) DREF DeeObject *DCALL
 repeat_sum_with_range_impl(Repeat *self, size_t start, size_t end,
                            DeeObject *def, DeeObject *key) {
 	DREF DeeObject *result;

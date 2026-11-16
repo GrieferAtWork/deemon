@@ -182,6 +182,7 @@ __pragma_GCC_diagnostic_ignored(Wunused_parameter)
 __pragma_GCC_diagnostic_ignored(Wsign_compare)
 __pragma_GCC_diagnostic_ignored(Wunused_function)
 __pragma_GCC_diagnostic_ignored(Wunused_variable)
+__pragma_GCC_diagnostic_ignored(Wdiscarded_qualifiers)
 
 /* Include SQLite source */
 #ifndef __INTELLISENSE__

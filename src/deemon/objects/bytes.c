@@ -70,6 +70,9 @@
 
 DECL_BEGIN
 
+/* allocation of insufficient size ‘44’ for type ‘Bytes’ {aka ‘struct Dee_bytes_object’} with size ‘48’ [-Walloc-size] */
+__pragma_GCC_diagnostic_ignored(Walloc_size)
+
 #ifndef NDEBUG
 #define DBG_memset (void)memset
 #else /* !NDEBUG */
