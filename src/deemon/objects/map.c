@@ -468,7 +468,7 @@ err_temp:
 PRIVATE struct type_getset tpconst map_getsets[] = {
 	TYPE_GETTER(STR_keys, &default__map_keys,
 	            "->?#Keys\n"
-	            "Returns a ?DSequence that can be enumerated to view only the keys of @this ?."),
+	            "Returns a ?DSet that can be enumerated to view only the keys of @this ?."),
 	TYPE_GETTER(STR_values, &default__map_values,
 	            "->?#Values\n"
 	            "Returns a ?DSequence that can be enumerated to view only the values of @this ?."),

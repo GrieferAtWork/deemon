@@ -24,8 +24,8 @@
 
 #include <deemon/format.h>          /* PRFuSIZ */
 #include <deemon/map.h>             /* DeeMap_Type */
-#include <deemon/method-hints.h>    /* DeeObject_InvokeMethodHint */
-#include <deemon/object.h>          /* DREF, DeeObject, DeeObject_*, DeeTypeObject, Dee_AsObject, Dee_COMPARE_*, Dee_Decref, Dee_Incref, Dee_TYPE, Dee_foreach_pair_t, Dee_hash_t, Dee_ssize_t, return_reference */
+#include <deemon/method-hints.h>    /* DeeObject_InvokeMethodHint, Dee_seq_enumerate_t */
+#include <deemon/object.h>          /* DREF, DeeObject, DeeObject_*, DeeTypeObject, Dee_AsObject, Dee_COMPARE_*, Dee_Decref, Dee_Incref, Dee_TYPE, Dee_foreach_pair_t, Dee_foreach_t, Dee_hash_t, Dee_ssize_t, return_reference */
 #include <deemon/seq.h>             /* DeeSeq_Type */
 #include <deemon/serial.h>          /* DeeSerial*, Dee_seraddr_t, Dee_serial */
 #include <deemon/set.h>             /* DeeSet_Type */
@@ -549,6 +549,16 @@ generic_proxy__seq_contains(ProxyObject *self, DeeObject *item){
 	return DeeObject_InvokeMethodHint(seq_contains, self->po_obj, item);
 }
 
+INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+generic_proxy__seq_trygetfirst(ProxyObject *__restrict self){
+	return DeeObject_InvokeMethodHint(seq_trygetfirst, self->po_obj);
+}
+
+INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+generic_proxy__seq_getfirst(ProxyObject *__restrict self){
+	return DeeObject_InvokeMethodHint(seq_getfirst, self->po_obj);
+}
+
 INTERN WUNUSED NONNULL((1)) int DCALL
 generic_proxy__seq_boundfirst(ProxyObject *__restrict self){
 	return DeeObject_InvokeMethodHint(seq_boundfirst, self->po_obj);
@@ -557,6 +567,21 @@ generic_proxy__seq_boundfirst(ProxyObject *__restrict self){
 INTERN WUNUSED NONNULL((1)) int DCALL
 generic_proxy__seq_delfirst(ProxyObject *__restrict self){
 	return DeeObject_InvokeMethodHint(seq_delfirst, self->po_obj);
+}
+
+INTERN WUNUSED NONNULL((1, 2)) int DCALL
+generic_proxy__seq_setfirst(ProxyObject *self, DeeObject *value){
+	return DeeObject_InvokeMethodHint(seq_setfirst, self->po_obj, value);
+}
+
+INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+generic_proxy__seq_trygetlast(ProxyObject *__restrict self){
+	return DeeObject_InvokeMethodHint(seq_trygetlast, self->po_obj);
+}
+
+INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+generic_proxy__seq_getlast(ProxyObject *__restrict self){
+	return DeeObject_InvokeMethodHint(seq_getlast, self->po_obj);
 }
 
 INTERN WUNUSED NONNULL((1)) int DCALL
@@ -569,6 +594,11 @@ generic_proxy__seq_dellast(ProxyObject *__restrict self){
 	return DeeObject_InvokeMethodHint(seq_dellast, self->po_obj);
 }
 
+INTERN WUNUSED NONNULL((1, 2)) int DCALL
+generic_proxy__seq_setlast(ProxyObject *self, DeeObject *value){
+	return DeeObject_InvokeMethodHint(seq_setlast, self->po_obj, value);
+}
+
 INTERN WUNUSED NONNULL((1)) int DCALL
 generic_proxy__seq_erase(ProxyObject *__restrict self, size_t index, size_t count){
 	return DeeObject_InvokeMethodHint(seq_erase, self->po_obj, index, count);
@@ -579,24 +609,14 @@ generic_proxy__seq_reverse(ProxyObject *self, size_t start, size_t end){
 	return DeeObject_InvokeMethodHint(seq_reverse, self->po_obj, start, end);
 }
 
-INTERN WUNUSED NONNULL((1)) int DCALL
-generic_proxy__set_operator_bool(ProxyObject *__restrict self){
-	return DeeObject_InvokeMethodHint(set_operator_bool, self->po_obj);
+INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+generic_proxy__set_trygetfirst(ProxyObject *__restrict self){
+	return DeeObject_InvokeMethodHint(set_trygetfirst, self->po_obj);
 }
 
 INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-generic_proxy__set_operator_iter(ProxyObject *__restrict self){
-	return DeeObject_InvokeMethodHint(set_operator_iter, self->po_obj);
-}
-
-INTERN WUNUSED NONNULL((1)) size_t DCALL
-generic_proxy__set_operator_size(ProxyObject *__restrict self){
-	return DeeObject_InvokeMethodHint(set_operator_size, self->po_obj);
-}
-
-INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-generic_proxy__set_operator_sizeob(ProxyObject *__restrict self){
-	return DeeObject_InvokeMethodHint(set_operator_sizeob, self->po_obj);
+generic_proxy__set_getfirst(ProxyObject *__restrict self){
+	return DeeObject_InvokeMethodHint(set_getfirst, self->po_obj);
 }
 
 INTERN WUNUSED NONNULL((1)) int DCALL
@@ -609,6 +629,21 @@ generic_proxy__set_delfirst(ProxyObject *__restrict self){
 	return DeeObject_InvokeMethodHint(set_delfirst, self->po_obj);
 }
 
+INTERN WUNUSED NONNULL((1, 2)) int DCALL
+generic_proxy__set_setfirst(ProxyObject *self, DeeObject *value){
+	return DeeObject_InvokeMethodHint(set_setfirst, self->po_obj, value);
+}
+
+INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+generic_proxy__set_trygetlast(ProxyObject *__restrict self){
+	return DeeObject_InvokeMethodHint(set_trygetlast, self->po_obj);
+}
+
+INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+generic_proxy__set_getlast(ProxyObject *__restrict self){
+	return DeeObject_InvokeMethodHint(set_getlast, self->po_obj);
+}
+
 INTERN WUNUSED NONNULL((1)) int DCALL
 generic_proxy__set_boundlast(ProxyObject *__restrict self){
 	return DeeObject_InvokeMethodHint(set_boundlast, self->po_obj);
@@ -617,6 +652,146 @@ generic_proxy__set_boundlast(ProxyObject *__restrict self){
 INTERN WUNUSED NONNULL((1)) int DCALL
 generic_proxy__set_dellast(ProxyObject *__restrict self){
 	return DeeObject_InvokeMethodHint(set_dellast, self->po_obj);
+}
+
+INTERN WUNUSED NONNULL((1, 2)) int DCALL
+generic_proxy__set_setlast(ProxyObject *self, DeeObject *value){
+	return DeeObject_InvokeMethodHint(set_setlast, self->po_obj, value);
+}
+
+INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+generic_proxy__set_operator_iter(ProxyObject *__restrict self){
+	return DeeObject_InvokeMethodHint(set_operator_iter, self->po_obj);
+}
+
+INTERN WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
+generic_proxy__set_operator_foreach(ProxyObject *__restrict self, Dee_foreach_t cb, void *arg){
+	return DeeObject_InvokeMethodHint(set_operator_foreach, self->po_obj, cb, arg);
+}
+
+INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+generic_proxy__set_operator_sizeob(ProxyObject *__restrict self){
+	return DeeObject_InvokeMethodHint(set_operator_sizeob, self->po_obj);
+}
+
+INTERN WUNUSED NONNULL((1)) size_t DCALL
+generic_proxy__set_operator_size(ProxyObject *__restrict self){
+	return DeeObject_InvokeMethodHint(set_operator_size, self->po_obj);
+}
+
+INTERN WUNUSED NONNULL((1)) Dee_hash_t DCALL
+generic_proxy__set_operator_hash(ProxyObject *__restrict self){
+	return DeeObject_InvokeMethodHint(set_operator_hash, self->po_obj);
+}
+
+INTERN WUNUSED NONNULL((1, 2)) int DCALL
+generic_proxy__set_operator_compare_eq(ProxyObject *lhs, DeeObject *rhs){
+	return DeeObject_InvokeMethodHint(set_operator_compare_eq, lhs->po_obj, rhs);
+}
+
+INTERN WUNUSED NONNULL((1, 2)) int DCALL
+generic_proxy__set_operator_trycompare_eq(ProxyObject *lhs, DeeObject *rhs){
+	return DeeObject_InvokeMethodHint(set_operator_trycompare_eq, lhs->po_obj, rhs);
+}
+
+INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+generic_proxy__set_operator_eq(ProxyObject *lhs, DeeObject *rhs){
+	return DeeObject_InvokeMethodHint(set_operator_eq, lhs->po_obj, rhs);
+}
+
+INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+generic_proxy__set_operator_ne(ProxyObject *lhs, DeeObject *rhs){
+	return DeeObject_InvokeMethodHint(set_operator_ne, lhs->po_obj, rhs);
+}
+
+INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+generic_proxy__set_operator_lo(ProxyObject *lhs, DeeObject *rhs){
+	return DeeObject_InvokeMethodHint(set_operator_lo, lhs->po_obj, rhs);
+}
+
+INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+generic_proxy__set_operator_le(ProxyObject *lhs, DeeObject *rhs){
+	return DeeObject_InvokeMethodHint(set_operator_le, lhs->po_obj, rhs);
+}
+
+INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+generic_proxy__set_operator_gr(ProxyObject *lhs, DeeObject *rhs){
+	return DeeObject_InvokeMethodHint(set_operator_gr, lhs->po_obj, rhs);
+}
+
+INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+generic_proxy__set_operator_ge(ProxyObject *lhs, DeeObject *rhs){
+	return DeeObject_InvokeMethodHint(set_operator_ge, lhs->po_obj, rhs);
+}
+
+INTERN WUNUSED NONNULL((1)) int DCALL
+generic_proxy__set_operator_bool(ProxyObject *__restrict self){
+	return DeeObject_InvokeMethodHint(set_operator_bool, self->po_obj);
+}
+
+INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+generic_proxy__set_operator_inv(ProxyObject *__restrict self){
+	return DeeObject_InvokeMethodHint(set_operator_inv, self->po_obj);
+}
+
+INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+generic_proxy__set_operator_add(ProxyObject *lhs, DeeObject *rhs){
+	return DeeObject_InvokeMethodHint(set_operator_add, lhs->po_obj, rhs);
+}
+
+INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+generic_proxy__set_operator_sub(ProxyObject *lhs, DeeObject *rhs){
+	return DeeObject_InvokeMethodHint(set_operator_sub, lhs->po_obj, rhs);
+}
+
+INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+generic_proxy__set_operator_and(ProxyObject *lhs, DeeObject *rhs){
+	return DeeObject_InvokeMethodHint(set_operator_and, lhs->po_obj, rhs);
+}
+
+INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+generic_proxy__set_operator_xor(ProxyObject *lhs, DeeObject *rhs){
+	return DeeObject_InvokeMethodHint(set_operator_xor, lhs->po_obj, rhs);
+}
+
+INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+generic_proxy__set_frozen(ProxyObject *__restrict self){
+	return DeeObject_InvokeMethodHint(set_frozen, self->po_obj);
+}
+
+INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+generic_proxy__set_unify(ProxyObject *self, DeeObject *key){
+	return DeeObject_InvokeMethodHint(set_unify, self->po_obj, key);
+}
+
+INTERN WUNUSED NONNULL((1, 2)) int DCALL
+generic_proxy__set_insert(ProxyObject *self, DeeObject *key){
+	return DeeObject_InvokeMethodHint(set_insert, self->po_obj, key);
+}
+
+INTERN WUNUSED NONNULL((1, 2)) int DCALL
+generic_proxy__set_insertall(ProxyObject *self, DeeObject *keys){
+	return DeeObject_InvokeMethodHint(set_insertall, self->po_obj, keys);
+}
+
+INTERN WUNUSED NONNULL((1, 2)) int DCALL
+generic_proxy__set_remove(ProxyObject *self, DeeObject *key){
+	return DeeObject_InvokeMethodHint(set_remove, self->po_obj, key);
+}
+
+INTERN WUNUSED NONNULL((1, 2)) int DCALL
+generic_proxy__set_removeall(ProxyObject *self, DeeObject *keys){
+	return DeeObject_InvokeMethodHint(set_removeall, self->po_obj, keys);
+}
+
+INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+generic_proxy__set_pop(ProxyObject *self){
+	return DeeObject_InvokeMethodHint(set_pop, self->po_obj);
+}
+
+INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+generic_proxy__set_pop_with_default(ProxyObject *self, DeeObject *default_){
+	return DeeObject_InvokeMethodHint(set_pop_with_default, self->po_obj, default_);
 }
 
 INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
@@ -629,84 +804,9 @@ generic_proxy__map_operator_foreach_pair(ProxyObject *__restrict self, Dee_forea
 	return DeeObject_InvokeMethodHint(map_operator_foreach_pair, self->po_obj, cb, arg);
 }
 
-INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-generic_proxy__map_operator_getitem(ProxyObject *self, DeeObject *key){
-	return DeeObject_InvokeMethodHint(map_operator_getitem, self->po_obj, key);
-}
-
-INTERN WUNUSED NONNULL((1, 2)) int DCALL
-generic_proxy__map_operator_delitem(ProxyObject *self, DeeObject *key){
-	return DeeObject_InvokeMethodHint(map_operator_delitem, self->po_obj, key);
-}
-
-INTERN WUNUSED NONNULL((1, 2, 3)) int DCALL
-generic_proxy__map_operator_setitem(ProxyObject *self, DeeObject *key, DeeObject *value){
-	return DeeObject_InvokeMethodHint(map_operator_setitem, self->po_obj, key, value);
-}
-
-INTERN WUNUSED NONNULL((1, 2)) int DCALL
-generic_proxy__map_operator_hasitem(ProxyObject *self, DeeObject *key){
-	return DeeObject_InvokeMethodHint(map_operator_hasitem, self->po_obj, key);
-}
-
-INTERN WUNUSED NONNULL((1, 2)) int DCALL
-generic_proxy__map_operator_bounditem(ProxyObject *self, DeeObject *key){
-	return DeeObject_InvokeMethodHint(map_operator_bounditem, self->po_obj, key);
-}
-
-INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-generic_proxy__map_operator_getitem_string_hash(ProxyObject *self, char const *key, Dee_hash_t hash){
-	return DeeObject_InvokeMethodHint(map_operator_getitem_string_hash, self->po_obj, key, hash);
-}
-
-INTERN WUNUSED NONNULL((1, 2)) int DCALL
-generic_proxy__map_operator_delitem_string_hash(ProxyObject *self, char const *key, Dee_hash_t hash){
-	return DeeObject_InvokeMethodHint(map_operator_delitem_string_hash, self->po_obj, key, hash);
-}
-
-INTERN WUNUSED NONNULL((1, 2, 4)) int DCALL
-generic_proxy__map_operator_setitem_string_hash(ProxyObject *self, char const *key, Dee_hash_t hash, DeeObject *value){
-	return DeeObject_InvokeMethodHint(map_operator_setitem_string_hash, self->po_obj, key, hash, value);
-}
-
-INTERN WUNUSED NONNULL((1, 2)) int DCALL
-generic_proxy__map_operator_hasitem_string_hash(ProxyObject *self, char const *key, Dee_hash_t hash){
-	return DeeObject_InvokeMethodHint(map_operator_hasitem_string_hash, self->po_obj, key, hash);
-}
-
-INTERN WUNUSED NONNULL((1, 2)) int DCALL
-generic_proxy__map_operator_bounditem_string_hash(ProxyObject *self, char const *key, Dee_hash_t hash){
-	return DeeObject_InvokeMethodHint(map_operator_bounditem_string_hash, self->po_obj, key, hash);
-}
-
 INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-generic_proxy__map_operator_getitem_string_len_hash(ProxyObject *self, char const *key, size_t keylen, Dee_hash_t hash){
-	return DeeObject_InvokeMethodHint(map_operator_getitem_string_len_hash, self->po_obj, key, keylen, hash);
-}
-
-INTERN WUNUSED NONNULL((1)) int DCALL
-generic_proxy__map_operator_delitem_string_len_hash(ProxyObject *self, char const *key, size_t keylen, Dee_hash_t hash){
-	return DeeObject_InvokeMethodHint(map_operator_delitem_string_len_hash, self->po_obj, key, keylen, hash);
-}
-
-INTERN WUNUSED NONNULL((1, 5)) int DCALL
-generic_proxy__map_operator_setitem_string_len_hash(ProxyObject *self, char const *key, size_t keylen, Dee_hash_t hash, DeeObject *value){
-	return DeeObject_InvokeMethodHint(map_operator_setitem_string_len_hash, self->po_obj, key, keylen, hash, value);
-}
-
-INTERN WUNUSED NONNULL((1)) int DCALL
-generic_proxy__map_operator_hasitem_string_len_hash(ProxyObject *self, char const *key, size_t keylen, Dee_hash_t hash){
-	return DeeObject_InvokeMethodHint(map_operator_hasitem_string_len_hash, self->po_obj, key, keylen, hash);
-}
-
-INTERN WUNUSED NONNULL((1)) int DCALL
-generic_proxy__map_operator_bounditem_string_len_hash(ProxyObject *self, char const *key, size_t keylen, Dee_hash_t hash){
-	return DeeObject_InvokeMethodHint(map_operator_bounditem_string_len_hash, self->po_obj, key, keylen, hash);
-}
-
-INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-generic_proxy__map_operator_contains(ProxyObject *self, DeeObject *key){
-	return DeeObject_InvokeMethodHint(map_operator_contains, self->po_obj, key);
+generic_proxy__map_operator_sizeob(ProxyObject *__restrict self){
+	return DeeObject_InvokeMethodHint(map_operator_sizeob, self->po_obj);
 }
 
 INTERN WUNUSED NONNULL((1)) size_t DCALL
@@ -714,9 +814,174 @@ generic_proxy__map_operator_size(ProxyObject *__restrict self){
 	return DeeObject_InvokeMethodHint(map_operator_size, self->po_obj);
 }
 
+INTERN WUNUSED NONNULL((1)) Dee_hash_t DCALL
+generic_proxy__map_operator_hash(ProxyObject *__restrict self){
+	return DeeObject_InvokeMethodHint(map_operator_hash, self->po_obj);
+}
+
+INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+generic_proxy__map_operator_getitem(ProxyObject *self, DeeObject *key){
+	return DeeObject_InvokeMethodHint(map_operator_getitem, self->po_obj, key);
+}
+
+INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+generic_proxy__map_operator_trygetitem(ProxyObject *self, DeeObject *key){
+	return DeeObject_InvokeMethodHint(map_operator_trygetitem, self->po_obj, key);
+}
+
 INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-generic_proxy__map_operator_sizeob(ProxyObject *__restrict self){
-	return DeeObject_InvokeMethodHint(map_operator_sizeob, self->po_obj);
+generic_proxy__map_operator_getitem_index(ProxyObject *self, size_t key){
+	return DeeObject_InvokeMethodHint(map_operator_getitem_index, self->po_obj, key);
+}
+
+INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+generic_proxy__map_operator_trygetitem_index(ProxyObject *self, size_t key){
+	return DeeObject_InvokeMethodHint(map_operator_trygetitem_index, self->po_obj, key);
+}
+
+INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+generic_proxy__map_operator_getitem_string_hash(ProxyObject *self, char const *key, Dee_hash_t hash){
+	return DeeObject_InvokeMethodHint(map_operator_getitem_string_hash, self->po_obj, key, hash);
+}
+
+INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+generic_proxy__map_operator_trygetitem_string_hash(ProxyObject *self, char const *key, Dee_hash_t hash){
+	return DeeObject_InvokeMethodHint(map_operator_trygetitem_string_hash, self->po_obj, key, hash);
+}
+
+INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+generic_proxy__map_operator_getitem_string_len_hash(ProxyObject *self, char const *key, size_t keylen, Dee_hash_t hash){
+	return DeeObject_InvokeMethodHint(map_operator_getitem_string_len_hash, self->po_obj, key, keylen, hash);
+}
+
+INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+generic_proxy__map_operator_trygetitem_string_len_hash(ProxyObject *self, char const *key, size_t keylen, Dee_hash_t hash){
+	return DeeObject_InvokeMethodHint(map_operator_trygetitem_string_len_hash, self->po_obj, key, keylen, hash);
+}
+
+INTERN WUNUSED NONNULL((1, 2)) int DCALL
+generic_proxy__map_operator_bounditem(ProxyObject *self, DeeObject *key){
+	return DeeObject_InvokeMethodHint(map_operator_bounditem, self->po_obj, key);
+}
+
+INTERN WUNUSED NONNULL((1)) int DCALL
+generic_proxy__map_operator_bounditem_index(ProxyObject *self, size_t key){
+	return DeeObject_InvokeMethodHint(map_operator_bounditem_index, self->po_obj, key);
+}
+
+INTERN WUNUSED NONNULL((1, 2)) int DCALL
+generic_proxy__map_operator_bounditem_string_hash(ProxyObject *self, char const *key, Dee_hash_t hash){
+	return DeeObject_InvokeMethodHint(map_operator_bounditem_string_hash, self->po_obj, key, hash);
+}
+
+INTERN WUNUSED NONNULL((1)) int DCALL
+generic_proxy__map_operator_bounditem_string_len_hash(ProxyObject *self, char const *key, size_t keylen, Dee_hash_t hash){
+	return DeeObject_InvokeMethodHint(map_operator_bounditem_string_len_hash, self->po_obj, key, keylen, hash);
+}
+
+INTERN WUNUSED NONNULL((1, 2)) int DCALL
+generic_proxy__map_operator_hasitem(ProxyObject *self, DeeObject *key){
+	return DeeObject_InvokeMethodHint(map_operator_hasitem, self->po_obj, key);
+}
+
+INTERN WUNUSED NONNULL((1)) int DCALL
+generic_proxy__map_operator_hasitem_index(ProxyObject *self, size_t key){
+	return DeeObject_InvokeMethodHint(map_operator_hasitem_index, self->po_obj, key);
+}
+
+INTERN WUNUSED NONNULL((1, 2)) int DCALL
+generic_proxy__map_operator_hasitem_string_hash(ProxyObject *self, char const *key, Dee_hash_t hash){
+	return DeeObject_InvokeMethodHint(map_operator_hasitem_string_hash, self->po_obj, key, hash);
+}
+
+INTERN WUNUSED NONNULL((1)) int DCALL
+generic_proxy__map_operator_hasitem_string_len_hash(ProxyObject *self, char const *key, size_t keylen, Dee_hash_t hash){
+	return DeeObject_InvokeMethodHint(map_operator_hasitem_string_len_hash, self->po_obj, key, keylen, hash);
+}
+
+INTERN WUNUSED NONNULL((1, 2)) int DCALL
+generic_proxy__map_operator_delitem(ProxyObject *self, DeeObject *key){
+	return DeeObject_InvokeMethodHint(map_operator_delitem, self->po_obj, key);
+}
+
+INTERN WUNUSED NONNULL((1)) int DCALL
+generic_proxy__map_operator_delitem_index(ProxyObject *self, size_t key){
+	return DeeObject_InvokeMethodHint(map_operator_delitem_index, self->po_obj, key);
+}
+
+INTERN WUNUSED NONNULL((1, 2)) int DCALL
+generic_proxy__map_operator_delitem_string_hash(ProxyObject *self, char const *key, Dee_hash_t hash){
+	return DeeObject_InvokeMethodHint(map_operator_delitem_string_hash, self->po_obj, key, hash);
+}
+
+INTERN WUNUSED NONNULL((1)) int DCALL
+generic_proxy__map_operator_delitem_string_len_hash(ProxyObject *self, char const *key, size_t keylen, Dee_hash_t hash){
+	return DeeObject_InvokeMethodHint(map_operator_delitem_string_len_hash, self->po_obj, key, keylen, hash);
+}
+
+INTERN WUNUSED NONNULL((1, 2, 3)) int DCALL
+generic_proxy__map_operator_setitem(ProxyObject *self, DeeObject *key, DeeObject *value){
+	return DeeObject_InvokeMethodHint(map_operator_setitem, self->po_obj, key, value);
+}
+
+INTERN WUNUSED NONNULL((1, 3)) int DCALL
+generic_proxy__map_operator_setitem_index(ProxyObject *self, size_t key, DeeObject *value){
+	return DeeObject_InvokeMethodHint(map_operator_setitem_index, self->po_obj, key, value);
+}
+
+INTERN WUNUSED NONNULL((1, 2, 4)) int DCALL
+generic_proxy__map_operator_setitem_string_hash(ProxyObject *self, char const *key, Dee_hash_t hash, DeeObject *value){
+	return DeeObject_InvokeMethodHint(map_operator_setitem_string_hash, self->po_obj, key, hash, value);
+}
+
+INTERN WUNUSED NONNULL((1, 5)) int DCALL
+generic_proxy__map_operator_setitem_string_len_hash(ProxyObject *self, char const *key, size_t keylen, Dee_hash_t hash, DeeObject *value){
+	return DeeObject_InvokeMethodHint(map_operator_setitem_string_len_hash, self->po_obj, key, keylen, hash, value);
+}
+
+INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+generic_proxy__map_operator_contains(ProxyObject *self, DeeObject *key){
+	return DeeObject_InvokeMethodHint(map_operator_contains, self->po_obj, key);
+}
+
+INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+generic_proxy__map_keys(ProxyObject *__restrict self){
+	return DeeObject_InvokeMethodHint(map_keys, self->po_obj);
+}
+
+INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+generic_proxy__map_iterkeys(ProxyObject *__restrict self){
+	return DeeObject_InvokeMethodHint(map_iterkeys, self->po_obj);
+}
+
+INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+generic_proxy__map_values(ProxyObject *__restrict self){
+	return DeeObject_InvokeMethodHint(map_values, self->po_obj);
+}
+
+INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+generic_proxy__map_itervalues(ProxyObject *__restrict self){
+	return DeeObject_InvokeMethodHint(map_itervalues, self->po_obj);
+}
+
+INTERN WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
+generic_proxy__map_enumerate(ProxyObject *__restrict self, Dee_seq_enumerate_t cb, void *arg){
+	return DeeObject_InvokeMethodHint(map_enumerate, self->po_obj, cb, arg);
+}
+
+INTERN WUNUSED NONNULL((1, 2, 4, 5)) Dee_ssize_t DCALL
+generic_proxy__map_enumerate_range(ProxyObject *self, Dee_seq_enumerate_t cb, void *arg, DeeObject *start, DeeObject *end){
+	return DeeObject_InvokeMethodHint(map_enumerate_range, self->po_obj, cb, arg, start, end);
+}
+
+INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+generic_proxy__map_makeenumeration(ProxyObject *__restrict self){
+	return DeeObject_InvokeMethodHint(map_makeenumeration, self->po_obj);
+}
+
+INTERN WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL
+generic_proxy__map_makeenumeration_with_range(ProxyObject *self, DeeObject *start, DeeObject *end){
+	return DeeObject_InvokeMethodHint(map_makeenumeration_with_range, self->po_obj, start, end);
 }
 
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
@@ -759,14 +1024,59 @@ generic_proxy__map_operator_ge(ProxyObject *lhs, DeeObject *rhs){
 	return DeeObject_InvokeMethodHint(map_operator_ge, lhs->po_obj, rhs);
 }
 
-INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-generic_proxy__map_iterkeys(ProxyObject *__restrict self){
-	return DeeObject_InvokeMethodHint(map_iterkeys, self->po_obj);
+INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+generic_proxy__map_operator_add(ProxyObject *lhs, DeeObject *rhs){
+	return DeeObject_InvokeMethodHint(map_operator_add, lhs->po_obj, rhs);
+}
+
+INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+generic_proxy__map_operator_sub(ProxyObject *lhs, DeeObject *keys){
+	return DeeObject_InvokeMethodHint(map_operator_sub, lhs->po_obj, keys);
+}
+
+INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+generic_proxy__map_operator_and(ProxyObject *lhs, DeeObject *keys){
+	return DeeObject_InvokeMethodHint(map_operator_and, lhs->po_obj, keys);
+}
+
+INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+generic_proxy__map_operator_xor(ProxyObject *lhs, DeeObject *rhs){
+	return DeeObject_InvokeMethodHint(map_operator_xor, lhs->po_obj, rhs);
 }
 
 INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-generic_proxy__map_itervalues(ProxyObject *__restrict self){
-	return DeeObject_InvokeMethodHint(map_itervalues, self->po_obj);
+generic_proxy__map_frozen(ProxyObject *__restrict self){
+	return DeeObject_InvokeMethodHint(map_frozen, self->po_obj);
+}
+
+INTERN WUNUSED NONNULL((1, 2, 3)) int DCALL
+generic_proxy__map_setold(ProxyObject *self, DeeObject *key, DeeObject *value){
+	return DeeObject_InvokeMethodHint(map_setold, self->po_obj, key, value);
+}
+
+INTERN WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL
+generic_proxy__map_setold_ex(ProxyObject *self, DeeObject *key, DeeObject *value){
+	return DeeObject_InvokeMethodHint(map_setold_ex, self->po_obj, key, value);
+}
+
+INTERN WUNUSED NONNULL((1, 2, 3)) int DCALL
+generic_proxy__map_setnew(ProxyObject *self, DeeObject *key, DeeObject *value){
+	return DeeObject_InvokeMethodHint(map_setnew, self->po_obj, key, value);
+}
+
+INTERN WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL
+generic_proxy__map_setnew_ex(ProxyObject *self, DeeObject *key, DeeObject *value){
+	return DeeObject_InvokeMethodHint(map_setnew_ex, self->po_obj, key, value);
+}
+
+INTERN WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL
+generic_proxy__map_setdefault(ProxyObject *self, DeeObject *key, DeeObject *value){
+	return DeeObject_InvokeMethodHint(map_setdefault, self->po_obj, key, value);
+}
+
+INTERN WUNUSED NONNULL((1, 2)) int DCALL
+generic_proxy__map_update(ProxyObject *self, DeeObject *items){
+	return DeeObject_InvokeMethodHint(map_update, self->po_obj, items);
 }
 
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
@@ -777,6 +1087,21 @@ generic_proxy__map_remove(ProxyObject *self, DeeObject *key){
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
 generic_proxy__map_removekeys(ProxyObject *self, DeeObject *keys){
 	return DeeObject_InvokeMethodHint(map_removekeys, self->po_obj, keys);
+}
+
+INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+generic_proxy__map_pop(ProxyObject *self, DeeObject *key){
+	return DeeObject_InvokeMethodHint(map_pop, self->po_obj, key);
+}
+
+INTERN WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL
+generic_proxy__map_pop_with_default(ProxyObject *self, DeeObject *key, DeeObject *default_){
+	return DeeObject_InvokeMethodHint(map_pop_with_default, self->po_obj, key, default_);
+}
+
+INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+generic_proxy__map_popitem(ProxyObject *self){
+	return DeeObject_InvokeMethodHint(map_popitem, self->po_obj);
 }
 
 INTERN WUNUSED NONNULL((1)) size_t DCALL

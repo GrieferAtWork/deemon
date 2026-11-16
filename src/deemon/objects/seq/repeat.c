@@ -30,10 +30,10 @@
 #include <deemon/error.h>              /* DeeError_* */
 #include <deemon/format.h>             /* DeeFormat_Printf, PRFuSIZ */
 #include <deemon/gc.h>                 /* DeeGCObject_FREE, DeeGCObject_MALLOC, DeeGC_TRACK, Dee_TYPE_CONSTRUCTOR_INIT_FIXED_GC */
-#include <deemon/int.h>                /* DeeInt_NewSize, DeeInt_NewZero */
+#include <deemon/int.h>                /* DeeInt_NewSize */
 #include <deemon/method-hints.h>       /* DeeObject_InvokeMethodHint, Dee_seq_enumerate_index_t, TYPE_METHOD_HINT*, type_method_hint */
 #include <deemon/none.h>               /* DeeNone_NewRef, Dee_None */
-#include <deemon/object.h>             /* DREF, DeeObject, DeeObject_*, DeeTypeObject, Dee_AsObject, Dee_BOUND_FROMBOOL, Dee_COMPARE_*, Dee_Decref*, Dee_HAS_*, Dee_Incref, Dee_Setrefv, Dee_TYPE, Dee_foreach_pair_t, Dee_foreach_t, Dee_formatprinter_t, Dee_hash_t, Dee_return_compareT, Dee_return_compare_if_ne, Dee_ssize_t, ITER_DONE, OBJECT_HEAD_INIT, return_reference, return_reference_ */
+#include <deemon/object.h>             /* DREF, DeeObject, DeeObject_*, DeeTypeObject, Dee_AsObject, Dee_BOUND_ERR, Dee_BOUND_FROMBOOL, Dee_COMPARE_*, Dee_Decref*, Dee_HAS_*, Dee_Incref, Dee_Setrefv, Dee_TYPE, Dee_foreach_pair_t, Dee_foreach_t, Dee_formatprinter_t, Dee_hash_t, Dee_return_compareT, Dee_return_compare_if_ne, Dee_ssize_t, ITER_DONE, OBJECT_HEAD_INIT, return_reference, return_reference_ */
 #include <deemon/operator-hints.h>     /* DeeNO_foreach_pair_t, DeeNO_foreach_t, DeeType_RequireNativeOperator */
 #include <deemon/pair.h>               /* CONFIG_ENABLE_SEQ_ONE_TYPE */
 #include <deemon/seq.h>                /* DeeIterator_NewEmpty, DeeIterator_Type, DeeSeqRange_Clamp, DeeSeqRange_Clamp_n, DeeSeq_*, Dee_EmptySeq, Dee_seq_range */
@@ -535,38 +535,13 @@ err:
 STATIC_ASSERT(offsetof(Repeat, rp_seq) == offsetof(ProxyObject, po_obj));
 #define repeat_contains generic_proxy__seq_operator_contains
 
-PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-repeat_getitem(Repeat *self, DeeObject *index_ob) {
-	/* FIXME: Don't use C types here -- must use deemon objects! */
-	size_t index;
-	size_t seq_size;
-	if unlikely(DeeObject_AsSize(index_ob, &index))
-		goto err_maybe_overflow;
-	seq_size = DeeObject_Size(self->rp_seq);
-	if unlikely(seq_size == (size_t)-1)
-		goto err;
-	if unlikely(index >= seq_size * self->rp_num) {
-		DeeRT_ErrIndexOutOfBounds(Dee_AsObject(self), index,
-		                          seq_size * self->rp_num);
-		goto err;
-	}
-	index %= seq_size;
-	return DeeObject_GetItemIndex(self->rp_seq, index);
-err_maybe_overflow:
-	DeeRT_ErrIndexOverflow(self);
-err:
-	return NULL;
-}
-
 PRIVATE WUNUSED NONNULL((1)) size_t DCALL
 repeat_size(Repeat *__restrict self) {
 	size_t result;
-	size_t base_size;
-	if unlikely(self->rp_num == 0)
-		return 0;
-	base_size = DeeObject_Size(self->rp_seq);
+	size_t base_size = DeeObject_Size(self->rp_seq);
 	if unlikely(base_size == (size_t)-1)
 		return (size_t)-1;
+	ASSERTF(self->rp_num != 0, "Prevented during construction");
 	if (OVERFLOW_UMUL(base_size, self->rp_num, &result)) {
 		DeeRT_ErrIntegerOverflowUAdd(base_size, self->rp_num);
 		return (size_t)-1;
@@ -579,8 +554,7 @@ repeat_sizeob(Repeat *__restrict self) {
 	DREF DeeObject *result;
 	DREF DeeObject *base_size;
 	DREF DeeObject *multiplier;
-	if unlikely(self->rp_num == 0)
-		return DeeInt_NewZero();
+	ASSERTF(self->rp_num != 0, "Prevented during construction");
 	base_size = DeeObject_SizeOb(self->rp_seq);
 	if unlikely(!base_size)
 		goto err;
@@ -609,21 +583,157 @@ repeat_size_fast(Repeat *__restrict self) {
 	return result;
 }
 
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-repeat_getitem_index(Repeat *__restrict self, size_t index) {
-	size_t seq_size;
+PRIVATE WUNUSED NONNULL((1)) size_t DCALL
+repeat_translate_index(Repeat *self, size_t index) {
+	size_t seq_size, whole_size, result;
+	ASSERTF(self->rp_num != 0, "Prevented during construction");
 	seq_size = DeeObject_Size(self->rp_seq);
 	if unlikely(seq_size == (size_t)-1)
 		goto err;
-	if unlikely(index >= seq_size * self->rp_num) {
-		DeeRT_ErrIndexOutOfBounds(Dee_AsObject(self), index,
-		                          seq_size * self->rp_num);
-		goto err;
+	if (OVERFLOW_UMUL(seq_size, self->rp_num, &whole_size)) {
+		/* Sequence is larger than SIZE_MAX -> can't be out-of-bounds */
+	} else {
+		if unlikely(index >= whole_size) {
+			DeeRT_ErrIndexOutOfBounds(Dee_AsObject(self),
+			                          index, whole_size);
+			goto err;
+		}
 	}
-	index %= seq_size;
-	return DeeObject_GetItemIndex(self->rp_seq, index);
+	ASSERT(seq_size != 0);
+	result = index % seq_size;
+	ASSERT(result != (size_t)-1);
+	return result;
+err:
+	return (size_t)-1;
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+repeat_translate_index_ob(Repeat *self, DeeObject *index_ob) {
+	DREF DeeObject *base_size;
+	DREF DeeObject *multiplier;
+	DREF DeeObject *whole_size;
+	DREF DeeObject *base_index;
+	int index_ge_whole_size;
+	ASSERTF(self->rp_num != 0, "Prevented during construction");
+	base_size = DeeObject_SizeOb(self->rp_seq);
+	if unlikely(!base_size)
+		goto err;
+	multiplier = DeeInt_NewSize(self->rp_num);
+	if unlikely(!multiplier)
+		goto err_base_size;
+	whole_size = DeeObject_Mul(multiplier, base_size);
+	Dee_Decref(multiplier);
+	if unlikely(!whole_size)
+		goto err_base_size;
+	index_ge_whole_size = DeeObject_CmpGeAsBool(index_ob, whole_size);
+	if unlikely(index_ge_whole_size != 0) {
+		if unlikely(index_ge_whole_size < 0)
+			goto err_base_size_whole_size;
+		DeeRT_ErrIndexOutOfBoundsObj(Dee_AsObject(self), index_ob, whole_size);
+		goto err_base_size_whole_size;
+	}
+	Dee_Decref_likely(whole_size);
+	base_index = DeeObject_Mod(index_ob, base_size);
+	Dee_Decref_likely(base_size);
+	return base_index;
+err_base_size_whole_size:
+	Dee_Decref(whole_size);
+err_base_size:
+	Dee_Decref(base_size);
 err:
 	return NULL;
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+repeat_getitem(Repeat *self, DeeObject *index_ob) {
+	DREF DeeObject *result;
+	DREF DeeObject *base_index = repeat_translate_index_ob(self, index_ob);
+	if unlikely(!base_index)
+		goto err;
+	result = DeeObject_GetItem(self->rp_seq, base_index);
+	Dee_Decref_likely(base_index);
+	return result;
+err:
+	return NULL;
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+repeat_bounditem(Repeat *self, DeeObject *index_ob) {
+	int result;
+	DREF DeeObject *base_index = repeat_translate_index_ob(self, index_ob);
+	if unlikely(!base_index)
+		goto err;
+	result = DeeObject_BoundItem(self->rp_seq, base_index);
+	Dee_Decref_likely(base_index);
+	return result;
+err:
+	return Dee_BOUND_ERR;
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+repeat_delitem(Repeat *self, DeeObject *index_ob) {
+	int result;
+	DREF DeeObject *base_index = repeat_translate_index_ob(self, index_ob);
+	if unlikely(!base_index)
+		goto err;
+	result = DeeObject_DelItem(self->rp_seq, base_index);
+	Dee_Decref_likely(base_index);
+	return result;
+err:
+	return -1;
+}
+
+PRIVATE WUNUSED NONNULL((1, 2, 3)) int DCALL
+repeat_setitem(Repeat *self, DeeObject *index_ob, DeeObject *value) {
+	int result;
+	DREF DeeObject *base_index = repeat_translate_index_ob(self, index_ob);
+	if unlikely(!base_index)
+		goto err;
+	result = DeeObject_SetItem(self->rp_seq, base_index, value);
+	Dee_Decref_likely(base_index);
+	return result;
+err:
+	return -1;
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+repeat_getitem_index(Repeat *__restrict self, size_t index) {
+	size_t base_index = repeat_translate_index(self, index);
+	if unlikely(base_index == (size_t)-1)
+		goto err;
+	return DeeObject_GetItemIndex(self->rp_seq, base_index);
+err:
+	return NULL;
+}
+
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+repeat_bounditem_index(Repeat *__restrict self, size_t index) {
+	size_t base_index = repeat_translate_index(self, index);
+	if unlikely(base_index == (size_t)-1)
+		goto err;
+	return DeeObject_BoundItemIndex(self->rp_seq, base_index);
+err:
+	return Dee_BOUND_ERR;
+}
+
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+repeat_delitem_index(Repeat *__restrict self, size_t index) {
+	size_t base_index = repeat_translate_index(self, index);
+	if unlikely(base_index == (size_t)-1)
+		goto err;
+	return DeeObject_DelItemIndex(self->rp_seq, base_index);
+err:
+	return -1;
+}
+
+PRIVATE WUNUSED NONNULL((1, 3)) int DCALL
+repeat_setitem_index(Repeat *self, size_t index, DeeObject *value) {
+	size_t base_index = repeat_translate_index(self, index);
+	if unlikely(base_index == (size_t)-1)
+		goto err;
+	return DeeObject_SetItemIndex(self->rp_seq, base_index, value);
+err:
+	return -1;
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
@@ -688,27 +798,161 @@ repeat_printrepr(Repeat *__restrict self, Dee_formatprinter_t printer, void *arg
 	                        self->rp_seq, self->rp_num);
 }
 
+STATIC_ASSERT(offsetof(Repeat, rp_seq) == offsetof(ProxyObject, po_obj));
+#define repeat_trygetfirst     generic_proxy__seq_trygetfirst
+#define repeat_getfirst        generic_proxy__seq_getfirst
+#define repeat_boundfirst      generic_proxy__seq_boundfirst
+#define repeat_delfirst        generic_proxy__seq_delfirst
+#define repeat_setfirst        generic_proxy__seq_setfirst
+#define repeat_trygetlast      generic_proxy__seq_trygetlast
+#define repeat_getlast         generic_proxy__seq_getlast
+#define repeat_boundlast       generic_proxy__seq_boundlast
+#define repeat_dellast         generic_proxy__seq_dellast
+#define repeat_setlast         generic_proxy__seq_setlast
+
+
+/* Sets force any duplicate values in the underlying mapping to be omitted.
+ * So when viewing a "SeqRepeat" object as a set, the "repeat" part goes away. */
+STATIC_ASSERT(offsetof(Repeat, rp_seq) == offsetof(ProxyObject, po_obj));
+#define repeat_set_trygetfirst            generic_proxy__set_trygetfirst
+#define repeat_set_getfirst               generic_proxy__set_getfirst
+#define repeat_set_boundfirst             generic_proxy__set_boundfirst
+#define repeat_set_delfirst               generic_proxy__set_delfirst
+#define repeat_set_setfirst               generic_proxy__set_setfirst
+#define repeat_set_trygetlast             generic_proxy__set_trygetlast
+#define repeat_set_getlast                generic_proxy__set_getlast
+#define repeat_set_boundlast              generic_proxy__set_boundlast
+#define repeat_set_dellast                generic_proxy__set_dellast
+#define repeat_set_setlast                generic_proxy__set_setlast
+#define repeat_set_operator_iter          generic_proxy__set_operator_iter
+#define repeat_set_operator_foreach       generic_proxy__set_operator_foreach
+#define repeat_set_operator_sizeob        generic_proxy__set_operator_sizeob
+#define repeat_set_operator_size          generic_proxy__set_operator_size
+#define repeat_set_operator_hash          generic_proxy__set_operator_hash
+#define repeat_set_operator_compare_eq    generic_proxy__set_operator_compare_eq
+#define repeat_set_operator_trycompare_eq generic_proxy__set_operator_trycompare_eq
+#define repeat_set_operator_eq            generic_proxy__set_operator_eq
+#define repeat_set_operator_ne            generic_proxy__set_operator_ne
+#define repeat_set_operator_lo            generic_proxy__set_operator_lo
+#define repeat_set_operator_le            generic_proxy__set_operator_le
+#define repeat_set_operator_gr            generic_proxy__set_operator_gr
+#define repeat_set_operator_ge            generic_proxy__set_operator_ge
+#define repeat_set_operator_bool          generic_proxy__set_operator_bool
+#define repeat_set_operator_inv           generic_proxy__set_operator_inv
+#define repeat_set_operator_add           generic_proxy__set_operator_add
+#define repeat_set_operator_sub           generic_proxy__set_operator_sub
+#define repeat_set_operator_and           generic_proxy__set_operator_and
+#define repeat_set_operator_xor           generic_proxy__set_operator_xor
+//TODO:#define repeat_set_operator_inplace_add   generic_proxy__set_operator_inplace_add
+//TODO:#define repeat_set_operator_inplace_sub   generic_proxy__set_operator_inplace_sub
+//TODO:#define repeat_set_operator_inplace_and   generic_proxy__set_operator_inplace_and
+//TODO:#define repeat_set_operator_inplace_xor   generic_proxy__set_operator_inplace_xor
+#define repeat_set_frozen                 generic_proxy__set_frozen
+#define repeat_set_unify                  generic_proxy__set_unify
+#define repeat_set_insert                 generic_proxy__set_insert
+#define repeat_set_insertall              generic_proxy__set_insertall
+#define repeat_set_remove                 generic_proxy__set_remove
+#define repeat_set_removeall              generic_proxy__set_removeall
+#define repeat_set_pop                    generic_proxy__set_pop
+#define repeat_set_pop_with_default       generic_proxy__set_pop_with_default
+
+/* Just like sets, maps also (kind-of) omit duplicate items.
+ *
+ * Technically, they only omit duplicate items that are pairs,
+ * and where that pair's first element was already encountered,
+ * but that rule also describes any item where *both* elements
+ * of the pair were already encountered! */
+STATIC_ASSERT(offsetof(Repeat, rp_seq) == offsetof(ProxyObject, po_obj));
+#define repeat_map_operator_iter                       generic_proxy__map_operator_iter
+#define repeat_map_operator_foreach_pair               generic_proxy__map_operator_foreach_pair
+#define repeat_map_operator_sizeob                     generic_proxy__map_operator_sizeob
+#define repeat_map_operator_size                       generic_proxy__map_operator_size
+#define repeat_map_operator_hash                       generic_proxy__map_operator_hash
+#define repeat_map_operator_getitem                    generic_proxy__map_operator_getitem
+#define repeat_map_operator_trygetitem                 generic_proxy__map_operator_trygetitem
+#define repeat_map_operator_getitem_index              generic_proxy__map_operator_getitem_index
+#define repeat_map_operator_trygetitem_index           generic_proxy__map_operator_trygetitem_index
+#define repeat_map_operator_getitem_string_hash        generic_proxy__map_operator_getitem_string_hash
+#define repeat_map_operator_trygetitem_string_hash     generic_proxy__map_operator_trygetitem_string_hash
+#define repeat_map_operator_getitem_string_len_hash    generic_proxy__map_operator_getitem_string_len_hash
+#define repeat_map_operator_trygetitem_string_len_hash generic_proxy__map_operator_trygetitem_string_len_hash
+#define repeat_map_operator_bounditem                  generic_proxy__map_operator_bounditem
+#define repeat_map_operator_bounditem_index            generic_proxy__map_operator_bounditem_index
+#define repeat_map_operator_bounditem_string_hash      generic_proxy__map_operator_bounditem_string_hash
+#define repeat_map_operator_bounditem_string_len_hash  generic_proxy__map_operator_bounditem_string_len_hash
+#define repeat_map_operator_hasitem                    generic_proxy__map_operator_hasitem
+#define repeat_map_operator_hasitem_index              generic_proxy__map_operator_hasitem_index
+#define repeat_map_operator_hasitem_string_hash        generic_proxy__map_operator_hasitem_string_hash
+#define repeat_map_operator_hasitem_string_len_hash    generic_proxy__map_operator_hasitem_string_len_hash
+#define repeat_map_operator_delitem                    generic_proxy__map_operator_delitem
+#define repeat_map_operator_delitem_index              generic_proxy__map_operator_delitem_index
+#define repeat_map_operator_delitem_string_hash        generic_proxy__map_operator_delitem_string_hash
+#define repeat_map_operator_delitem_string_len_hash    generic_proxy__map_operator_delitem_string_len_hash
+#define repeat_map_operator_setitem                    generic_proxy__map_operator_setitem
+#define repeat_map_operator_setitem_index              generic_proxy__map_operator_setitem_index
+#define repeat_map_operator_setitem_string_hash        generic_proxy__map_operator_setitem_string_hash
+#define repeat_map_operator_setitem_string_len_hash    generic_proxy__map_operator_setitem_string_len_hash
+#define repeat_map_operator_contains                   generic_proxy__map_operator_contains
+#define repeat_map_keys                                generic_proxy__map_keys
+#define repeat_map_iterkeys                            generic_proxy__map_iterkeys
+#define repeat_map_values                              generic_proxy__map_values
+#define repeat_map_itervalues                          generic_proxy__map_itervalues
+#define repeat_map_enumerate                           generic_proxy__map_enumerate
+#define repeat_map_enumerate_range                     generic_proxy__map_enumerate_range
+#define repeat_map_makeenumeration                     generic_proxy__map_makeenumeration
+#define repeat_map_makeenumeration_with_range          generic_proxy__map_makeenumeration_with_range
+#define repeat_map_operator_compare_eq                 generic_proxy__map_operator_compare_eq
+#define repeat_map_operator_trycompare_eq              generic_proxy__map_operator_trycompare_eq
+#define repeat_map_operator_eq                         generic_proxy__map_operator_eq
+#define repeat_map_operator_ne                         generic_proxy__map_operator_ne
+#define repeat_map_operator_lo                         generic_proxy__map_operator_lo
+#define repeat_map_operator_le                         generic_proxy__map_operator_le
+#define repeat_map_operator_gr                         generic_proxy__map_operator_gr
+#define repeat_map_operator_ge                         generic_proxy__map_operator_ge
+#define repeat_map_operator_add                        generic_proxy__map_operator_add
+#define repeat_map_operator_sub                        generic_proxy__map_operator_sub
+#define repeat_map_operator_and                        generic_proxy__map_operator_and
+#define repeat_map_operator_xor                        generic_proxy__map_operator_xor
+//TODO:#define repeat_map_operator_inplace_add                generic_proxy__map_operator_inplace_add
+//TODO:#define repeat_map_operator_inplace_sub                generic_proxy__map_operator_inplace_sub
+//TODO:#define repeat_map_operator_inplace_and                generic_proxy__map_operator_inplace_and
+//TODO:#define repeat_map_operator_inplace_xor                generic_proxy__map_operator_inplace_xor
+#define repeat_map_frozen                              generic_proxy__map_frozen
+#define repeat_map_setold                              generic_proxy__map_setold
+#define repeat_map_setold_ex                           generic_proxy__map_setold_ex
+#define repeat_map_setnew                              generic_proxy__map_setnew
+#define repeat_map_setnew_ex                           generic_proxy__map_setnew_ex
+#define repeat_map_setdefault                          generic_proxy__map_setdefault
+#define repeat_map_update                              generic_proxy__map_update
+#define repeat_map_remove                              generic_proxy__map_remove
+#define repeat_map_removekeys                          generic_proxy__map_removekeys
+#define repeat_map_pop                                 generic_proxy__map_pop
+#define repeat_map_pop_with_default                    generic_proxy__map_pop_with_default
+#define repeat_map_popitem                             generic_proxy__map_popitem
+
+
+
 PRIVATE struct type_seq repeat_seq = {
 	/* .tp_iter                       = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&repeat_iter,
 	/* .tp_sizeob                     = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&repeat_sizeob,
 	/* .tp_contains                   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&repeat_contains,
 	/* .tp_getitem                    = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&repeat_getitem,
-	/* .tp_delitem                    = */ DEFIMPL(&default__seq_operator_delitem__unsupported),
-	/* .tp_setitem                    = */ DEFIMPL(&default__seq_operator_setitem__unsupported),
+	/* .tp_delitem                    = */ (int (DCALL *)(DeeObject *, DeeObject *))&repeat_delitem,
+	/* .tp_setitem                    = */ (int (DCALL *)(DeeObject *, DeeObject *, DeeObject *))&repeat_setitem,
 	/* .tp_getrange                   = */ DEFIMPL(&default__seq_operator_getrange__with__seq_operator_sizeob__and__seq_operator_getitem),
 	/* .tp_delrange                   = */ DEFIMPL(&default__seq_operator_delrange__unsupported),
 	/* .tp_setrange                   = */ DEFIMPL(&default__seq_operator_setrange__unsupported),
 	/* .tp_foreach                    = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_t, void *))&repeat_foreach,
 	/* .tp_foreach_pair               = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_pair_t, void *))&repeat_foreach_pair,
-	/* .tp_bounditem                  = */ DEFIMPL(&default__bounditem__with__getitem),
+	/* .tp_bounditem                  = */ (int (DCALL *)(DeeObject *, DeeObject *))&repeat_bounditem,
 	/* .tp_hasitem                    = */ DEFIMPL(&default__hasitem__with__bounditem),
 	/* .tp_size                       = */ (size_t (DCALL *)(DeeObject *__restrict))&repeat_size,
 	/* .tp_size_fast                  = */ (size_t (DCALL *)(DeeObject *__restrict))&repeat_size_fast,
 	/* .tp_getitem_index              = */ (DREF DeeObject *(DCALL *)(DeeObject *, size_t))&repeat_getitem_index,
 	/* .tp_getitem_index_fast         = */ NULL,
-	/* .tp_delitem_index              = */ DEFIMPL(&default__seq_operator_delitem_index__unsupported),
-	/* .tp_setitem_index              = */ DEFIMPL(&default__seq_operator_setitem_index__unsupported),
-	/* .tp_bounditem_index            = */ DEFIMPL(&default__bounditem_index__with__getitem_index),
+	/* .tp_delitem_index              = */ (int (DCALL *)(DeeObject *, size_t))&repeat_delitem_index,
+	/* .tp_setitem_index              = */ (int (DCALL *)(DeeObject *, size_t, DeeObject *))&repeat_setitem_index,
+	/* .tp_bounditem_index            = */ (int (DCALL *)(DeeObject *, size_t))&repeat_bounditem_index,
 	/* .tp_hasitem_index              = */ DEFIMPL(&default__hasitem_index__with__bounditem_index),
 	/* .tp_getrange_index             = */ DEFIMPL(&default__seq_operator_getrange_index__with__seq_operator_size__and__seq_operator_getitem),
 	/* .tp_delrange_index             = */ DEFIMPL(&default__seq_operator_delrange_index__unsupported),
@@ -722,50 +966,71 @@ PRIVATE struct type_seq repeat_seq = {
 	/* .tp_getitem_string_hash        = */ DEFIMPL(&default__getitem_string_hash__with__getitem),
 	/* .tp_delitem_string_hash        = */ DEFIMPL(&default__delitem_string_hash__with__delitem),
 	/* .tp_setitem_string_hash        = */ DEFIMPL(&default__setitem_string_hash__with__setitem),
-	/* .tp_bounditem_string_hash      = */ DEFIMPL(&default__bounditem_string_hash__with__getitem_string_hash),
+	/* .tp_bounditem_string_hash      = */ DEFIMPL(&default__bounditem_string_hash__with__bounditem),
 	/* .tp_hasitem_string_hash        = */ DEFIMPL(&default__hasitem_string_hash__with__bounditem_string_hash),
 	/* .tp_trygetitem_string_len_hash = */ DEFIMPL(&default__trygetitem_string_len_hash__with__getitem_string_len_hash),
 	/* .tp_getitem_string_len_hash    = */ DEFIMPL(&default__getitem_string_len_hash__with__getitem),
 	/* .tp_delitem_string_len_hash    = */ DEFIMPL(&default__delitem_string_len_hash__with__delitem),
 	/* .tp_setitem_string_len_hash    = */ DEFIMPL(&default__setitem_string_len_hash__with__setitem),
-	/* .tp_bounditem_string_len_hash  = */ DEFIMPL(&default__bounditem_string_len_hash__with__getitem_string_len_hash),
+	/* .tp_bounditem_string_len_hash  = */ DEFIMPL(&default__bounditem_string_len_hash__with__bounditem),
 	/* .tp_hasitem_string_len_hash    = */ DEFIMPL(&default__hasitem_string_len_hash__with__bounditem_string_len_hash),
 };
 
-PRIVATE WUNUSED NONNULL((1)) DREF Repeat *DCALL
-repeat_get_frozen(Repeat *__restrict self) {
-	DREF DeeObject *inner_frozen;
+PRIVATE WUNUSED NONNULL((1, 2)) DREF Repeat *DCALL
+repeat_replaceseq_impl(Repeat *self, /*inherit(always)*/ DREF DeeObject *new_seq) {
 	DREF Repeat *result;
-	inner_frozen = DeeObject_InvokeMethodHint(seq_frozen, self->rp_seq);
-	if unlikely(!inner_frozen)
-		goto err;
-	if (inner_frozen == self->rp_seq) {
-		Dee_DecrefNokill(inner_frozen);
+	if (new_seq == self->rp_seq) {
+		Dee_DecrefNokill(new_seq);
 		return_reference_(self);
 	}
 	result = DeeObject_MALLOC(Repeat);
 	if unlikely(!result)
-		goto err_inner;
-	result->rp_seq = inner_frozen; /* Inherit reference */
+		goto err_new_seq;
+	result->rp_seq = new_seq; /* Inherit reference */
 	result->rp_num = self->rp_num;
 	DeeObject_InitStatic(result, &SeqRepeat_Type);
 	return result;
-err_inner:
-	Dee_Decref(inner_frozen);
+err_new_seq:
+	Dee_Decref(new_seq);
+	return NULL;
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF Repeat *DCALL
+repeat_get_frozen(Repeat *__restrict self) {
+	DREF DeeObject *inner_frozen;
+	inner_frozen = DeeObject_InvokeMethodHint(seq_frozen, self->rp_seq);
+	if unlikely(!inner_frozen)
+		goto err;
+	return repeat_replaceseq_impl(self, inner_frozen);
+err:
+	return NULL;
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF Repeat *DCALL
+repeat_get_cached(Repeat *__restrict self) {
+	DREF DeeObject *inner_cached;
+	inner_cached = DeeObject_InvokeMethodHint(seq_cached, self->rp_seq);
+	if unlikely(!inner_cached)
+		goto err;
+	return repeat_replaceseq_impl(self, inner_cached);
 err:
 	return NULL;
 }
 
 PRIVATE struct type_getset tpconst repeat_getsets[] = {
 	TYPE_GETTER(STR_frozen, &repeat_get_frozen, "->?."),
-	TYPE_GETTER(STR_cached, &repeat_get_frozen, "->?."),
-	/* TODO: first (require __num__ != 0, then __seq__.first; also support bound+del+set) */
-	/* TODO: last (require __num__ != 0, then __seq__.last; also support bound+del+set) */
+	TYPE_GETTER(STR_cached, &repeat_get_cached, "->?."),
+	TYPE_GETSET_BOUND_F_NODOC(STR_first, &repeat_getfirst, &repeat_delfirst, &repeat_setfirst, &repeat_boundfirst, METHOD_FNOREFESCAPE),
+	TYPE_GETSET_BOUND_F_NODOC(STR_last, &repeat_getlast, &repeat_dellast, &repeat_setlast, &repeat_boundlast, METHOD_FNOREFESCAPE),
+	TYPE_GETSET_BOUND_F_NODOC(STR___set_first__, &repeat_set_getfirst, &repeat_set_delfirst, &repeat_set_setfirst, &repeat_set_boundfirst, METHOD_FNOREFESCAPE),
+	TYPE_GETSET_BOUND_F_NODOC(STR___set_last__, &repeat_set_getlast, &repeat_set_dellast, &repeat_set_setlast, &repeat_set_boundlast, METHOD_FNOREFESCAPE),
+	TYPE_GETTER_AB_F(STR___set_frozen__, &repeat_set_frozen, METHOD_FNOREFESCAPE, "->?DSet"),
+	TYPE_GETTER_AB_F(STR___map_keys__, &repeat_map_keys, METHOD_FNOREFESCAPE, "->?DSet"),
+	TYPE_GETTER_AB_F(STR___map_values__, &repeat_map_values, METHOD_FNOREFESCAPE, "->?DSequence"),
+	TYPE_GETTER_AB_F(STR___map_iterkeys__, &repeat_map_iterkeys, METHOD_FNOREFESCAPE, "->?DIterator"),
+	TYPE_GETTER_AB_F(STR___map_itervalues__, &repeat_map_itervalues, METHOD_FNOREFESCAPE, "->?DIterator"),
+	TYPE_GETTER_AB_F(STR___map_frozen__, &repeat_map_frozen, METHOD_FNOREFESCAPE, "->?DMapping"),
 	TYPE_GETSET_END
-};
-
-PRIVATE struct type_method tpconst repeat_methods[] = {
-	TYPE_METHOD_END
 };
 
 PRIVATE struct type_member tpconst repeat_members[] = {
@@ -774,7 +1039,79 @@ PRIVATE struct type_member tpconst repeat_members[] = {
 	TYPE_MEMBER_END
 };
 
+PRIVATE struct type_method tpconst repeat_methods[] = {
+	/* TODO: Method hint refs */
+
+	/* All Set/Mapping method hints here are implemented using `generic_proxy__*`,
+	 * which in turn means is equivalent to an implementation:
+	 * >> `(this.__obj__ as Set).SOME_FUNCTION(...)`
+	 * >> `(this.__obj__ as Mapping).SOME_FUNCTION(...)` */
+	TYPE_METHOD_HINTREF(__set_iter__),
+	TYPE_METHOD_HINTREF(__set_size__),
+	TYPE_METHOD_HINTREF(__set_hash__),
+	TYPE_METHOD_HINTREF(__set_compare_eq__),
+	TYPE_METHOD_HINTREF(__set_eq__),
+	TYPE_METHOD_HINTREF(__set_ne__),
+	TYPE_METHOD_HINTREF(__set_lo__),
+	TYPE_METHOD_HINTREF(__set_le__),
+	TYPE_METHOD_HINTREF(__set_gr__),
+	TYPE_METHOD_HINTREF(__set_ge__),
+	TYPE_METHOD_HINTREF(__set_bool__),
+	TYPE_METHOD_HINTREF(__set_inv__),
+	TYPE_METHOD_HINTREF(__set_add__),
+	TYPE_METHOD_HINTREF(__set_sub__),
+	TYPE_METHOD_HINTREF(__set_and__),
+	TYPE_METHOD_HINTREF(__set_xor__),
+	TYPE_METHOD_HINTREF(__set_inplace_add__),
+	TYPE_METHOD_HINTREF(__set_inplace_sub__),
+	TYPE_METHOD_HINTREF(__set_inplace_and__),
+	TYPE_METHOD_HINTREF(__set_inplace_xor__),
+	TYPE_METHOD_HINTREF(__set_unify__),
+	TYPE_METHOD_HINTREF(__set_insert__),
+	TYPE_METHOD_HINTREF(__set_insertall__),
+	TYPE_METHOD_HINTREF(__set_remove__),
+	TYPE_METHOD_HINTREF(__set_removeall__),
+	TYPE_METHOD_HINTREF(__set_pop__),
+	TYPE_METHOD_HINTREF(__map_iter__),
+	TYPE_METHOD_HINTREF(__map_size__),
+	TYPE_METHOD_HINTREF(__map_hash__),
+	TYPE_METHOD_HINTREF(__map_getitem__),
+	TYPE_METHOD_HINTREF(__map_delitem__),
+	TYPE_METHOD_HINTREF(__map_setitem__),
+	TYPE_METHOD_HINTREF(__map_contains__),
+	TYPE_METHOD_HINTREF(__map_enumerate__),
+	TYPE_METHOD_HINTREF(__map_enumerate_items__),
+	TYPE_METHOD_HINTREF(__map_compare_eq__),
+	TYPE_METHOD_HINTREF(__map_eq__),
+	TYPE_METHOD_HINTREF(__map_ne__),
+	TYPE_METHOD_HINTREF(__map_lo__),
+	TYPE_METHOD_HINTREF(__map_le__),
+	TYPE_METHOD_HINTREF(__map_gr__),
+	TYPE_METHOD_HINTREF(__map_ge__),
+	TYPE_METHOD_HINTREF(__map_add__),
+	TYPE_METHOD_HINTREF(__map_sub__),
+	TYPE_METHOD_HINTREF(__map_and__),
+	TYPE_METHOD_HINTREF(__map_xor__),
+	TYPE_METHOD_HINTREF(__map_inplace_add__),
+	TYPE_METHOD_HINTREF(__map_inplace_sub__),
+	TYPE_METHOD_HINTREF(__map_inplace_and__),
+	TYPE_METHOD_HINTREF(__map_inplace_xor__),
+	TYPE_METHOD_HINTREF(__map_setold__),
+	TYPE_METHOD_HINTREF(__map_setold_ex__),
+	TYPE_METHOD_HINTREF(__map_setnew__),
+	TYPE_METHOD_HINTREF(__map_setnew_ex__),
+	TYPE_METHOD_HINTREF(__map_setdefault__),
+	TYPE_METHOD_HINTREF(__map_update__),
+	TYPE_METHOD_HINTREF(__map_remove__),
+	TYPE_METHOD_HINTREF(__map_removekeys__),
+	TYPE_METHOD_HINTREF(__map_pop__),
+	TYPE_METHOD_HINTREF(__map_popitem__),
+	TYPE_METHOD_END
+};
+
 PRIVATE struct type_method_hint tpconst repeat_method_hints[] = {
+	TYPE_METHOD_HINT_F(seq_trygetfirst, &repeat_trygetfirst, METHOD_FNOREFESCAPE),
+	TYPE_METHOD_HINT_F(seq_trygetlast, &repeat_trygetlast, METHOD_FNOREFESCAPE),
 //	TODO: Dee_TMH_seq_enumerate_index,
 //	TODO: Dee_TMH_seq_foreach_reverse,
 //	TODO: Dee_TMH_seq_enumerate_index_reverse,
@@ -863,113 +1200,99 @@ PRIVATE struct type_method_hint tpconst repeat_method_hints[] = {
 //	TODO: Dee_TMH_seq_bposition_with_key,
 //	TODO: Dee_TMH_seq_brange,
 //	TODO: Dee_TMH_seq_brange_with_key,
-//	TODO: Dee_TMH_set_operator_iter,
-//	TODO: Dee_TMH_set_operator_foreach,
-//	TODO: Dee_TMH_set_operator_sizeob,
-//	TODO: Dee_TMH_set_operator_size,
-//	TODO: Dee_TMH_set_operator_hash,
-//	TODO: Dee_TMH_set_operator_compare_eq,
-//	TODO: Dee_TMH_set_operator_trycompare_eq,
-//	TODO: Dee_TMH_set_operator_eq,
-//	TODO: Dee_TMH_set_operator_ne,
-//	TODO: Dee_TMH_set_operator_lo,
-//	TODO: Dee_TMH_set_operator_le,
-//	TODO: Dee_TMH_set_operator_gr,
-//	TODO: Dee_TMH_set_operator_ge,
-//	TODO: Dee_TMH_set_operator_bool,
-//	TODO: Dee_TMH_set_operator_inv,
-//	TODO: Dee_TMH_set_operator_add,
-//	TODO: Dee_TMH_set_operator_sub,
-//	TODO: Dee_TMH_set_operator_and,
-//	TODO: Dee_TMH_set_operator_xor,
-//	TODO: Dee_TMH_set_operator_inplace_add,
-//	TODO: Dee_TMH_set_operator_inplace_sub,
-//	TODO: Dee_TMH_set_operator_inplace_and,
-//	TODO: Dee_TMH_set_operator_inplace_xor,
-//	TODO: Dee_TMH_set_frozen,
-//	TODO: Dee_TMH_set_unify,
-//	TODO: Dee_TMH_set_insert,
-//	TODO: Dee_TMH_set_insertall,
-//	TODO: Dee_TMH_set_remove,
-//	TODO: Dee_TMH_set_removeall,
-//	TODO: Dee_TMH_set_pop,
-//	TODO: Dee_TMH_set_pop_with_default,
-//	TODO: Dee_TMH_set_trygetfirst,
-//	TODO: Dee_TMH_set_getfirst,
-//	TODO: Dee_TMH_set_boundfirst,
-//	TODO: Dee_TMH_set_delfirst,
-//	TODO: Dee_TMH_set_setfirst,
-//	TODO: Dee_TMH_set_trygetlast,
-//	TODO: Dee_TMH_set_getlast,
-//	TODO: Dee_TMH_set_boundlast,
-//	TODO: Dee_TMH_set_dellast,
-//	TODO: Dee_TMH_set_setlast,
-//	TODO: Dee_TMH_map_operator_iter,
-//	TODO: Dee_TMH_map_operator_foreach_pair,
-//	TODO: Dee_TMH_map_operator_sizeob,
-//	TODO: Dee_TMH_map_operator_size,
-//	TODO: Dee_TMH_map_operator_hash,
-//	TODO: Dee_TMH_map_operator_getitem,
-//	TODO: Dee_TMH_map_operator_trygetitem,
-//	TODO: Dee_TMH_map_operator_getitem_index,
-//	TODO: Dee_TMH_map_operator_trygetitem_index,
-//	TODO: Dee_TMH_map_operator_getitem_string_hash,
-//	TODO: Dee_TMH_map_operator_trygetitem_string_hash,
-//	TODO: Dee_TMH_map_operator_getitem_string_len_hash,
-//	TODO: Dee_TMH_map_operator_trygetitem_string_len_hash,
-//	TODO: Dee_TMH_map_operator_bounditem,
-//	TODO: Dee_TMH_map_operator_bounditem_index,
-//	TODO: Dee_TMH_map_operator_bounditem_string_hash,
-//	TODO: Dee_TMH_map_operator_bounditem_string_len_hash,
-//	TODO: Dee_TMH_map_operator_hasitem,
-//	TODO: Dee_TMH_map_operator_hasitem_index,
-//	TODO: Dee_TMH_map_operator_hasitem_string_hash,
-//	TODO: Dee_TMH_map_operator_hasitem_string_len_hash,
-//	TODO: Dee_TMH_map_operator_delitem,
-//	TODO: Dee_TMH_map_operator_delitem_index,
-//	TODO: Dee_TMH_map_operator_delitem_string_hash,
-//	TODO: Dee_TMH_map_operator_delitem_string_len_hash,
-//	TODO: Dee_TMH_map_operator_setitem,
-//	TODO: Dee_TMH_map_operator_setitem_index,
-//	TODO: Dee_TMH_map_operator_setitem_string_hash,
-//	TODO: Dee_TMH_map_operator_setitem_string_len_hash,
-//	TODO: Dee_TMH_map_operator_contains,
-//	TODO: Dee_TMH_map_keys,
-//	TODO: Dee_TMH_map_iterkeys,
-//	TODO: Dee_TMH_map_values,
-//	TODO: Dee_TMH_map_itervalues,
-//	TODO: Dee_TMH_map_enumerate,
-//	TODO: Dee_TMH_map_enumerate_range,
-//	TODO: Dee_TMH_map_makeenumeration,
-//	TODO: Dee_TMH_map_makeenumeration_with_range,
-//	TODO: Dee_TMH_map_operator_compare_eq,
-//	TODO: Dee_TMH_map_operator_trycompare_eq,
-//	TODO: Dee_TMH_map_operator_eq,
-//	TODO: Dee_TMH_map_operator_ne,
-//	TODO: Dee_TMH_map_operator_lo,
-//	TODO: Dee_TMH_map_operator_le,
-//	TODO: Dee_TMH_map_operator_gr,
-//	TODO: Dee_TMH_map_operator_ge,
-//	TODO: Dee_TMH_map_operator_add,
-//	TODO: Dee_TMH_map_operator_sub,
-//	TODO: Dee_TMH_map_operator_and,
-//	TODO: Dee_TMH_map_operator_xor,
-//	TODO: Dee_TMH_map_operator_inplace_add,
-//	TODO: Dee_TMH_map_operator_inplace_sub,
-//	TODO: Dee_TMH_map_operator_inplace_and,
-//	TODO: Dee_TMH_map_operator_inplace_xor,
-//	TODO: Dee_TMH_map_frozen,
-//	TODO: Dee_TMH_map_setold,
-//	TODO: Dee_TMH_map_setold_ex,
-//	TODO: Dee_TMH_map_setnew,
-//	TODO: Dee_TMH_map_setnew_ex,
-//	TODO: Dee_TMH_map_setdefault,
-//	TODO: Dee_TMH_map_update,
-//	TODO: Dee_TMH_map_remove,
-//	TODO: Dee_TMH_map_removekeys,
-//	TODO: Dee_TMH_map_pop,
-//	TODO: Dee_TMH_map_pop_with_default,
-//	TODO: Dee_TMH_map_popitem,
+	TYPE_METHOD_HINT_F(set_operator_iter, &repeat_set_operator_iter, METHOD_FNOREFESCAPE),
+	TYPE_METHOD_HINT_F(set_operator_foreach, &repeat_set_operator_foreach, METHOD_FNOREFESCAPE),
+	TYPE_METHOD_HINT_F(set_operator_sizeob, &repeat_set_operator_sizeob, METHOD_FNOREFESCAPE),
+	TYPE_METHOD_HINT_F(set_operator_size, &repeat_set_operator_size, METHOD_FNOREFESCAPE),
+	TYPE_METHOD_HINT_F(set_operator_hash, &repeat_set_operator_hash, METHOD_FNOREFESCAPE),
+	TYPE_METHOD_HINT_F(set_operator_compare_eq, &repeat_set_operator_compare_eq, METHOD_FNOREFESCAPE),
+	TYPE_METHOD_HINT_F(set_operator_trycompare_eq, &repeat_set_operator_trycompare_eq, METHOD_FNOREFESCAPE),
+	TYPE_METHOD_HINT_F(set_operator_eq, &repeat_set_operator_eq, METHOD_FNOREFESCAPE),
+	TYPE_METHOD_HINT_F(set_operator_ne, &repeat_set_operator_ne, METHOD_FNOREFESCAPE),
+	TYPE_METHOD_HINT_F(set_operator_lo, &repeat_set_operator_lo, METHOD_FNOREFESCAPE),
+	TYPE_METHOD_HINT_F(set_operator_le, &repeat_set_operator_le, METHOD_FNOREFESCAPE),
+	TYPE_METHOD_HINT_F(set_operator_gr, &repeat_set_operator_gr, METHOD_FNOREFESCAPE),
+	TYPE_METHOD_HINT_F(set_operator_ge, &repeat_set_operator_ge, METHOD_FNOREFESCAPE),
+	TYPE_METHOD_HINT_F(set_operator_bool, &repeat_set_operator_bool, METHOD_FNOREFESCAPE),
+	TYPE_METHOD_HINT_F(set_operator_inv, &repeat_set_operator_inv, METHOD_FNOREFESCAPE),
+	TYPE_METHOD_HINT_F(set_operator_add, &repeat_set_operator_add, METHOD_FNOREFESCAPE),
+	TYPE_METHOD_HINT_F(set_operator_sub, &repeat_set_operator_sub, METHOD_FNOREFESCAPE),
+	TYPE_METHOD_HINT_F(set_operator_and, &repeat_set_operator_and, METHOD_FNOREFESCAPE),
+	TYPE_METHOD_HINT_F(set_operator_xor, &repeat_set_operator_xor, METHOD_FNOREFESCAPE),
+	//TODO:TYPE_METHOD_HINT_F(set_operator_inplace_add, &repeat_set_operator_inplace_add, METHOD_FNOREFESCAPE),
+	//TODO:TYPE_METHOD_HINT_F(set_operator_inplace_sub, &repeat_set_operator_inplace_sub, METHOD_FNOREFESCAPE),
+	//TODO:TYPE_METHOD_HINT_F(set_operator_inplace_and, &repeat_set_operator_inplace_and, METHOD_FNOREFESCAPE),
+	//TODO:TYPE_METHOD_HINT_F(set_operator_inplace_xor, &repeat_set_operator_inplace_xor, METHOD_FNOREFESCAPE),
+	TYPE_METHOD_HINT_F(set_unify, &repeat_set_unify, METHOD_FNOREFESCAPE),
+	TYPE_METHOD_HINT_F(set_insert, &repeat_set_insert, METHOD_FNOREFESCAPE),
+	TYPE_METHOD_HINT_F(set_insertall, &repeat_set_insertall, METHOD_FNOREFESCAPE),
+	TYPE_METHOD_HINT_F(set_remove, &repeat_set_remove, METHOD_FNOREFESCAPE),
+	TYPE_METHOD_HINT_F(set_removeall, &repeat_set_removeall, METHOD_FNOREFESCAPE),
+	TYPE_METHOD_HINT_F(set_pop, &repeat_set_pop, METHOD_FNOREFESCAPE),
+	TYPE_METHOD_HINT_F(set_pop_with_default, &repeat_set_pop_with_default, METHOD_FNOREFESCAPE),
+	TYPE_METHOD_HINT_F(set_trygetfirst, &repeat_set_trygetfirst, METHOD_FNOREFESCAPE),
+	TYPE_METHOD_HINT_F(set_trygetlast, &repeat_set_trygetlast, METHOD_FNOREFESCAPE),
+	TYPE_METHOD_HINT_F(map_operator_iter, &repeat_map_operator_iter, METHOD_FNOREFESCAPE),
+	TYPE_METHOD_HINT_F(map_operator_foreach_pair, &repeat_map_operator_foreach_pair, METHOD_FNOREFESCAPE),
+	TYPE_METHOD_HINT_F(map_operator_sizeob, &repeat_map_operator_sizeob, METHOD_FNOREFESCAPE),
+	TYPE_METHOD_HINT_F(map_operator_size, &repeat_map_operator_size, METHOD_FNOREFESCAPE),
+	TYPE_METHOD_HINT_F(map_operator_hash, &repeat_map_operator_hash, METHOD_FNOREFESCAPE),
+	TYPE_METHOD_HINT_F(map_operator_getitem, &repeat_map_operator_getitem, METHOD_FNOREFESCAPE),
+	TYPE_METHOD_HINT_F(map_operator_trygetitem, &repeat_map_operator_trygetitem, METHOD_FNOREFESCAPE),
+	TYPE_METHOD_HINT_F(map_operator_getitem_index, &repeat_map_operator_getitem_index, METHOD_FNOREFESCAPE),
+	TYPE_METHOD_HINT_F(map_operator_trygetitem_index, &repeat_map_operator_trygetitem_index, METHOD_FNOREFESCAPE),
+	TYPE_METHOD_HINT_F(map_operator_getitem_string_hash, &repeat_map_operator_getitem_string_hash, METHOD_FNOREFESCAPE),
+	TYPE_METHOD_HINT_F(map_operator_trygetitem_string_hash, &repeat_map_operator_trygetitem_string_hash, METHOD_FNOREFESCAPE),
+	TYPE_METHOD_HINT_F(map_operator_getitem_string_len_hash, &repeat_map_operator_getitem_string_len_hash, METHOD_FNOREFESCAPE),
+	TYPE_METHOD_HINT_F(map_operator_trygetitem_string_len_hash, &repeat_map_operator_trygetitem_string_len_hash, METHOD_FNOREFESCAPE),
+	TYPE_METHOD_HINT_F(map_operator_bounditem, &repeat_map_operator_bounditem, METHOD_FNOREFESCAPE),
+	TYPE_METHOD_HINT_F(map_operator_bounditem_index, &repeat_map_operator_bounditem_index, METHOD_FNOREFESCAPE),
+	TYPE_METHOD_HINT_F(map_operator_bounditem_string_hash, &repeat_map_operator_bounditem_string_hash, METHOD_FNOREFESCAPE),
+	TYPE_METHOD_HINT_F(map_operator_bounditem_string_len_hash, &repeat_map_operator_bounditem_string_len_hash, METHOD_FNOREFESCAPE),
+	TYPE_METHOD_HINT_F(map_operator_hasitem, &repeat_map_operator_hasitem, METHOD_FNOREFESCAPE),
+	TYPE_METHOD_HINT_F(map_operator_hasitem_index, &repeat_map_operator_hasitem_index, METHOD_FNOREFESCAPE),
+	TYPE_METHOD_HINT_F(map_operator_hasitem_string_hash, &repeat_map_operator_hasitem_string_hash, METHOD_FNOREFESCAPE),
+	TYPE_METHOD_HINT_F(map_operator_hasitem_string_len_hash, &repeat_map_operator_hasitem_string_len_hash, METHOD_FNOREFESCAPE),
+	TYPE_METHOD_HINT_F(map_operator_delitem, &repeat_map_operator_delitem, METHOD_FNOREFESCAPE),
+	TYPE_METHOD_HINT_F(map_operator_delitem_index, &repeat_map_operator_delitem_index, METHOD_FNOREFESCAPE),
+	TYPE_METHOD_HINT_F(map_operator_delitem_string_hash, &repeat_map_operator_delitem_string_hash, METHOD_FNOREFESCAPE),
+	TYPE_METHOD_HINT_F(map_operator_delitem_string_len_hash, &repeat_map_operator_delitem_string_len_hash, METHOD_FNOREFESCAPE),
+	TYPE_METHOD_HINT_F(map_operator_setitem, &repeat_map_operator_setitem, METHOD_FNOREFESCAPE),
+	TYPE_METHOD_HINT_F(map_operator_setitem_index, &repeat_map_operator_setitem_index, METHOD_FNOREFESCAPE),
+	TYPE_METHOD_HINT_F(map_operator_setitem_string_hash, &repeat_map_operator_setitem_string_hash, METHOD_FNOREFESCAPE),
+	TYPE_METHOD_HINT_F(map_operator_setitem_string_len_hash, &repeat_map_operator_setitem_string_len_hash, METHOD_FNOREFESCAPE),
+	TYPE_METHOD_HINT_F(map_operator_contains, &repeat_map_operator_contains, METHOD_FNOREFESCAPE),
+	TYPE_METHOD_HINT_F(map_enumerate, &repeat_map_enumerate, METHOD_FNOREFESCAPE),
+	TYPE_METHOD_HINT_F(map_enumerate_range, &repeat_map_enumerate_range, METHOD_FNOREFESCAPE),
+	TYPE_METHOD_HINT_F(map_makeenumeration, &repeat_map_makeenumeration, METHOD_FNOREFESCAPE),
+	TYPE_METHOD_HINT_F(map_makeenumeration_with_range, &repeat_map_makeenumeration_with_range, METHOD_FNOREFESCAPE),
+	TYPE_METHOD_HINT_F(map_operator_compare_eq, &repeat_map_operator_compare_eq, METHOD_FNOREFESCAPE),
+	TYPE_METHOD_HINT_F(map_operator_trycompare_eq, &repeat_map_operator_trycompare_eq, METHOD_FNOREFESCAPE),
+	TYPE_METHOD_HINT_F(map_operator_eq, &repeat_map_operator_eq, METHOD_FNOREFESCAPE),
+	TYPE_METHOD_HINT_F(map_operator_ne, &repeat_map_operator_ne, METHOD_FNOREFESCAPE),
+	TYPE_METHOD_HINT_F(map_operator_lo, &repeat_map_operator_lo, METHOD_FNOREFESCAPE),
+	TYPE_METHOD_HINT_F(map_operator_le, &repeat_map_operator_le, METHOD_FNOREFESCAPE),
+	TYPE_METHOD_HINT_F(map_operator_gr, &repeat_map_operator_gr, METHOD_FNOREFESCAPE),
+	TYPE_METHOD_HINT_F(map_operator_ge, &repeat_map_operator_ge, METHOD_FNOREFESCAPE),
+	TYPE_METHOD_HINT_F(map_operator_add, &repeat_map_operator_add, METHOD_FNOREFESCAPE),
+	TYPE_METHOD_HINT_F(map_operator_sub, &repeat_map_operator_sub, METHOD_FNOREFESCAPE),
+	TYPE_METHOD_HINT_F(map_operator_and, &repeat_map_operator_and, METHOD_FNOREFESCAPE),
+	TYPE_METHOD_HINT_F(map_operator_xor, &repeat_map_operator_xor, METHOD_FNOREFESCAPE),
+	//TODO:TYPE_METHOD_HINT_F(map_operator_inplace_add, &repeat_map_operator_inplace_add, METHOD_FNOREFESCAPE),
+	//TODO:TYPE_METHOD_HINT_F(map_operator_inplace_sub, &repeat_map_operator_inplace_sub, METHOD_FNOREFESCAPE),
+	//TODO:TYPE_METHOD_HINT_F(map_operator_inplace_and, &repeat_map_operator_inplace_and, METHOD_FNOREFESCAPE),
+	//TODO:TYPE_METHOD_HINT_F(map_operator_inplace_xor, &repeat_map_operator_inplace_xor, METHOD_FNOREFESCAPE),
+	TYPE_METHOD_HINT_F(map_setold, &repeat_map_setold, METHOD_FNOREFESCAPE),
+	TYPE_METHOD_HINT_F(map_setold_ex, &repeat_map_setold_ex, METHOD_FNOREFESCAPE),
+	TYPE_METHOD_HINT_F(map_setnew, &repeat_map_setnew, METHOD_FNOREFESCAPE),
+	TYPE_METHOD_HINT_F(map_setnew_ex, &repeat_map_setnew_ex, METHOD_FNOREFESCAPE),
+	TYPE_METHOD_HINT_F(map_setdefault, &repeat_map_setdefault, METHOD_FNOREFESCAPE),
+	TYPE_METHOD_HINT_F(map_update, &repeat_map_update, METHOD_FNOREFESCAPE),
+	TYPE_METHOD_HINT_F(map_remove, &repeat_map_remove, METHOD_FNOREFESCAPE),
+	TYPE_METHOD_HINT_F(map_removekeys, &repeat_map_removekeys, METHOD_FNOREFESCAPE),
+	TYPE_METHOD_HINT_F(map_pop, &repeat_map_pop, METHOD_FNOREFESCAPE),
+	TYPE_METHOD_HINT_F(map_pop_with_default, &repeat_map_pop_with_default, METHOD_FNOREFESCAPE),
+	TYPE_METHOD_HINT_F(map_popitem, &repeat_map_popitem, METHOD_FNOREFESCAPE),
 	TYPE_METHOD_HINT_END
 };
 
