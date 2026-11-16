@@ -2201,6 +2201,60 @@ typedef struct {
 	bool               io_positive; /* [const] Is the overflow positive? */
 } IntegerOverflow;
 
+/* Check if `self` is equal to `value` */
+INTDEF WUNUSED NONNULL((1)) bool DCALL
+Dee_variant_equals_size(struct Dee_variant *__restrict self, size_t value);
+
+/* Check if the currently thrown error is an `IntegerOverflow` with:
+ * - <io_base.ve_value> is bound
+ * - <io_minval> == 0
+ * - <io_maxval> == (size_t)-2
+ * - <io_positive> == true
+ *
+ * iow: is indicative of the runtime being unable to convert
+ *      an integer-like object into `size_t` because the value
+ *      to positive and would exceed the maximum, representable
+ *      `size_t`-value (NOTE: `(size_t)-1` isn't representable
+ *      because it is used as indicator that an exception was
+ *      thrown)
+ *
+ * @return: * :   Success. Current error was handled, and the return
+ *                value is its `io_base.ve_value` converted into an
+ *                object.
+ * @return: NULL: Current error isn't a matching IntegerOverflow
+ * @return: NULL: A different error (probably NoMemory) was thrown
+ *                while trying to decode the caught IntegerOverflow */
+INTERN WUNUSED DREF DeeObject *DCALL
+DeeRT_IntegerOverflow_TryCatchSizeOverflow(void) {
+	DREF DeeObject *result;
+	IntegerOverflow *error = (IntegerOverflow *)DeeError_Current();
+	if (!DeeObject_InstanceOfExact((DeeObject *)error, &DeeError_IntegerOverflow))
+		goto fail;
+	if (!error->io_positive)
+		goto fail;
+	if (!Dee_variant_equals_size(&error->io_minval, 0))
+		goto fail;
+	if (!Dee_variant_equals_size(&error->io_maxval, (size_t)-1) && /* Accept `-1` because of regular overflow */
+	    !Dee_variant_equals_size(&error->io_maxval, (size_t)-2))   /* Accept `-2` because `-1` is often disallowed due to being an error-signal */
+		goto fail;
+
+	/* It's a match! -> handle the error */
+	Dee_Incref((DeeObject *)error);
+	DeeError_Handled(Dee_ERROR_HANDLED_INTERRUPT);
+
+	/* This right here might throw an additional error.
+	 * But if it does, that's OK since we already handled
+	 * the original error, meaning that if this returns
+	 * "NULL", then the caller will think it wasn't a
+	 * match, and just continue handling the current
+	 * error (which would then be a different error) */
+	result = Dee_variant_getobject(&error->io_base.ve_value);
+	Dee_Decref_likely((DeeObject *)error);
+	return result;
+fail:
+	return NULL;
+}
+
 PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
 IntegerOverflow_print(IntegerOverflow *__restrict self,
                       Dee_formatprinter_t printer, void *arg) {

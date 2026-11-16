@@ -50,32 +50,13 @@ err:
 	return NULL;
 }}
 %{$with__seq_operator_sizeob__and__seq_operator_getitem = {
-	int temp;
-	DREF DefaultSequence_WithSizeObAndGetItem *result;
-	DREF DeeObject *startob_and_endob[2];
-	DREF DeeObject *startob_and_endob_tuple;
+	DREF DeeObject *result;
 	DREF DeeObject *sizeob = CALL_DEPENDENCY(seq_operator_sizeob, self);
 	if unlikely(!sizeob)
 		goto err;
-	/* Make a call to "util.clamprange()" to do the range-fixup. */
-	startob_and_endob_tuple = DeeModule_CallExternStringf("util", "clamprange", "ooo", start, end, sizeob);
+	result = default__seq_operator_getrange__with__given_size__and__seq_operator_getitem(self, start, end, sizeob);
 	Dee_Decref(sizeob);
-	if unlikely(!startob_and_endob_tuple)
-		goto err;
-	temp = DeeSeq_Unpack(startob_and_endob_tuple, 2, startob_and_endob);
-	Dee_Decref(startob_and_endob_tuple);
-	if unlikely(temp)
-		goto err;
-	result = DeeObject_MALLOC(DefaultSequence_WithSizeObAndGetItem);
-	if unlikely(!result)
-		goto err;
-	result->dssg_start = startob_and_endob[0]; /* Inherit reference */
-	result->dssg_end   = startob_and_endob[1]; /* Inherit reference */
-	Dee_Incref(self);
-	result->dssg_seq        = self;
-	result->dssg_tp_getitem = REQUIRE_DEPENDENCY(seq_operator_getitem);
-	DeeObject_InitStatic(result, &DefaultSequence_WithSizeObAndGetItem_Type);
-	return Dee_AsObject(result);
+	return result;
 err:
 	return NULL;
 }} {
@@ -138,7 +119,7 @@ err:
 	struct Dee_seq_range range;
 	size_t size = CALL_DEPENDENCY(seq_operator_size, self);
 	if unlikely(size == (size_t)-1)
-		goto err;
+		goto err_maybe_overflow;
 	DeeSeqRange_Clamp(&range, start, end, size);
 	result = DeeObject_MALLOC(DefaultSequence_WithSizeAndGetItemIndex);
 	if unlikely(!result)
@@ -150,6 +131,8 @@ err:
 	result->dssgi_end              = range.sr_end;
 	DeeObject_InitStatic(result, &DefaultSequence_WithSizeAndGetItemIndexFast_Type);
 	return Dee_AsObject(result);
+err_maybe_overflow:
+	return default__seq_operator_getrange_index__maybe__overflow(self, start, end);
 err:
 	return NULL;
 }}
@@ -158,7 +141,7 @@ err:
 	struct Dee_seq_range range;
 	size_t size = CALL_DEPENDENCY(seq_operator_size, self);
 	if unlikely(size == (size_t)-1)
-		goto err;
+		goto err_maybe_overflow;
 	DeeSeqRange_Clamp(&range, start, end, size);
 	result = DeeObject_MALLOC(DefaultSequence_WithSizeAndGetItemIndex);
 	if unlikely(!result)
@@ -170,6 +153,8 @@ err:
 	result->dssgi_end              = range.sr_end;
 	DeeObject_InitStatic(result, &DefaultSequence_WithSizeAndGetItemIndex_Type);
 	return Dee_AsObject(result);
+err_maybe_overflow:
+	return default__seq_operator_getrange_index__maybe__overflow(self, start, end);
 err:
 	return NULL;
 }}
@@ -178,7 +163,7 @@ err:
 	struct Dee_seq_range range;
 	size_t size = CALL_DEPENDENCY(seq_operator_size, self);
 	if unlikely(size == (size_t)-1)
-		goto err;
+		goto err_maybe_overflow;
 	DeeSeqRange_Clamp(&range, start, end, size);
 	result = DeeObject_MALLOC(DefaultSequence_WithSizeAndGetItemIndex);
 	if unlikely(!result)
@@ -190,6 +175,8 @@ err:
 	result->dssgi_end              = range.sr_end;
 	DeeObject_InitStatic(result, &DefaultSequence_WithSizeAndTryGetItemIndex_Type);
 	return Dee_AsObject(result);
+err_maybe_overflow:
+	return default__seq_operator_getrange_index__maybe__overflow(self, start, end);
 err:
 	return NULL;
 }}
@@ -198,7 +185,7 @@ err:
 	struct Dee_seq_range range;
 	size_t size = CALL_DEPENDENCY(seq_operator_size, self);
 	if unlikely(size == (size_t)-1)
-		goto err;
+		goto err_maybe_overflow;
 	DeeSeqRange_Clamp(&range, start, end, size);
 	result = DeeObject_MALLOC(DefaultSequence_WithSizeObAndGetItem);
 	if unlikely(!result)
@@ -220,6 +207,8 @@ err_r:
 	DeeObject_FREE(result);
 err:
 	return NULL;
+err_maybe_overflow:
+	return default__seq_operator_getrange_index__maybe__overflow(self, start, end);
 }}
 %{$with__seq_operator_size__and__seq_operator_iter = {
 	DREF DefaultSequence_WithIterAndLimit *result;
@@ -230,7 +219,7 @@ err:
 	} else {
 		size_t size = CALL_DEPENDENCY(seq_operator_size, self);
 		if unlikely(size == (size_t)-1)
-			goto err;
+			goto err_maybe_overflow;
 		DeeSeqRange_Clamp(&range, start, end, size);
 	}
 	if (range.sr_start >= range.sr_end)
@@ -247,6 +236,8 @@ err:
 	return Dee_AsObject(result);
 empty_seq:
 	return DeeSeq_NewEmpty();
+err_maybe_overflow:
+	return default__seq_operator_getrange_index__maybe__overflow(self, start, end);
 err:
 	return NULL;
 }} = $with__seq_operator_getrange;
@@ -311,7 +302,7 @@ err:
 	DREF DefaultSequence_WithSizeAndGetItemIndex *result;
 	size_t size = CALL_DEPENDENCY(seq_operator_size, self);
 	if unlikely(size == (size_t)-1)
-		goto err;
+		goto err_maybe_overflow;
 	if (start < 0) {
 		start += size;
 		if unlikely(start < 0) {
@@ -332,13 +323,15 @@ err:
 	return Dee_AsObject(result);
 empty_range:
 	return DeeSeq_NewEmpty();
+err_maybe_overflow:
+	return default__seq_operator_getrange_index_n__maybe__overflow(self, start);
 err:
 	return NULL;
 }}
 %{$with__seq_operator_size__and__seq_operator_getrange_index = {
 	size_t size = CALL_DEPENDENCY(seq_operator_size, self);
 	if unlikely(size == (size_t)-1)
-		goto err;
+		goto err_maybe_overflow;
 	if (start < 0) {
 		start += size;
 		if unlikely(start < 0) {
@@ -350,14 +343,16 @@ err:
 	return CALL_DEPENDENCY(seq_operator_getrange_index, self, start, (Dee_ssize_t)size);
 empty_range:
 	return DeeSeq_NewEmpty();
-err:
-	return NULL;
+err_maybe_overflow:
+	return default__seq_operator_getrange_index_n__maybe__overflow(self, start);
+/*err:
+	return NULL;*/
 }}
 %{$with__seq_operator_size__and__seq_operator_getitem_index = {
 	DREF DefaultSequence_WithSizeAndGetItemIndex *result;
 	size_t size = CALL_DEPENDENCY(seq_operator_size, self);
 	if unlikely(size == (size_t)-1)
-		goto err;
+		goto err_maybe_overflow;
 	if (start < 0) {
 		start += size;
 		if unlikely(start < 0) {
@@ -378,6 +373,8 @@ err:
 	return Dee_AsObject(result);
 empty_range:
 	return DeeSeq_NewEmpty();
+err_maybe_overflow:
+	return default__seq_operator_getrange_index_n__maybe__overflow(self, start);
 err:
 	return NULL;
 }}
@@ -385,7 +382,7 @@ err:
 	DREF DefaultSequence_WithSizeAndGetItemIndex *result;
 	size_t size = CALL_DEPENDENCY(seq_operator_size, self);
 	if unlikely(size == (size_t)-1)
-		goto err;
+		goto err_maybe_overflow;
 	if (start < 0) {
 		start += size;
 		if unlikely(start < 0) {
@@ -406,6 +403,8 @@ err:
 	return Dee_AsObject(result);
 empty_range:
 	return DeeSeq_NewEmpty();
+err_maybe_overflow:
+	return default__seq_operator_getrange_index_n__maybe__overflow(self, start);
 err:
 	return NULL;
 }}
@@ -413,7 +412,7 @@ err:
 	DREF DefaultSequence_WithSizeObAndGetItem *result;
 	size_t size = CALL_DEPENDENCY(seq_operator_size, self);
 	if unlikely(size == (size_t)-1)
-		goto err;
+		goto err_maybe_overflow;
 	if (start < 0) {
 		start += size;
 		if unlikely(start < 0) {
@@ -444,6 +443,8 @@ err_r:
 	DeeObject_FREE(result);
 err:
 	return NULL;
+err_maybe_overflow:
+	return default__seq_operator_getrange_index_n__maybe__overflow(self, start);
 }}
 %{$with__seq_operator_size__and__seq_operator_iter = {
 	DREF DefaultSequence_WithIterAndLimit *result;
@@ -453,7 +454,7 @@ err:
 	} else {
 		size_t size = CALL_DEPENDENCY(seq_operator_size, self);
 		if unlikely(size == (size_t)-1)
-			goto err;
+			goto err_maybe_overflow;
 		used_start = DeeSeqRange_Clamp_n(start, size);
 	}
 	result = DeeObject_MALLOC(DefaultSequence_WithIterAndLimit);
@@ -466,6 +467,8 @@ err:
 	result->dsial_tp_iter = REQUIRE_DEPENDENCY(seq_operator_iter);
 	DeeObject_InitStatic(result, &DefaultSequence_WithIterAndLimit_Type);
 	return Dee_AsObject(result);
+err_maybe_overflow:
+	return default__seq_operator_getrange_index_n__maybe__overflow(self, start);
 err:
 	return NULL;
 }} = $with__seq_operator_getrange;

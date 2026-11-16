@@ -543,7 +543,7 @@ repeat_size(Repeat *__restrict self) {
 		return (size_t)-1;
 	ASSERTF(self->rp_num != 0, "Prevented during construction");
 	if (OVERFLOW_UMUL(base_size, self->rp_num, &result)) {
-		DeeRT_ErrIntegerOverflowUAdd(base_size, self->rp_num);
+		DeeRT_ErrIntegerOverflowUMul(base_size, self->rp_num);
 		return (size_t)-1;
 	}
 	return result;
@@ -650,7 +650,7 @@ repeat_getitem(Repeat *self, DeeObject *index_ob) {
 	DREF DeeObject *base_index = repeat_translate_index_ob(self, index_ob);
 	if unlikely(!base_index)
 		goto err;
-	result = DeeObject_GetItem(self->rp_seq, base_index);
+	result = DeeObject_InvokeMethodHint(seq_operator_getitem, self->rp_seq, base_index);
 	Dee_Decref_likely(base_index);
 	return result;
 err:
@@ -663,7 +663,7 @@ repeat_bounditem(Repeat *self, DeeObject *index_ob) {
 	DREF DeeObject *base_index = repeat_translate_index_ob(self, index_ob);
 	if unlikely(!base_index)
 		goto err;
-	result = DeeObject_BoundItem(self->rp_seq, base_index);
+	result = DeeObject_InvokeMethodHint(seq_operator_bounditem, self->rp_seq, base_index);
 	Dee_Decref_likely(base_index);
 	return result;
 err:
@@ -676,7 +676,7 @@ repeat_delitem(Repeat *self, DeeObject *index_ob) {
 	DREF DeeObject *base_index = repeat_translate_index_ob(self, index_ob);
 	if unlikely(!base_index)
 		goto err;
-	result = DeeObject_DelItem(self->rp_seq, base_index);
+	result = DeeObject_InvokeMethodHint(seq_operator_delitem, self->rp_seq, base_index);
 	Dee_Decref_likely(base_index);
 	return result;
 err:
@@ -689,7 +689,7 @@ repeat_setitem(Repeat *self, DeeObject *index_ob, DeeObject *value) {
 	DREF DeeObject *base_index = repeat_translate_index_ob(self, index_ob);
 	if unlikely(!base_index)
 		goto err;
-	result = DeeObject_SetItem(self->rp_seq, base_index, value);
+	result = DeeObject_InvokeMethodHint(seq_operator_setitem, self->rp_seq, base_index, value);
 	Dee_Decref_likely(base_index);
 	return result;
 err:
@@ -701,7 +701,7 @@ repeat_getitem_index(Repeat *__restrict self, size_t index) {
 	size_t base_index = repeat_translate_index(self, index);
 	if unlikely(base_index == (size_t)-1)
 		goto err;
-	return DeeObject_GetItemIndex(self->rp_seq, base_index);
+	return DeeObject_InvokeMethodHint(seq_operator_getitem_index, self->rp_seq, base_index);
 err:
 	return NULL;
 }
@@ -711,7 +711,7 @@ repeat_bounditem_index(Repeat *__restrict self, size_t index) {
 	size_t base_index = repeat_translate_index(self, index);
 	if unlikely(base_index == (size_t)-1)
 		goto err;
-	return DeeObject_BoundItemIndex(self->rp_seq, base_index);
+	return DeeObject_InvokeMethodHint(seq_operator_bounditem_index, self->rp_seq, base_index);
 err:
 	return Dee_BOUND_ERR;
 }
@@ -721,7 +721,7 @@ repeat_delitem_index(Repeat *__restrict self, size_t index) {
 	size_t base_index = repeat_translate_index(self, index);
 	if unlikely(base_index == (size_t)-1)
 		goto err;
-	return DeeObject_DelItemIndex(self->rp_seq, base_index);
+	return DeeObject_InvokeMethodHint(seq_operator_delitem_index, self->rp_seq, base_index);
 err:
 	return -1;
 }
@@ -731,29 +731,37 @@ repeat_setitem_index(Repeat *self, size_t index, DeeObject *value) {
 	size_t base_index = repeat_translate_index(self, index);
 	if unlikely(base_index == (size_t)-1)
 		goto err;
-	return DeeObject_SetItemIndex(self->rp_seq, base_index, value);
+	return DeeObject_InvokeMethodHint(seq_operator_setitem_index, self->rp_seq, base_index, value);
 err:
 	return -1;
 }
 
-PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
-repeat_foreach(Repeat *__restrict self, Dee_foreach_t proc, void *arg) {
-	DeeTypeObject *tp_seq;
-	Dee_ssize_t temp, result;
-	DeeNO_foreach_t foreach;
-	size_t i;
-	tp_seq  = Dee_TYPE(self->rp_seq);
-	foreach = DeeType_RequireNativeOperator(tp_seq, foreach);
-	i = 0;
-	result = 0;
+PRIVATE WUNUSED NONNULL((1, 3)) DREF DeeObject *DCALL
+repeat_xchitem_index(Repeat *self, size_t index, DeeObject *value) {
+	size_t base_index = repeat_translate_index(self, index);
+	if unlikely(base_index == (size_t)-1)
+		goto err;
+	return DeeObject_InvokeMethodHint(seq_xchitem_index, self->rp_seq, base_index, value);
+err:
+	return NULL;
+}
+
+PRIVATE WUNUSED NONNULL((1, 2, 4)) Dee_ssize_t DCALL
+repeat_foreach_impl2(DeeObject *__restrict seq,
+                     Dee_foreach_t proc, void *arg,
+                     DeeMH_seq_operator_foreach_t foreach,
+                     size_t count) {
+	Dee_ssize_t temp, result = 0;
+	size_t i = 0;
+	ASSERT(count >= 1);
 	do {
-		temp = (*foreach)(self->rp_seq, proc, arg);
+		temp = (*foreach)(seq, proc, arg);
 		if unlikely(temp < 0)
 			goto err_temp;
 		result += temp;
 		if (DeeThread_CheckInterrupt())
-			goto err; /* For very high `rp_num` */
-	} while (++i < self->rp_num);
+			goto err; /* For very high `count` */
+	} while (++i < count);
 	return result;
 err_temp:
 	return temp;
@@ -761,16 +769,53 @@ err:
 	return -1;
 }
 
+PRIVATE WUNUSED NONNULL((1, 2, 4)) Dee_ssize_t DCALL
+repeat_foreach_impl(Repeat *__restrict self,
+                    Dee_foreach_t proc, void *arg,
+                    DeeMH_seq_operator_foreach_t foreach) {
+	return repeat_foreach_impl2(self->rp_seq, proc, arg, foreach, self->rp_num);
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
+repeat_foreach(Repeat *__restrict self, Dee_foreach_t proc, void *arg) {
+	DeeTypeObject *tp_seq = Dee_TYPE(self->rp_seq);
+	DeeMH_seq_operator_foreach_t foreach = DeeType_RequireMethodHint(tp_seq, seq_operator_foreach);
+	return repeat_foreach_impl(self, proc, arg, foreach);
+}
+
+INTDEF WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL /* From "../tuple.c" */
+tuple_mh_foreach_reverse(DeeTupleObject *__restrict self,
+                         Dee_foreach_t proc, void *arg);
+
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
+repeat_foreach_reverse(Repeat *__restrict self, Dee_foreach_t proc, void *arg) {
+	Dee_ssize_t result;
+	DREF DeeObject *as_tuple;
+	DeeTypeObject *tp_seq = Dee_TYPE(self->rp_seq);
+	DeeMH_seq_foreach_reverse_t foreach_reverse = DeeType_RequireMethodHint(tp_seq, seq_foreach_reverse);
+	if (foreach_reverse != NULL)
+		return repeat_foreach_impl(self, proc, arg, foreach_reverse);
+	/* Convert underlying sequence to "Tuple" (which **does** implement reverse foreach) */
+	as_tuple = DeeTuple_FromSequence(self->rp_seq);
+	if unlikely(!as_tuple)
+		goto err;
+	foreach_reverse = (DeeMH_seq_foreach_reverse_t)&tuple_mh_foreach_reverse;
+	result = repeat_foreach_impl2(as_tuple, proc, arg, foreach_reverse, self->rp_num);
+	Dee_Decref_likely(as_tuple);
+	return result;
+err:
+	return -1;
+}
+
 PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
 repeat_foreach_pair(Repeat *__restrict self, Dee_foreach_pair_t proc, void *arg) {
-	DeeTypeObject *tp_seq;
-	Dee_ssize_t temp, result;
-	DeeNO_foreach_pair_t foreach_pair;
-	size_t i;
-	tp_seq  = Dee_TYPE(self->rp_seq);
-	foreach_pair = DeeType_RequireNativeOperator(tp_seq, foreach_pair);
-	i = 0;
-	result = 0;
+	DeeTypeObject *tp_seq = Dee_TYPE(self->rp_seq);
+	DeeMH_seq_operator_foreach_pair_t foreach_pair = DeeType_RequireMethodHint(tp_seq, seq_operator_foreach_pair);
+#if 1
+	return repeat_foreach_impl(self, (Dee_foreach_t)proc, arg, (DeeNO_foreach_t)foreach_pair);
+#else
+	Dee_ssize_t temp, result = 0;
+	size_t i = 0;
 	do {
 		temp = (*foreach_pair)(self->rp_seq, proc, arg);
 		if unlikely(temp < 0)
@@ -784,6 +829,7 @@ err_temp:
 	return temp;
 err:
 	return -1;
+#endif
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
@@ -1041,6 +1087,7 @@ PRIVATE struct type_member tpconst repeat_members[] = {
 
 PRIVATE struct type_method tpconst repeat_methods[] = {
 	/* TODO: Method hint refs */
+	TYPE_METHOD_HINTREF(Sequence_xchitem),
 
 	/* All Set/Mapping method hints here are implemented using `generic_proxy__*`,
 	 * which in turn means is equivalent to an implementation:
@@ -1110,11 +1157,11 @@ PRIVATE struct type_method tpconst repeat_methods[] = {
 };
 
 PRIVATE struct type_method_hint tpconst repeat_method_hints[] = {
+//	TODO: Dee_TMH_seq_enumerate_index,
+//	TODO: Dee_TMH_seq_enumerate_index_reverse,
+	TYPE_METHOD_HINT_F(seq_foreach_reverse, &repeat_foreach_reverse, METHOD_FNOREFESCAPE),
 	TYPE_METHOD_HINT_F(seq_trygetfirst, &repeat_trygetfirst, METHOD_FNOREFESCAPE),
 	TYPE_METHOD_HINT_F(seq_trygetlast, &repeat_trygetlast, METHOD_FNOREFESCAPE),
-//	TODO: Dee_TMH_seq_enumerate_index,
-//	TODO: Dee_TMH_seq_foreach_reverse,
-//	TODO: Dee_TMH_seq_enumerate_index_reverse,
 //	TODO: Dee_TMH_seq_unpack,
 //	TODO: Dee_TMH_seq_unpack_ex,
 //	TODO: Dee_TMH_seq_unpack_ub,
@@ -1176,7 +1223,7 @@ PRIVATE struct type_method_hint tpconst repeat_method_hints[] = {
 //	TODO: Dee_TMH_seq_pushfront,
 //	TODO: Dee_TMH_seq_append,
 //	TODO: Dee_TMH_seq_extend,
-//	TODO: Dee_TMH_seq_xchitem_index,
+	TYPE_METHOD_HINT_F(seq_xchitem_index, &repeat_xchitem_index, METHOD_FNOREFESCAPE),
 //	TODO: Dee_TMH_seq_clear,
 //	TODO: Dee_TMH_seq_pop,
 //	TODO: Dee_TMH_seq_remove,

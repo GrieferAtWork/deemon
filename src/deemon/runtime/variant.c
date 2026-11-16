@@ -941,6 +941,66 @@ Dee_variant_trycompare_eq(struct Dee_variant *lhs, struct Dee_variant *rhs) {
 	return result;
 }
 
+PRIVATE WUNUSED NONNULL((1)) bool DCALL
+DeeObject_Try_EqualsSize(DeeObject *__restrict self, size_t value) {
+	if (DeeInt_Check(self)) {
+		size_t self_value;
+		if (DeeInt_TryAsSize(self, &self_value))
+			return self_value == value;
+	}
+	return false;
+}
+
+/* Check if `self` is equal to `value` */
+INTERN WUNUSED NONNULL((1)) bool DCALL
+Dee_variant_equals_size(struct Dee_variant *__restrict self, size_t value) {
+	bool result;
+	struct Dee_variant copy;
+	copy.var_type = Dee_variant_lock(self);
+	if (copy.var_type == Dee_VARIANT_OBJECT) {
+		DREF DeeObject *obj = self->var_data.d_object;
+		Dee_Incref(obj);
+		Dee_variant_unlock(self, copy.var_type);
+		result = DeeObject_Try_EqualsSize(obj, value);
+		Dee_Decref_unlikely(obj);
+		return result;
+	}
+	memcpy(&copy.var_data, &self->var_data, sizeof(copy.var_data));
+	Dee_variant_unlock(self, copy.var_type);
+
+	switch (copy.var_type) {
+	case Dee_VARIANT_INT32: {
+		int32_t self_value = _Dee_variant_get_int32(&copy);
+		result = (self_value >= 0) && ((size_t)self_value == value);
+	}	break;
+	case Dee_VARIANT_UINT32:
+		result = (size_t)_Dee_variant_get_uint32(&copy) == value;
+		break;
+	case Dee_VARIANT_INT64: {
+		int64_t self_value = _Dee_variant_get_int64(&copy);
+		result = (self_value >= 0) &&
+#if __SIZEOF_SIZE_T__ < 8
+		         (self_value < (int64_t)((size_t)-1)) &&
+#endif /* __SIZEOF_SIZE_T__ < 8 */
+		         ((size_t)self_value == value);
+	}	break;
+	case Dee_VARIANT_UINT64:
+		result = _Dee_variant_get_uint64(&copy) == (uint64_t)value;
+		break;
+	case Dee_VARIANT_INT128:
+		result = !__hybrid_int128_isneg(_Dee_variant_get_int128(&copy)) &&
+		         __hybrid_uint128_eq(_Dee_variant_get_uint128(&copy), value);
+		break;
+	case Dee_VARIANT_UINT128:
+		result = __hybrid_uint128_eq(_Dee_variant_get_uint128(&copy), value);
+		break;
+	default:
+		result = false;
+		break;
+	}
+	return result;
+}
+
 DECL_END
 
 #endif /* !GUARD_DEEMON_RUNTIME_VARIANT_C */

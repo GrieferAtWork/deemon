@@ -109,10 +109,10 @@ DFUNDEF ATTR_COLD NONNULL((1)) int
 
 
 
-DFUNDEF ATTR_COLD int (DCALL DeeRT_ErrIntegerOverflowS)(Dee_ssize_t value, Dee_ssize_t minval, Dee_ssize_t maxval);
-DFUNDEF ATTR_COLD int (DCALL DeeRT_ErrIntegerOverflowU)(size_t value, size_t maxval);
-DFUNDEF ATTR_COLD int (DCALL DeeRT_ErrIntegerOverflowUMul)(size_t lhs, size_t rhs);
-DFUNDEF ATTR_COLD int (DCALL DeeRT_ErrIntegerOverflowUAdd)(size_t lhs, size_t rhs);
+DFUNDEF ATTR_COLD int (DCALL DeeRT_ErrIntegerOverflowS)(Dee_ssize_t value, Dee_ssize_t minval, Dee_ssize_t maxval); /* IntegerOverflow because `value < minval || value > maxval` */
+DFUNDEF ATTR_COLD int (DCALL DeeRT_ErrIntegerOverflowU)(size_t value, size_t maxval);                               /* IntegerOverflow because `value > maxval` */
+DFUNDEF ATTR_COLD int (DCALL DeeRT_ErrIntegerOverflowUMul)(size_t lhs, size_t rhs);                                 /* IntegerOverflow because `lhs * rhs` overflows `SIZE_MAX` */
+DFUNDEF ATTR_COLD int (DCALL DeeRT_ErrIntegerOverflowUAdd)(size_t lhs, size_t rhs);                                 /* IntegerOverflow because `lhs + rhs` overflows `SIZE_MAX` */
 #define DeeRT_ErrIntegerOverflowS(value, minval, maxval) Dee_ASSUMED_VALUE((DeeRT_ErrIntegerOverflowS)(value, minval, maxval), -1)
 #define DeeRT_ErrIntegerOverflowU(value, maxval)         Dee_ASSUMED_VALUE((DeeRT_ErrIntegerOverflowU)(value, maxval), -1)
 #define DeeRT_ErrIntegerOverflowUMul(lhs, rhs)           Dee_ASSUMED_VALUE((DeeRT_ErrIntegerOverflowUMul)(lhs, rhs), -1)
