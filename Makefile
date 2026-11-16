@@ -598,6 +598,10 @@ method-hints:
 		lib/rt/hints/operator.dee
 .PHONY: method-hints
 
+fixincludes:
+	$(DEEMON) util/scripts/fixincludes.dee
+.PHONY: fixincludes
+
 computed-operators:
 	$(DEEMON) util/scripts/computed-operators.dee
 .PHONY: computed-operators

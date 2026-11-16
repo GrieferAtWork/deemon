@@ -2617,6 +2617,7 @@ INTERN DeeTypeObject SeqFlatIterator_Type = {
 
 INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 SeqFlat_Of(DeeObject *__restrict self) {
+	/* TODO: Sequence.flatten(Sequence.repeatitem(X)) <=> Sequence.repeat(X) */
 	return Dee_AsObject(SeqFlat_New(self));
 }
 

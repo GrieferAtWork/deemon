@@ -32,7 +32,7 @@
 #include <deemon/error-rt.h>           /* DeeRT_ErrTUnboundAttr, DeeRT_ErrTUnboundAttrCStr */
 #include <deemon/error.h>              /* DeeError_* */
 #include <deemon/float.h>              /* DeeFloat_Type */
-#include <deemon/format.h>             /* PRFuSIZ */
+#include <deemon/format.h>             /* DeeFormat_Printf, PRFuSIZ, PRFxPTR */
 #include <deemon/int.h>                /* DeeInt_* */
 #include <deemon/method-hints.h>       /* DeeObject_InvokeMethodHint, TYPE_METHOD_HINT, TYPE_METHOD_HINT_END, type_method_hint */
 #include <deemon/module.h>             /* DeeModule*, Dee_MODSYM_F*, Dee_MODULE_PROPERTY_DEL, Dee_MODULE_PROPERTY_GET, Dee_MODULE_PROPERTY_SET, Dee_module_symbol */

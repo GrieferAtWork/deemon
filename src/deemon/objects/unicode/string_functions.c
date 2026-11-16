@@ -11407,7 +11407,7 @@ INTERN_TPCONST struct type_method tpconst string_methods[] = {
 	                "}\n"
 	                "Supported repetition and group expressions:"
 	                "#T{Expression|Description~"
-	                /**/ "#I{#CBLANK}| Matches epsilon. Can appear like #C{()} or #C{(|X|Y)}, ...&"
+	                /**/ "#IBLANK| Matches epsilon. Can appear like #C{()} or #C{(|X|Y)}, ...&"
 	                /**/ "#C{(X)}|The given #CX forms a group that is treated as a unit. "
 	                /**/ /*    */ "Its bounds can be determined explicitly using ?#regmatch&"
 	                /**/ "#C{X#|Y}|Either #CX or #CY is matched&"

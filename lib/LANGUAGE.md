@@ -10,8 +10,8 @@ At its core, Deemon's syntax is an amalgamation of C, C++, Python, Java and Java
 - Braces: `{ STATEMENTS; }`
 - If-statement: `if (COND) TT; else FF;`, `if (COND) { TT; } else { FF; }`
 - For-statement: `for (local i = 0; i < 10; ++i) { ... }`
-- White-statement: `while (COND) { BODY; }`
-- Do-While-statement: `do { BODY; } while (COND);`
+- While-statement: `while (COND) { BODY; }`
+- Do-while-statement: `do { BODY; } while (COND);`
 - Loop-control: `break;`, `continue;`
 - Switch-statement: `switch (EXPR) { case 1: BODY_1; /*fallthru*/ case 2: BODY_1_OR_2; break; default: BODY_DEFAULT; break; }`
 - Goto: `label: STATEMENTS; goto label;`
