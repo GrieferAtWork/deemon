@@ -1142,6 +1142,9 @@ LOCAL ATTR_ARTIFICIAL ATTR_RETNONNULL NONNULL((1)) DREF DeeObject *
 /* The base class of all objects. */
 DDATDEF DeeTypeObject DeeObject_Type; /* `Object` */
 
+/* Construct a new "dummy" object -- equivalent to `deemon.Object()` in user-code. */
+DFUNDEF WUNUSED DREF DeeObject *DCALL DeeObject_NewDummy(void);
+
 
 /* Assert the typing of an object (raising an `Error.TypeError` if the type wasn't expected)
  * HINT: When `required_type` isn't a type-object, these functions throw an error!

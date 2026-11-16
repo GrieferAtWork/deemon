@@ -195,6 +195,17 @@ printProxyObjectMethodHintWrapper("seq_operator_setrange_index_n");
 printProxyObjectMethodHintWrapper("seq_operator_contains");
 printProxyObjectMethodHintWrapper("seq_clear");
 printProxyObjectMethodHintWrapper("seq_contains");
+printProxyObjectMethodHintWrapper("seq_contains_with_key");
+printProxyObjectMethodHintWrapper("seq_any");
+printProxyObjectMethodHintWrapper("seq_any_with_key");
+printProxyObjectMethodHintWrapper("seq_all");
+printProxyObjectMethodHintWrapper("seq_all_with_key");
+printProxyObjectMethodHintWrapper("seq_min");
+printProxyObjectMethodHintWrapper("seq_min_with_key");
+printProxyObjectMethodHintWrapper("seq_max");
+printProxyObjectMethodHintWrapper("seq_max_with_key");
+printProxyObjectMethodHintWrapper("seq_locate");
+printProxyObjectMethodHintWrapper("seq_rlocate");
 
 printProxyObjectMethodHintWrapper("seq_trygetfirst");
 printProxyObjectMethodHintWrapper("seq_getfirst");
@@ -337,6 +348,17 @@ INTDEF WUNUSED NONNULL((1, 3)) int DCALL generic_proxy__seq_operator_setrange_in
 INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL generic_proxy__seq_operator_contains(ProxyObject *self, DeeObject *item); /* DeeObject_InvokeMethodHint(seq_operator_contains, self->po_obj, item) */
 INTDEF WUNUSED NONNULL((1)) int DCALL generic_proxy__seq_clear(ProxyObject *__restrict self); /* DeeObject_InvokeMethodHint(seq_clear, self->po_obj) */
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL generic_proxy__seq_contains(ProxyObject *self, DeeObject *item); /* DeeObject_InvokeMethodHint(seq_contains, self->po_obj, item) */
+INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL generic_proxy__seq_contains_with_key(ProxyObject *self, DeeObject *item, DeeObject *key); /* DeeObject_InvokeMethodHint(seq_contains_with_key, self->po_obj, item, key) */
+INTDEF WUNUSED NONNULL((1)) int DCALL generic_proxy__seq_any(ProxyObject *__restrict self); /* DeeObject_InvokeMethodHint(seq_any, self->po_obj) */
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL generic_proxy__seq_any_with_key(ProxyObject *self, DeeObject *key); /* DeeObject_InvokeMethodHint(seq_any_with_key, self->po_obj, key) */
+INTDEF WUNUSED NONNULL((1)) int DCALL generic_proxy__seq_all(ProxyObject *__restrict self); /* DeeObject_InvokeMethodHint(seq_all, self->po_obj) */
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL generic_proxy__seq_all_with_key(ProxyObject *self, DeeObject *key); /* DeeObject_InvokeMethodHint(seq_all_with_key, self->po_obj, key) */
+INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL generic_proxy__seq_min(ProxyObject *self, DeeObject *def); /* DeeObject_InvokeMethodHint(seq_min, self->po_obj, def) */
+INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL generic_proxy__seq_min_with_key(ProxyObject *self, DeeObject *def, DeeObject *key); /* DeeObject_InvokeMethodHint(seq_min_with_key, self->po_obj, def, key) */
+INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL generic_proxy__seq_max(ProxyObject *self, DeeObject *def); /* DeeObject_InvokeMethodHint(seq_max, self->po_obj, def) */
+INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL generic_proxy__seq_max_with_key(ProxyObject *self, DeeObject *def, DeeObject *key); /* DeeObject_InvokeMethodHint(seq_max_with_key, self->po_obj, def, key) */
+INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL generic_proxy__seq_locate(ProxyObject *self, DeeObject *match, DeeObject *def); /* DeeObject_InvokeMethodHint(seq_locate, self->po_obj, match, def) */
+INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL generic_proxy__seq_rlocate(ProxyObject *self, DeeObject *match, DeeObject *def); /* DeeObject_InvokeMethodHint(seq_rlocate, self->po_obj, match, def) */
 INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL generic_proxy__seq_trygetfirst(ProxyObject *__restrict self); /* DeeObject_InvokeMethodHint(seq_trygetfirst, self->po_obj) */
 INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL generic_proxy__seq_getfirst(ProxyObject *__restrict self); /* DeeObject_InvokeMethodHint(seq_getfirst, self->po_obj) */
 INTDEF WUNUSED NONNULL((1)) int DCALL generic_proxy__seq_boundfirst(ProxyObject *__restrict self); /* DeeObject_InvokeMethodHint(seq_boundfirst, self->po_obj) */

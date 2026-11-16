@@ -27,7 +27,7 @@
 #include <deemon/code.h>               /* DeeCodeObject, Dee_code_frame */
 #include <deemon/computed-operators.h> /* DEFIMPL, DEFIMPL_UNSUPPORTED */
 #include <deemon/error-rt.h>           /* DeeRT_Err* */
-#include <deemon/error.h>              /* DeeErrorObject, DeeError_*, Dee_ERROR_HANDLED_RESTORE, Dee_ERROR_OBJECT_HEAD */
+#include <deemon/error.h>              /* DeeErrorObject, DeeError_*, Dee_ERROR_HANDLED_INTERRUPT, Dee_ERROR_HANDLED_RESTORE, Dee_ERROR_OBJECT_HEAD */
 #include <deemon/error_types.h>        /* DeeNoMemoryErrorObject */
 #include <deemon/file.h>               /* DeeFile_GetStd, DeeFile_WriteAll, Dee_STDERR */
 #include <deemon/format.h>             /* DeeFormat_PRINT, DeeFormat_Printf, PRFuSIZ */
@@ -35,7 +35,7 @@
 #include <deemon/kwds.h>               /* DeeKwArgs* */
 #include <deemon/method-hints.h>       /* DeeObject_InvokeMethodHint */
 #include <deemon/none.h>               /* DeeNone_Check, Dee_None, return_none */
-#include <deemon/object.h>             /* DeeObject_*, Dee_BOUND_ERR, Dee_Decref, Dee_Decref_unlikely, Dee_Incref, Dee_XDecref, Dee_XDecref_unlikely, Dee_XIncref, return_reference, return_reference_ */
+#include <deemon/object.h>             /* DeeObject_*, Dee_BOUND_ERR, Dee_Decref*, Dee_Incref, Dee_XDecref, Dee_XDecref_unlikely, Dee_XIncref, return_reference, return_reference_ */
 #include <deemon/seq.h>                /* DeeSeq_Type */
 #include <deemon/serial.h>             /* DeeSerial, DeeSerial_XPutObject, Dee_seraddr_t */
 #include <deemon/string.h>             /* DeeString*, Dee_EmptyString */
@@ -45,7 +45,7 @@
 #include <deemon/traceback.h>          /* DeeTracebackObject, DeeTraceback_Type */
 #include <deemon/tuple.h>              /* DeeTuple* */
 #include <deemon/type.h>               /* DeeObject_InitStatic, DeeObject_IsShared, DeeType_GetName, DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, Dee_XVisit, Dee_visit_t, METHOD_FNOREFESCAPE, STRUCT_*, TF_NONE, TF_TPVISIT, TP_F*, TYPE_*, type_* */
-#include <deemon/types.h>              /* DREF, DeeObject, DeeObject_InstanceOf, DeeTypeObject, Dee_AsObject, Dee_TYPE, Dee_[u]int128_t, Dee_formatprinter_t, Dee_ssize_t, ITER_DONE, OBJECT_HEAD_INIT, _Dee_HashSelectC */
+#include <deemon/types.h>              /* DREF, DeeObject, DeeObject_InstanceOf, DeeObject_InstanceOfExact, DeeTypeObject, Dee_AsObject, Dee_TYPE, Dee_[u]int128_t, Dee_formatprinter_t, Dee_ssize_t, ITER_DONE, OBJECT_HEAD_INIT, _Dee_HashSelectC */
 #include <deemon/variant.h>            /* Dee_VARIANT_INIT_UNBOUND, Dee_variant, Dee_variant_* */
 
 #include <hybrid/int128.h>    /* __hybrid_int128_*, __hybrid_uint128_* */
@@ -2224,7 +2224,7 @@ Dee_variant_equals_size(struct Dee_variant *__restrict self, size_t value);
  * @return: NULL: Current error isn't a matching IntegerOverflow
  * @return: NULL: A different error (probably NoMemory) was thrown
  *                while trying to decode the caught IntegerOverflow */
-INTERN WUNUSED DREF DeeObject *DCALL
+PUBLIC WUNUSED DREF DeeObject *DCALL
 DeeRT_IntegerOverflow_TryCatchSizeOverflow(void) {
 	DREF DeeObject *result;
 	IntegerOverflow *error = (IntegerOverflow *)DeeError_Current();

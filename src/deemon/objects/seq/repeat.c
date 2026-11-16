@@ -22,31 +22,32 @@
 
 #include <deemon/api.h>
 
+#include <deemon/accu.h>               /* Dee_accu, Dee_accu_* */
 #include <deemon/alloc.h>              /* DeeObject_MALLOC, Dee_TYPE_CONSTRUCTOR_INIT_FIXED */
 #include <deemon/arg.h>                /* DeeArg_Unpack1, DeeArg_UnpackStruct2X, UNPuSIZ, _DeeArg_AsObject */
 #include <deemon/bool.h>               /* Dee_True, return_false */
 #include <deemon/computed-operators.h> /* DEFIMPL, DEFIMPL_UNSUPPORTED */
-#include <deemon/error-rt.h>           /* DeeRT_Err* */
+#include <deemon/error-rt.h>           /* DeeRT_Err*, DeeRT_IntegerOverflow_TryCatchSizeOverflow */
 #include <deemon/error.h>              /* DeeError_* */
 #include <deemon/format.h>             /* DeeFormat_Printf, PRFuSIZ */
 #include <deemon/gc.h>                 /* DeeGCObject_FREE, DeeGCObject_MALLOC, DeeGC_TRACK, Dee_TYPE_CONSTRUCTOR_INIT_FIXED_GC */
 #include <deemon/int.h>                /* DeeInt_NewSize */
-#include <deemon/method-hints.h>       /* DeeObject_InvokeMethodHint, Dee_seq_enumerate_index_t, TYPE_METHOD_HINT*, type_method_hint */
+#include <deemon/method-hints.h>       /* DeeMH_*_t, DeeObject_InvokeMethodHint, DeeObject_RequireMethodHint, DeeType_RequireMethodHint, Dee_seq_enumerate_index_t, TYPE_METHOD_HINT*, type_method_hint */
 #include <deemon/none.h>               /* DeeNone_NewRef, Dee_None */
 #include <deemon/object.h>             /* DREF, DeeObject, DeeObject_*, DeeTypeObject, Dee_AsObject, Dee_BOUND_ERR, Dee_BOUND_FROMBOOL, Dee_COMPARE_*, Dee_Decref*, Dee_HAS_*, Dee_Incref, Dee_Setrefv, Dee_TYPE, Dee_foreach_pair_t, Dee_foreach_t, Dee_formatprinter_t, Dee_hash_t, Dee_return_compareT, Dee_return_compare_if_ne, Dee_ssize_t, ITER_DONE, OBJECT_HEAD_INIT, return_reference, return_reference_ */
-#include <deemon/operator-hints.h>     /* DeeNO_foreach_pair_t, DeeNO_foreach_t, DeeType_RequireNativeOperator */
+#include <deemon/operator-hints.h>     /* DeeNO_foreach_t */
 #include <deemon/pair.h>               /* CONFIG_ENABLE_SEQ_ONE_TYPE */
 #include <deemon/seq.h>                /* DeeIterator_NewEmpty, DeeIterator_Type, DeeSeqRange_Clamp, DeeSeqRange_Clamp_n, DeeSeq_*, Dee_EmptySeq, Dee_seq_range */
 #include <deemon/serial.h>             /* DeeSerial*, Dee_seraddr_t */
 #include <deemon/thread.h>             /* DeeThread_CheckInterrupt */
-#include <deemon/tuple.h>              /* DeeTuple_NewVector */
+#include <deemon/tuple.h>              /* DeeTuple* */
 #include <deemon/type.h>               /* DeeObject_InitStatic, DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, Dee_TYPE_CONSTRUCTOR_INIT_FIXED_GC, Dee_visit_t, METHOD_FNOREFESCAPE, STRUCT_*, TF_NONE, TP_F*, TYPE_*, type_* */
 #include <deemon/util/atomic.h>        /* atomic_cmpxch_weak_or_write, atomic_read */
 #include <deemon/util/hash.h>          /* DeeObject_HashGeneric, Dee_HashCombine */
 #include <deemon/util/lock.h>          /* Dee_atomic_rwlock_init */
 
 #include <hybrid/limitcore.h> /* __SSIZE_MAX__ */
-#include <hybrid/overflow.h>  /* OVERFLOW_UMUL */
+#include <hybrid/overflow.h>  /* OVERFLOW_UADD, OVERFLOW_UMUL */
 
 #include "../../runtime/strings.h"
 #include "../generic-proxy.h"
@@ -59,6 +60,34 @@
 #define SSIZE_MAX __SSIZE_MAX__
 
 DECL_BEGIN
+
+/* Simulate the result of `obj [+ obj [+ obj [+ obj [+ obj [+ ...]]]]]`
+ * Repeated `count` times. In order to keep this executing in a reasonable
+ * amount of time, we always just do `obj * int(count)`, even though not
+ * every object necessarily implements `operator *` in the mathematical
+ * sense, this works correctly for: `Sequence`, `Bytes`, `string`, `int`,
+ * `float`, `bool` */
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+generic_object_repeat_sum(DeeObject *obj, size_t count) {
+	DREF DeeObject *result;
+	DREF DeeObject *multiplier;
+	multiplier = DeeInt_NewSize(count);
+	if unlikely(!multiplier)
+		goto err;
+	result = DeeObject_Mul(obj, multiplier);
+	Dee_Decref(multiplier);
+	return result;
+err:
+	return NULL;
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+generic_object_repeat_sum_inherited(/*inherit(always)*/ DREF DeeObject *obj, size_t count) {
+	DREF DeeObject *result = generic_object_repeat_sum(obj, count);
+	Dee_Decref(obj);
+	return result;
+}
+
 
 #define REPEATITER_READ_NUM(x) atomic_read(&(x)->rpi_num)
 
@@ -533,7 +562,7 @@ err:
 }
 
 STATIC_ASSERT(offsetof(Repeat, rp_seq) == offsetof(ProxyObject, po_obj));
-#define repeat_contains generic_proxy__seq_operator_contains
+#define repeat_operator_contains generic_proxy__seq_operator_contains
 
 PRIVATE WUNUSED NONNULL((1)) size_t DCALL
 repeat_size(Repeat *__restrict self) {
@@ -587,9 +616,17 @@ PRIVATE WUNUSED NONNULL((1)) size_t DCALL
 repeat_translate_index(Repeat *self, size_t index) {
 	size_t seq_size, whole_size, result;
 	ASSERTF(self->rp_num != 0, "Prevented during construction");
+	if unlikely(index >= (size_t)-1)
+		return (size_t)DeeRT_ErrIntegerOverflowU(index, (size_t)-2);
 	seq_size = DeeObject_Size(self->rp_seq);
-	if unlikely(seq_size == (size_t)-1)
-		goto err;
+	if unlikely(seq_size == (size_t)-1) {
+		DREF DeeObject *actual_size = DeeRT_IntegerOverflow_TryCatchSizeOverflow();
+		if (!actual_size)
+			goto err;
+		Dee_Decref(actual_size);
+		/* Sequence is >= SIZE_MAX; `index < SIZE_MAX` -> caller's `index` always maps 1-on-1 */
+		return index;
+	}
 	if (OVERFLOW_UMUL(seq_size, self->rp_num, &whole_size)) {
 		/* Sequence is larger than SIZE_MAX -> can't be out-of-bounds */
 	} else {
@@ -845,16 +882,16 @@ repeat_printrepr(Repeat *__restrict self, Dee_formatprinter_t printer, void *arg
 }
 
 STATIC_ASSERT(offsetof(Repeat, rp_seq) == offsetof(ProxyObject, po_obj));
-#define repeat_trygetfirst     generic_proxy__seq_trygetfirst
-#define repeat_getfirst        generic_proxy__seq_getfirst
-#define repeat_boundfirst      generic_proxy__seq_boundfirst
-#define repeat_delfirst        generic_proxy__seq_delfirst
-#define repeat_setfirst        generic_proxy__seq_setfirst
-#define repeat_trygetlast      generic_proxy__seq_trygetlast
-#define repeat_getlast         generic_proxy__seq_getlast
-#define repeat_boundlast       generic_proxy__seq_boundlast
-#define repeat_dellast         generic_proxy__seq_dellast
-#define repeat_setlast         generic_proxy__seq_setlast
+#define repeat_trygetfirst generic_proxy__seq_trygetfirst
+#define repeat_getfirst    generic_proxy__seq_getfirst
+#define repeat_boundfirst  generic_proxy__seq_boundfirst
+#define repeat_delfirst    generic_proxy__seq_delfirst
+#define repeat_setfirst    generic_proxy__seq_setfirst
+#define repeat_trygetlast  generic_proxy__seq_trygetlast
+#define repeat_getlast     generic_proxy__seq_getlast
+#define repeat_boundlast   generic_proxy__seq_boundlast
+#define repeat_dellast     generic_proxy__seq_dellast
+#define repeat_setlast     generic_proxy__seq_setlast
 
 
 /* Sets force any duplicate values in the underlying mapping to be omitted.
@@ -981,7 +1018,7 @@ STATIC_ASSERT(offsetof(Repeat, rp_seq) == offsetof(ProxyObject, po_obj));
 PRIVATE struct type_seq repeat_seq = {
 	/* .tp_iter                       = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&repeat_iter,
 	/* .tp_sizeob                     = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&repeat_sizeob,
-	/* .tp_contains                   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&repeat_contains,
+	/* .tp_contains                   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&repeat_operator_contains,
 	/* .tp_getitem                    = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&repeat_getitem,
 	/* .tp_delitem                    = */ (int (DCALL *)(DeeObject *, DeeObject *))&repeat_delitem,
 	/* .tp_setitem                    = */ (int (DCALL *)(DeeObject *, DeeObject *, DeeObject *))&repeat_setitem,
@@ -1063,6 +1100,888 @@ err:
 	return NULL;
 }
 
+/* Descriptor for a [start,end) range applied to a SeqRepeat
+ * object. This struct describes how that range translates to
+ * the underlying sequence. */
+struct repeat_range_desc {
+	/*
+	 *  Sequence.repeat("FOO", 999)
+	 *     012345678911111111112222222222
+	 *               01234567890123456789
+	 *     [-][-][-][-][-][-][-][-][-][-]
+	 *     FOOFOOFOOFOOFOOFOOFOOFOOFOOFOO...
+	 *      [-------]
+	 *      ^        ^
+	 *      |        end=10
+	 *      start=1
+	 *
+	 *  This results in a descriptor
+	 *
+	 *     012345678911111111112222222222
+	 *               01234567890123456789
+	 *     [-][-][-][-][-][-][-][-][-][-]
+	 *     FOOFOOFOOFOOFOOFOOFOOFOOFOOFOO...
+	 *      [][-]...[]
+	 *      | |     |
+	 *      | |     TAIL={rrd_tail_start=0, rrd_tail_end=2}
+	 *      | |
+	 *      | BODY={rrd_body_rep=2}
+	 *      |
+	 *      HEAD={rrd_head_start=1, rrd_head_end=3}
+	 */
+	size_t rrd_head_start; /* Start index of head */
+	size_t rrd_head_end;   /* End index of head */
+	size_t rrd_body_rep;   /* # of times the entire child-sequence appears in the body */
+//	size_t rrd_tail_start; /* Start index of tail (Always `0`) */
+	size_t rrd_tail_end;   /* End index of tail */
+	size_t rrd_skip;       /* # of elements that were skipped (a multiple of repeat_range_desc_getbodylen1) */
+#define repeat_range_desc_hashead(self)      ((self)->rrd_head_end > (self)->rrd_head_start)
+#define repeat_range_desc_getheadstart(self) ((self)->rrd_head_start)
+#define repeat_range_desc_getheadend(self)   ((self)->rrd_head_end)
+#define repeat_range_desc_getheadlen(self)   ((self)->rrd_head_end - (self)->rrd_head_start)
+#define repeat_range_desc_hasbody(self)      ((self)->rrd_body_rep != 0)
+#define repeat_range_desc_getbodyrep(self)   ((self)->rrd_body_rep)
+#define repeat_range_desc_getbodylen1(self)  ((self)->rrd_head_end) /* Only valid when `repeat_range_desc_getbodyrep(self) > 0` */
+#define repeat_range_desc_getbodylenN(self)  (repeat_range_desc_getbodyrep(self) * repeat_range_desc_getbodylen1(self))
+#define repeat_range_desc_getbodystart(self) 0
+#define repeat_range_desc_getbodyend(self)   repeat_range_desc_getbodylen1(self)
+#define repeat_range_desc_hastail(self)      ((self)->rrd_tail_end > 0)
+#define repeat_range_desc_gettailstart(self) 0
+#define repeat_range_desc_gettailend(self)   ((self)->rrd_tail_end)
+#define repeat_range_desc_gettaillen(self)   ((self)->rrd_tail_end)
+
+	/* Returns absolute (iow: within the SeqRepeat) indices of chunks. */
+#define repeat_range_desc_getabsheadstart(self) ((self)->rrd_skip + (self)->rrd_head_start)
+#define repeat_range_desc_getabsheadend(self)   ((self)->rrd_skip + (self)->rrd_head_end)
+#define repeat_range_desc_getabsbodystart(self) repeat_range_desc_getabsheadend(self)
+#define repeat_range_desc_getabsbodyend(self)   (repeat_range_desc_getabsbodystart(self) + repeat_range_desc_getbodylenN(self))
+#define repeat_range_desc_getabstailstart(self) repeat_range_desc_getabsbodyend(self)
+#define repeat_range_desc_getabstailend(self)   (repeat_range_desc_getabstailstart(self) + repeat_range_desc_gettaillen(self))
+};
+
+/* Modify `self` such that elements are never enumerated more than once.
+ * Upon return, you're allowed to assume that `repeat_range_desc_getbodyrep(self) == 0` */
+PRIVATE WUNUSED NONNULL((1)) void DCALL
+repeat_range_desc_makeonce(struct repeat_range_desc *__restrict self) {
+	if (repeat_range_desc_hasbody(self)) {
+		/* - Keep `rrd_head_start` unchanged -> range still starts on same element
+		 * - Because there is a body, `rrd_head_end` is equal to the length of the
+		 *   sub-sequence, meaning that the head is guarantied to hug the end of
+		 *   said sub-sequence
+		 * - Change the tail-range such that it describes everything not already
+		 *   covered by the head (which, like already said: hugs the end of the
+		 *   sub-sequence)
+		 * - Change the body-repetition counter `rrd_body_rep` to `0` such that
+		 *   no extra loops are made between the head and tail (which now cover
+		 *   the sub-sequence in its entirety exactly once) */
+		self->rrd_tail_end = self->rrd_head_start;
+		self->rrd_body_rep = 0;
+	}
+}
+
+/* Same as `repeat_range_desc_makeonce()`, but retain `rrd_tail_end` */
+PRIVATE WUNUSED NONNULL((1)) void DCALL
+repeat_range_desc_makeonce_rev(struct repeat_range_desc *__restrict self) {
+	if (repeat_range_desc_hasbody(self)) {
+		self->rrd_head_start = self->rrd_tail_end;
+		self->rrd_body_rep   = 0;
+	}
+}
+
+/* Initialize `self` from `repeat` and the half-open range described by `[start,end)` */
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+repeat_range_desc_of(struct repeat_range_desc *__restrict self,
+                     Repeat *__restrict repeat,
+                     size_t start, size_t end) {
+	size_t seq_len, leading_skip;
+	size_t total_len;
+	ASSERTF(repeat->rp_num != 0, "Prevented during construction");
+
+	self->rrd_body_rep = 0;
+	self->rrd_tail_end = 0;
+	if (start >= end) {
+		/* Simple case: entirely empty */
+return_empty:
+		self->rrd_skip       = 0;
+		self->rrd_head_start = 0;
+		self->rrd_head_end   = 0;
+		return 0;
+	}
+
+	/* Check for simple (but unlikely) case: sequence isn't actually being repeated.
+	 * In this case, rely on the fact that the caller will always invoke some sequence
+	 * function of the wrapped sequence, which in turn will clamp the `end` index as
+	 * necessary. */
+	if unlikely(repeat->rp_num == 1) {
+		self->rrd_skip       = 0;
+		self->rrd_head_start = start;
+		self->rrd_head_end   = end;
+		return 0;
+	}
+
+	/* Query length of underlying sequence. */
+	seq_len = DeeObject_InvokeMethodHint(seq_operator_size, repeat->rp_seq);
+	if unlikely(seq_len == (size_t)-1) {
+		DREF DeeObject *actual_size = DeeRT_IntegerOverflow_TryCatchSizeOverflow();
+		if (!actual_size)
+			goto err;
+		/* Sequence is larger than SIZE_MAX -> caller's range always fits */
+		Dee_Decref(actual_size);
+		self->rrd_skip       = 0;
+		self->rrd_head_start = start;
+		self->rrd_head_end   = end;
+		return 0;
+	}
+
+	/* Clamp `end` if it points beyond the repetition's absolute end */
+	if (!OVERFLOW_UMUL(seq_len, repeat->rp_num, &total_len)) {
+		if (end > total_len) {
+			end = total_len;
+			if (start >= end)
+				goto return_empty;
+		}
+	}
+
+	/* Deal with special case: underlying sequence is empty. */
+	if unlikely(seq_len == 0)
+		goto return_empty;
+	leading_skip = (start / seq_len) * seq_len;
+	start -= leading_skip;
+	end -= leading_skip;
+	self->rrd_skip = leading_skip;
+	self->rrd_head_start = start;
+	if (end <= seq_len) {
+		/* Entirely contained in head */
+		self->rrd_head_end = end;
+	} else {
+		size_t count_after_head = end - seq_len; /* # of 0-aligned items to iterate after head */
+		self->rrd_head_end = seq_len; /* Head ends at end of underlying sequence (because there is a body/tail) */
+		self->rrd_body_rep = count_after_head / seq_len;
+		self->rrd_tail_end = count_after_head % seq_len;
+		ASSERT(self->rrd_body_rep > 0 || self->rrd_tail_end > 0);
+	}
+	return 0;
+err:
+	return -1;
+}
+
+
+STATIC_ASSERT(offsetof(Repeat, rp_seq) == offsetof(ProxyObject, po_obj));
+#define repeat_any          generic_proxy__seq_any
+#define repeat_any_with_key generic_proxy__seq_any_with_key
+
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+repeat_any_with_range(Repeat *__restrict self, size_t start, size_t end) {
+	int result = 0;
+	struct repeat_range_desc range;
+	if (repeat_range_desc_of(&range, self, start, end))
+		goto err;
+	repeat_range_desc_makeonce(&range);
+	if (repeat_range_desc_hashead(&range)) {
+		result = DeeObject_InvokeMethodHint(seq_any_with_range, self->rp_seq,
+		                                    repeat_range_desc_getheadstart(&range),
+		                                    repeat_range_desc_getheadend(&range));
+		if (result != 0)
+			goto done;
+	}
+	if (repeat_range_desc_hastail(&range)) {
+		result = DeeObject_InvokeMethodHint(seq_any_with_range, self->rp_seq,
+		                                    repeat_range_desc_gettailstart(&range),
+		                                    repeat_range_desc_gettailend(&range));
+		if (result != 0)
+			goto done;
+	}
+done:
+	return result;
+err:
+	return -1;
+}
+
+PRIVATE WUNUSED NONNULL((1, 4)) int DCALL
+repeat_any_with_range_and_key(Repeat *self, size_t start, size_t end, DeeObject *key) {
+	int result = 0;
+	struct repeat_range_desc range;
+	if (repeat_range_desc_of(&range, self, start, end))
+		goto err;
+	repeat_range_desc_makeonce(&range);
+	if (repeat_range_desc_hashead(&range)) {
+		result = DeeObject_InvokeMethodHint(seq_any_with_range_and_key, self->rp_seq,
+		                                    repeat_range_desc_getheadstart(&range),
+		                                    repeat_range_desc_getheadend(&range),
+		                                    key);
+		if (result != 0)
+			goto done;
+	}
+	if (repeat_range_desc_hastail(&range)) {
+		result = DeeObject_InvokeMethodHint(seq_any_with_range_and_key, self->rp_seq,
+		                                    repeat_range_desc_gettailstart(&range),
+		                                    repeat_range_desc_gettailend(&range),
+		                                    key);
+		if (result != 0)
+			goto done;
+	}
+done:
+	return result;
+err:
+	return -1;
+}
+
+
+STATIC_ASSERT(offsetof(Repeat, rp_seq) == offsetof(ProxyObject, po_obj));
+#define repeat_all          generic_proxy__seq_all
+#define repeat_all_with_key generic_proxy__seq_all_with_key
+
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+repeat_all_with_range(Repeat *__restrict self, size_t start, size_t end) {
+	int result = 1;
+	struct repeat_range_desc range;
+	if (repeat_range_desc_of(&range, self, start, end))
+		goto err;
+	repeat_range_desc_makeonce(&range);
+	if (repeat_range_desc_hashead(&range)) {
+		result = DeeObject_InvokeMethodHint(seq_all_with_range, self->rp_seq,
+		                                    repeat_range_desc_getheadstart(&range),
+		                                    repeat_range_desc_getheadend(&range));
+		if (result <= 0)
+			goto done;
+	}
+	if (repeat_range_desc_hastail(&range)) {
+		result = DeeObject_InvokeMethodHint(seq_all_with_range, self->rp_seq,
+		                                    repeat_range_desc_gettailstart(&range),
+		                                    repeat_range_desc_gettailend(&range));
+		if (result <= 0)
+			goto done;
+	}
+done:
+	return result;
+err:
+	return -1;
+}
+
+PRIVATE WUNUSED NONNULL((1, 4)) int DCALL
+repeat_all_with_range_and_key(Repeat *self, size_t start, size_t end, DeeObject *key) {
+	int result = 1;
+	struct repeat_range_desc range;
+	if (repeat_range_desc_of(&range, self, start, end))
+		goto err;
+	repeat_range_desc_makeonce(&range);
+	if (repeat_range_desc_hashead(&range)) {
+		result = DeeObject_InvokeMethodHint(seq_all_with_range_and_key, self->rp_seq,
+		                                    repeat_range_desc_getheadstart(&range),
+		                                    repeat_range_desc_getheadend(&range),
+		                                    key);
+		if (result <= 0)
+			goto done;
+	}
+	if (repeat_range_desc_hastail(&range)) {
+		result = DeeObject_InvokeMethodHint(seq_all_with_range_and_key, self->rp_seq,
+		                                    repeat_range_desc_gettailstart(&range),
+		                                    repeat_range_desc_gettailend(&range),
+		                                    key);
+		if (result <= 0)
+			goto done;
+	}
+done:
+	return result;
+err:
+	return -1;
+}
+
+
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+repeat_parity(Repeat *__restrict self) {
+	if (!(self->rp_num & 1))
+		return 0; /* Even total -> paritiy is always = 0 */
+	return DeeObject_InvokeMethodHint(seq_parity, self->rp_seq);
+}
+
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+repeat_parity_with_key(Repeat *__restrict self, DeeObject *key) {
+	if (!(self->rp_num & 1))
+		return 0; /* Even total -> paritiy is always = 0 */
+	return DeeObject_InvokeMethodHint(seq_parity_with_key, self->rp_seq, key);
+}
+
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+repeat_parity_with_range_impl(Repeat *self, size_t start, size_t end, DeeObject *key) {
+	int result = 0;
+	struct repeat_range_desc range;
+	if (repeat_range_desc_of(&range, self, start, end))
+		goto err;
+	if (repeat_range_desc_hashead(&range)) {
+		result = key ? DeeObject_InvokeMethodHint(seq_parity_with_range_and_key, self->rp_seq,
+		                                          repeat_range_desc_getheadstart(&range),
+		                                          repeat_range_desc_getheadend(&range),
+		                                          key)
+		             : DeeObject_InvokeMethodHint(seq_parity_with_range, self->rp_seq,
+		                                          repeat_range_desc_getheadstart(&range),
+		                                          repeat_range_desc_getheadend(&range));
+		if (result < 0)
+			goto done;
+	}
+	if ((repeat_range_desc_getbodyrep(&range) & 1) != 0) {
+		/* Uneven body repetition -> must include parity of body exactly once */
+		int temp = key ? DeeObject_InvokeMethodHint(seq_parity_with_key, self->rp_seq, key)
+		               : DeeObject_InvokeMethodHint(seq_parity, self->rp_seq);
+		if (temp < 0)
+			goto err;
+		if (temp)
+			result = result ? 0 : 1;
+	}
+	if (repeat_range_desc_hastail(&range)) {
+		int temp = key ? DeeObject_InvokeMethodHint(seq_parity_with_range_and_key, self->rp_seq,
+		                                            repeat_range_desc_gettailstart(&range),
+		                                            repeat_range_desc_gettailend(&range),
+		                                            key)
+		               : DeeObject_InvokeMethodHint(seq_parity_with_range, self->rp_seq,
+		                                            repeat_range_desc_gettailstart(&range),
+		                                            repeat_range_desc_gettailend(&range));
+		if (temp < 0)
+			goto err;
+		if (temp)
+			result = result ? 0 : 1;
+	}
+done:
+	return result;
+err:
+	return -1;
+}
+
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+repeat_parity_with_range(Repeat *__restrict self, size_t start, size_t end) {
+	return repeat_parity_with_range_impl(self, start, end, NULL);
+}
+
+PRIVATE WUNUSED NONNULL((1, 4)) int DCALL
+repeat_parity_with_range_and_key(Repeat *self, size_t start, size_t end, DeeObject *key) {
+	return repeat_parity_with_range_impl(self, start, end, key);
+}
+
+
+STATIC_ASSERT(offsetof(Repeat, rp_seq) == offsetof(ProxyObject, po_obj));
+#define repeat_min          generic_proxy__seq_min
+#define repeat_min_with_key generic_proxy__seq_min_with_key
+#define repeat_max          generic_proxy__seq_max
+#define repeat_max_with_key generic_proxy__seq_max_with_key
+
+PRIVATE WUNUSED NONNULL((1, 4)) DREF DeeObject *DCALL
+repeat_minmax_with_range_impl_helper2(DeeObject *__restrict subseq,
+                                      size_t start, size_t end,
+                                      DeeObject *def, DeeObject *key,
+                                      bool is_max) {
+	if (key) {
+		DeeMH_seq_min_with_range_and_key_t cb;
+		cb = is_max ? DeeObject_RequireMethodHint(subseq, seq_max_with_range_and_key)
+		            : DeeObject_RequireMethodHint(subseq, seq_min_with_range_and_key);
+		return (*cb)(subseq, start, end, def, key);
+	} else {
+		DeeMH_seq_min_with_range_t cb;
+		cb = is_max ? DeeObject_RequireMethodHint(subseq, seq_max_with_range)
+		            : DeeObject_RequireMethodHint(subseq, seq_min_with_range);
+		return (*cb)(subseq, start, end, def);
+	}
+}
+
+/* @return: ITER_DONE: "def" value was used */
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+repeat_minmax_with_range_impl_helper(DeeObject *__restrict subseq,
+                                     size_t start, size_t end,
+                                     DeeObject *key, bool is_max) {
+	DREF DeeObject *result;
+	DREF DeeObject *def = DeeObject_NewDummy();
+	if unlikely(!def)
+		goto err;
+	result = repeat_minmax_with_range_impl_helper2(subseq, start, end, def, key, is_max);
+	if (result == def) {
+		Dee_DecrefNokill(result);
+		result = ITER_DONE;
+	}
+	Dee_Decref_likely(def);
+	return result;
+err:
+	return NULL;
+}
+
+PRIVATE WUNUSED NONNULL((1, 4)) DREF DeeObject *DCALL
+repeat_minmax_with_range_impl(Repeat *__restrict self,
+                              size_t start, size_t end,
+                              DeeObject *def, DeeObject *key,
+                              bool is_max) {
+	DREF DeeObject *result;
+	struct repeat_range_desc range;
+	if (repeat_range_desc_of(&range, self, start, end))
+		goto err;
+	repeat_range_desc_makeonce(&range);
+	if (repeat_range_desc_hashead(&range) &&
+	    repeat_range_desc_hastail(&range)) {
+		DREF DeeObject *head_result, *tail_result;
+		head_result = repeat_minmax_with_range_impl_helper(self->rp_seq,
+		                                                   repeat_range_desc_getheadstart(&range),
+		                                                   repeat_range_desc_getheadend(&range),
+		                                                   key, is_max);
+		if unlikely(!head_result)
+			goto err;
+		tail_result = repeat_minmax_with_range_impl_helper(self->rp_seq,
+		                                                   repeat_range_desc_gettailstart(&range),
+		                                                   repeat_range_desc_gettailend(&range),
+		                                                   key, is_max);
+		if unlikely(!tail_result) {
+			if (head_result != ITER_DONE)
+				Dee_Decref(head_result);
+			goto err;
+		}
+		if (head_result == ITER_DONE) {
+			if (tail_result == ITER_DONE)
+				goto return_def;
+			result = tail_result;
+		} else if (tail_result == ITER_DONE) {
+			result = head_result;
+		} else {
+			int head_lo_tail;
+			head_lo_tail = DeeObject_CmpLoAsBool(head_result, tail_result);
+			if unlikely(head_lo_tail < 0) {
+				Dee_Decref(head_result);
+				Dee_Decref(tail_result);
+				result = NULL;
+			} else if ((head_lo_tail > 0) != is_max) {
+				/* Use "head_result" */
+				result = head_result;
+				Dee_Decref(tail_result);
+			} else {
+				/* Use "tail_result" */
+				result = tail_result;
+				Dee_Decref(head_result);
+			}
+		}
+	} else {
+		size_t used_start, used_end;
+		if (repeat_range_desc_hashead(&range)) {
+			used_start = repeat_range_desc_getheadstart(&range);
+			used_end   = repeat_range_desc_getheadend(&range);
+		} else if (repeat_range_desc_hastail(&range)) {
+			used_start = repeat_range_desc_gettailstart(&range);
+			used_end   = repeat_range_desc_gettailend(&range);
+		} else {
+			goto return_def;
+		}
+		result = repeat_minmax_with_range_impl_helper2(self->rp_seq, used_start, used_end,
+		                                               def, key, is_max);
+	}
+/*done:*/
+	return result;
+return_def:
+	return_reference_(def);
+err:
+	return NULL;
+}
+
+PRIVATE WUNUSED NONNULL((1, 4)) DREF DeeObject *DCALL
+repeat_min_with_range(Repeat *self, size_t start, size_t end, DeeObject *def) {
+	return repeat_minmax_with_range_impl(self, start, end, def, NULL, false);
+}
+
+PRIVATE WUNUSED NONNULL((1, 4, 5)) DREF DeeObject *DCALL
+repeat_min_with_range_and_key(Repeat *self, size_t start, size_t end, DeeObject *def, DeeObject *key) {
+	return repeat_minmax_with_range_impl(self, start, end, def, key, false);
+}
+
+PRIVATE WUNUSED NONNULL((1, 4)) DREF DeeObject *DCALL
+repeat_max_with_range(Repeat *self, size_t start, size_t end, DeeObject *def) {
+	return repeat_minmax_with_range_impl(self, start, end, def, NULL, true);
+}
+
+PRIVATE WUNUSED NONNULL((1, 4, 5)) DREF DeeObject *DCALL
+repeat_max_with_range_and_key(Repeat *self, size_t start, size_t end, DeeObject *def, DeeObject *key) {
+	return repeat_minmax_with_range_impl(self, start, end, def, key, true);
+}
+
+
+PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+repeat_sum_impl(Repeat *self, DeeObject *def, DeeObject *key) {
+	DREF DeeObject *result;
+	DREF DeeObject *dummy_def;
+	dummy_def = DeeObject_NewDummy();
+	if unlikely(!dummy_def)
+		goto err;
+	result = key ? DeeObject_InvokeMethodHint(seq_sum_with_key, self->rp_seq, dummy_def, key)
+	             : DeeObject_InvokeMethodHint(seq_sum, self->rp_seq, dummy_def);
+	Dee_Decref_likely(dummy_def);
+	if unlikely(!result)
+		goto err;
+	if (result == dummy_def) {
+		result = def;
+		Dee_Incref(def);
+	} else {
+		result = generic_object_repeat_sum_inherited(result, self->rp_num);
+	}
+	return result;
+err:
+	return NULL;
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+repeat_sum(Repeat *self, DeeObject *def) {
+	return repeat_sum_impl(self, def, NULL);
+}
+
+PRIVATE WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL
+repeat_sum_with_key(Repeat *self, DeeObject *def, DeeObject *key) {
+	return repeat_sum_impl(self, def, key);
+}
+
+/* Append `subseq.sum(start, end)` to `accu`, but only if that sum is present */
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+repeat_sum_with_range_impl2(struct Dee_accu *__restrict accu,
+                            DeeObject *subseq, size_t start,
+                            size_t end, size_t repeat,
+                            DeeObject *key) {
+	DREF DeeObject *range_sum;
+	DREF DeeObject *dummy_def;
+	if unlikely(start >= end || repeat == 0)
+		return 0; /* Empty range -> do nothing */
+	dummy_def = DeeObject_NewDummy();
+	if unlikely(!dummy_def)
+		goto err;
+	range_sum = key ? DeeObject_InvokeMethodHint(seq_sum_with_range_and_key, subseq, start, end, dummy_def, key)
+	                : DeeObject_InvokeMethodHint(seq_sum_with_range, subseq, start, end, dummy_def);
+	Dee_Decref_likely(dummy_def);
+	if unlikely(!range_sum)
+		goto err;
+	if (range_sum == dummy_def) {
+		Dee_Decref_likely(range_sum);
+	} else {
+		/* If necessary, repeat "range_sum" before added it to the accu */
+		if (repeat > 1) {
+			range_sum = generic_object_repeat_sum_inherited(range_sum, repeat);
+			if unlikely(!range_sum)
+				goto err;
+		}
+
+		/* Append to accu */
+		if (Dee_accu_add_inherited(accu, range_sum) < 0)
+			goto err;
+	}
+	return 0;
+err:
+	return -1;
+}
+
+PRIVATE WUNUSED NONNULL((1, 4, 5)) DREF DeeObject *DCALL
+repeat_sum_with_range_impl(Repeat *self, size_t start, size_t end,
+                           DeeObject *def, DeeObject *key) {
+	DREF DeeObject *result;
+	struct Dee_accu accu;
+	struct repeat_range_desc range;
+	if (repeat_range_desc_of(&range, self, start, end))
+		goto err;
+	Dee_accu_init(&accu);
+
+	/* Head */
+	if (repeat_sum_with_range_impl2(&accu, self->rp_seq,
+	                                repeat_range_desc_getheadstart(&range),
+	                                repeat_range_desc_getheadend(&range),
+	                                1, key))
+		goto err_accu;
+
+	/* Body */
+	if (repeat_sum_with_range_impl2(&accu, self->rp_seq,
+	                                repeat_range_desc_getbodystart(&range),
+	                                repeat_range_desc_getbodyend(&range),
+	                                repeat_range_desc_getbodyrep(&range),
+	                                key))
+		goto err_accu;
+
+	/* Tail */
+	if (repeat_sum_with_range_impl2(&accu, self->rp_seq,
+	                                repeat_range_desc_gettailstart(&range),
+	                                repeat_range_desc_gettailend(&range),
+	                                1, key))
+		goto err_accu;
+
+	result = Dee_accu_pack(&accu);
+	if (result == ITER_DONE) {
+		result = def;
+		Dee_Incref(def);
+	}
+	return result;
+err_accu:
+	Dee_accu_fini(&accu);
+err:
+	return NULL;
+}
+
+PRIVATE WUNUSED NONNULL((1, 4)) DREF DeeObject *DCALL
+repeat_sum_with_range(Repeat *self, size_t start, size_t end, DeeObject *def) {
+	return repeat_sum_with_range_impl(self, start, end, def, NULL);
+}
+
+PRIVATE WUNUSED NONNULL((1, 4, 5)) DREF DeeObject *DCALL
+repeat_sum_with_range_and_key(Repeat *self, size_t start, size_t end, DeeObject *def, DeeObject *key) {
+	return repeat_sum_with_range_impl(self, start, end, def, key);
+}
+
+
+/* NOTE: If `base_count == (size_t)-1`, assumes that
+ * an exception was thrown and always propagate as-is */
+PRIVATE WUNUSED NONNULL((1)) size_t DCALL
+repeat_multiply_count(Repeat *__restrict self, size_t base_count) {
+	size_t total_count;
+	if unlikely(base_count == (size_t)-1)
+		return base_count; /* Error happend in caller */
+	if (OVERFLOW_UMUL(base_count, self->rp_num, &total_count))
+		return (size_t)DeeRT_ErrIntegerOverflowUMul(base_count, self->rp_num);
+	ASSERTF(total_count != (size_t)-1,
+	        "Can't be case multiplication didn't overflow, meaning `total_count` "
+	        "must be a multiple of `base_count`, and `base_count` itself was already "
+	        "check to be `!= (size_t)-1`");
+	return total_count;
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) size_t DCALL
+repeat_count(Repeat *self, DeeObject *item) {
+	size_t base_count = DeeObject_InvokeMethodHint(seq_count, self->rp_seq, item);
+	return repeat_multiply_count(self, base_count);
+}
+
+PRIVATE WUNUSED NONNULL((1, 2, 3)) size_t DCALL
+repeat_count_with_key(Repeat *self, DeeObject *item, DeeObject *key) {
+	size_t base_count = DeeObject_InvokeMethodHint(seq_count_with_key, self->rp_seq, item, key);
+	return repeat_multiply_count(self, base_count);
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) size_t DCALL
+repeat_count_with_range_impl2(DeeObject *subseq, DeeObject *item,
+                              size_t start, size_t end, DeeObject *key) {
+	return key ? DeeObject_InvokeMethodHint(seq_count_with_range_and_key, subseq, item, start, end, key)
+	           : DeeObject_InvokeMethodHint(seq_count_with_range, subseq, item, start, end);
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) size_t DCALL
+repeat_count_with_range_impl(Repeat *self, DeeObject *item,
+                             size_t start, size_t end, DeeObject *key) {
+	size_t result = 0;
+	struct repeat_range_desc range;
+	if (repeat_range_desc_of(&range, self, start, end))
+		goto err;
+	if (repeat_range_desc_hashead(&range)) {
+		result = repeat_count_with_range_impl2(self->rp_seq, item,
+		                                       repeat_range_desc_getheadstart(&range),
+		                                       repeat_range_desc_getheadend(&range),
+		                                       key);
+		if unlikely(result == (size_t)-1)
+			goto err;
+	}
+	if (repeat_range_desc_hasbody(&range)) {
+		size_t multipled_count, new_result;
+		size_t base_count = key ? DeeObject_InvokeMethodHint(seq_count_with_key, self->rp_seq, item, key)
+		                        : DeeObject_InvokeMethodHint(seq_count, self->rp_seq, item);
+		if unlikely(base_count == (size_t)-1)
+			goto err;
+		if (OVERFLOW_UMUL(base_count, repeat_range_desc_getbodyrep(&range), &multipled_count))
+			return (size_t)DeeRT_ErrIntegerOverflowUMul(base_count, repeat_range_desc_getbodyrep(&range));
+		if (OVERFLOW_UADD(result, multipled_count, &new_result))
+			return (size_t)DeeRT_ErrIntegerOverflowUAdd(result, multipled_count);
+		result = new_result;
+	}
+	if (repeat_range_desc_hastail(&range)) {
+		size_t tail_count, new_result;
+		tail_count = repeat_count_with_range_impl2(self->rp_seq, item,
+		                                           repeat_range_desc_getheadstart(&range),
+		                                           repeat_range_desc_getheadend(&range),
+		                                           key);
+		if unlikely(tail_count == (size_t)-1)
+			goto err;
+		if (OVERFLOW_UADD(result, tail_count, &new_result))
+			return (size_t)DeeRT_ErrIntegerOverflowUAdd(result, tail_count);
+		result = new_result;
+	}
+	if unlikely(result == (size_t)-1)
+		return (size_t)DeeRT_ErrIntegerOverflowU(result, (size_t)-2);
+	return result;
+err:
+	return (size_t)-1;
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) size_t DCALL
+repeat_count_with_range(Repeat *self, DeeObject *item, size_t start, size_t end) {
+	return repeat_count_with_range_impl(self, item, start, end, NULL);
+}
+
+PRIVATE WUNUSED NONNULL((1, 2, 5)) size_t DCALL
+repeat_count_with_range_and_key(Repeat *self, DeeObject *item,
+                                size_t start, size_t end, DeeObject *key) {
+	return repeat_count_with_range_impl(self, item, start, end, key);
+}
+
+
+
+STATIC_ASSERT(offsetof(Repeat, rp_seq) == offsetof(ProxyObject, po_obj));
+#define repeat_contains          generic_proxy__seq_contains
+#define repeat_contains_with_key generic_proxy__seq_contains_with_key
+
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+repeat_contains_with_range_impl2(DeeObject *subseq, DeeObject *item,
+                                 size_t start, size_t end, DeeObject *key) {
+	return key ? DeeObject_InvokeMethodHint(seq_contains_with_range_and_key, subseq, item, start, end, key)
+	           : DeeObject_InvokeMethodHint(seq_contains_with_range, subseq, item, start, end);
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+repeat_contains_with_range_impl(Repeat *__restrict self, DeeObject *item,
+                                size_t start, size_t end, DeeObject *key) {
+	struct repeat_range_desc range;
+	if (repeat_range_desc_of(&range, self, start, end))
+		goto err;
+	repeat_range_desc_makeonce(&range);
+	if (repeat_range_desc_hashead(&range)) {
+		int status = repeat_contains_with_range_impl2(self->rp_seq, item,
+		                                              repeat_range_desc_getheadstart(&range),
+		                                              repeat_range_desc_getheadend(&range),
+		                                              key);
+		if (status != 0)
+			return status;
+	}
+	if (repeat_range_desc_hastail(&range)) {
+		int status = repeat_contains_with_range_impl2(self->rp_seq, item,
+		                                              repeat_range_desc_gettailstart(&range),
+		                                              repeat_range_desc_gettailend(&range),
+		                                              key);
+		if (status != 0)
+			return status;
+	}
+	return 0;
+err:
+	return -1;
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+repeat_contains_with_range(Repeat *self, DeeObject *item, size_t start, size_t end) {
+	return repeat_contains_with_range_impl(self, item, start, end, NULL);
+}
+
+PRIVATE WUNUSED NONNULL((1, 2, 5)) int DCALL
+repeat_contains_with_range_and_key(Repeat *self, DeeObject *item,
+                                   size_t start, size_t end, DeeObject *key) {
+	return repeat_contains_with_range_impl(self, item, start, end, key);
+}
+
+
+
+STATIC_ASSERT(offsetof(Repeat, rp_seq) == offsetof(ProxyObject, po_obj));
+#define repeat_locate generic_proxy__seq_locate
+
+/* @return: ITER_DONE: not matched. */
+PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+repeat_locate_with_range_impl(DeeObject *subseq, DeeObject *match,
+                              size_t start, size_t end) {
+	DREF DeeObject *result;
+	DREF DeeObject *dummy_def = DeeObject_NewDummy();
+	if unlikely(!dummy_def)
+		goto err;
+	result = DeeObject_InvokeMethodHint(seq_locate_with_range,
+	                                    subseq, match,
+	                                    start, end, dummy_def);
+	Dee_Decref(dummy_def);
+	if (result == dummy_def)
+		result = ITER_DONE;
+	return result;
+err:
+	return NULL;
+}
+
+PRIVATE WUNUSED NONNULL((1, 2, 5)) DREF DeeObject *DCALL
+repeat_locate_with_range(Repeat *self, DeeObject *match,
+                         size_t start, size_t end, DeeObject *def) {
+	DREF DeeObject *result;
+	struct repeat_range_desc range;
+	if (repeat_range_desc_of(&range, self, start, end))
+		goto err;
+	repeat_range_desc_makeonce(&range);
+	if (repeat_range_desc_hashead(&range) &&
+	    repeat_range_desc_hastail(&range)) {
+		/* Need to inspect both ranges */
+		result = repeat_locate_with_range_impl(self->rp_seq, match,
+		                                       repeat_range_desc_getheadstart(&range),
+		                                       repeat_range_desc_getheadend(&range));
+		if (result != ITER_DONE)
+			return result; /* Matched, or error */
+		goto do_search_tail;
+	} else if (repeat_range_desc_hashead(&range)) {
+		result = DeeObject_InvokeMethodHint(seq_locate_with_range, self->rp_seq, match,
+		                                    repeat_range_desc_getheadstart(&range),
+		                                    repeat_range_desc_getheadend(&range), def);
+	} else if (repeat_range_desc_hastail(&range)) {
+do_search_tail:
+		result = DeeObject_InvokeMethodHint(seq_locate_with_range, self->rp_seq, match,
+		                                    repeat_range_desc_gettailstart(&range),
+		                                    repeat_range_desc_gettailend(&range), def);
+	} else {
+		return_reference_(def);
+	}
+	return result;
+err:
+	return NULL;
+}
+
+STATIC_ASSERT(offsetof(Repeat, rp_seq) == offsetof(ProxyObject, po_obj));
+#define repeat_rlocate generic_proxy__seq_rlocate
+
+/* @return: ITER_DONE: not matched. */
+PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+repeat_rlocate_with_range_impl(DeeObject *subseq, DeeObject *match,
+                               size_t start, size_t end) {
+	DREF DeeObject *result;
+	DREF DeeObject *dummy_def = DeeObject_NewDummy();
+	if unlikely(!dummy_def)
+		goto err;
+	result = DeeObject_InvokeMethodHint(seq_rlocate_with_range,
+	                                    subseq, match,
+	                                    start, end, dummy_def);
+	Dee_Decref(dummy_def);
+	if (result == dummy_def)
+		result = ITER_DONE;
+	return result;
+err:
+	return NULL;
+}
+
+PRIVATE WUNUSED NONNULL((1, 2, 5)) DREF DeeObject *DCALL
+repeat_rlocate_with_range(Repeat *self, DeeObject *match,
+                          size_t start, size_t end, DeeObject *def) {
+	DREF DeeObject *result;
+	struct repeat_range_desc range;
+	if (repeat_range_desc_of(&range, self, start, end))
+		goto err;
+	repeat_range_desc_makeonce_rev(&range);
+	if (repeat_range_desc_hashead(&range) &&
+	    repeat_range_desc_hastail(&range)) {
+		/* Need to inspect both ranges */
+		result = repeat_rlocate_with_range_impl(self->rp_seq, match,
+		                                        repeat_range_desc_gettailstart(&range),
+		                                        repeat_range_desc_gettailend(&range));
+		if (result != ITER_DONE)
+			return result; /* Matched, or error */
+		goto do_search_head;
+	} else if (repeat_range_desc_hashead(&range)) {
+do_search_head:
+		result = DeeObject_InvokeMethodHint(seq_rlocate_with_range, self->rp_seq, match,
+		                                    repeat_range_desc_getheadstart(&range),
+		                                    repeat_range_desc_getheadend(&range), def);
+	} else if (repeat_range_desc_hastail(&range)) {
+		result = DeeObject_InvokeMethodHint(seq_rlocate_with_range, self->rp_seq, match,
+		                                    repeat_range_desc_gettailstart(&range),
+		                                    repeat_range_desc_gettailend(&range), def);
+	} else {
+		return_reference_(def);
+	}
+	return result;
+err:
+	return NULL;
+}
+
+
+
+
 PRIVATE struct type_getset tpconst repeat_getsets[] = {
 	TYPE_GETTER(STR_frozen, &repeat_get_frozen, "->?."),
 	TYPE_GETTER(STR_cached, &repeat_get_cached, "->?."),
@@ -1086,8 +2005,45 @@ PRIVATE struct type_member tpconst repeat_members[] = {
 };
 
 PRIVATE struct type_method tpconst repeat_methods[] = {
-	/* TODO: Method hint refs */
+	//TODO: TYPE_METHOD_HINTREF(Sequence_unpack),
+	//TODO: TYPE_METHOD_HINTREF(Sequence_unpackub),
+	TYPE_METHOD_HINTREF(Sequence_any),
+	TYPE_METHOD_HINTREF(Sequence_all),
+	TYPE_METHOD_HINTREF(Sequence_parity),
+	//XXX: TYPE_METHOD_HINTREF(Sequence_reduce),
+	TYPE_METHOD_HINTREF(Sequence_min),
+	TYPE_METHOD_HINTREF(Sequence_max),
+	TYPE_METHOD_HINTREF(Sequence_sum),
+	TYPE_METHOD_HINTREF(Sequence_count),
+	TYPE_METHOD_HINTREF(Sequence_contains),
+	TYPE_METHOD_HINTREF(Sequence_locate),
+	TYPE_METHOD_HINTREF(Sequence_rlocate),
+	//TODO: TYPE_METHOD_HINTREF(Sequence_startswith),
+	//TODO: TYPE_METHOD_HINTREF(Sequence_endswith),
+	//TODO: TYPE_METHOD_HINTREF(Sequence_find),
+	//TODO: TYPE_METHOD_HINTREF(Sequence_rfind),
+	//TODO: TYPE_METHOD_HINTREF(Sequence_erase),
+	//TODO: TYPE_METHOD_HINTREF(Sequence_insert),
+	//TODO: TYPE_METHOD_HINTREF(Sequence_insertall),
+	//TODO: TYPE_METHOD_HINTREF(Sequence_pushfront),
+	//TODO: TYPE_METHOD_HINTREF(Sequence_append),
+	//TODO: TYPE_METHOD_HINTREF(Sequence_extend),
 	TYPE_METHOD_HINTREF(Sequence_xchitem),
+	//TODO: TYPE_METHOD_HINTREF(Sequence_clear),
+	//TODO: TYPE_METHOD_HINTREF(Sequence_pop),
+	//TODO: TYPE_METHOD_HINTREF(Sequence_remove),
+	//TODO: TYPE_METHOD_HINTREF(Sequence_rremove),
+	//TODO: TYPE_METHOD_HINTREF(Sequence_removeall),
+	//TODO: TYPE_METHOD_HINTREF(Sequence_removeif),
+	//TODO: TYPE_METHOD_HINTREF(Sequence_resize),
+	//TODO: TYPE_METHOD_HINTREF(Sequence_fill),
+	//TODO: TYPE_METHOD_HINTREF(Sequence_reverse),
+	//TODO: TYPE_METHOD_HINTREF(Sequence_reversed),
+	//TODO: TYPE_METHOD_HINTREF(Sequence_sort),
+	//TODO: TYPE_METHOD_HINTREF(Sequence_sorted),
+	//TODO: TYPE_METHOD_HINTREF(Sequence_bfind),
+	//TODO: TYPE_METHOD_HINTREF(Sequence_bposition),
+	//TODO: TYPE_METHOD_HINTREF(Sequence_brange),
 
 	/* All Set/Mapping method hints here are implemented using `generic_proxy__*`,
 	 * which in turn means is equivalent to an implementation:
@@ -1109,10 +2065,10 @@ PRIVATE struct type_method tpconst repeat_methods[] = {
 	TYPE_METHOD_HINTREF(__set_sub__),
 	TYPE_METHOD_HINTREF(__set_and__),
 	TYPE_METHOD_HINTREF(__set_xor__),
-	TYPE_METHOD_HINTREF(__set_inplace_add__),
-	TYPE_METHOD_HINTREF(__set_inplace_sub__),
-	TYPE_METHOD_HINTREF(__set_inplace_and__),
-	TYPE_METHOD_HINTREF(__set_inplace_xor__),
+	//TODO:TYPE_METHOD_HINTREF(__set_inplace_add__),
+	//TODO:TYPE_METHOD_HINTREF(__set_inplace_sub__),
+	//TODO:TYPE_METHOD_HINTREF(__set_inplace_and__),
+	//TODO:TYPE_METHOD_HINTREF(__set_inplace_xor__),
 	TYPE_METHOD_HINTREF(__set_unify__),
 	TYPE_METHOD_HINTREF(__set_insert__),
 	TYPE_METHOD_HINTREF(__set_insertall__),
@@ -1139,10 +2095,10 @@ PRIVATE struct type_method tpconst repeat_methods[] = {
 	TYPE_METHOD_HINTREF(__map_sub__),
 	TYPE_METHOD_HINTREF(__map_and__),
 	TYPE_METHOD_HINTREF(__map_xor__),
-	TYPE_METHOD_HINTREF(__map_inplace_add__),
-	TYPE_METHOD_HINTREF(__map_inplace_sub__),
-	TYPE_METHOD_HINTREF(__map_inplace_and__),
-	TYPE_METHOD_HINTREF(__map_inplace_xor__),
+	//TODO:TYPE_METHOD_HINTREF(__map_inplace_add__),
+	//TODO:TYPE_METHOD_HINTREF(__map_inplace_sub__),
+	//TODO:TYPE_METHOD_HINTREF(__map_inplace_and__),
+	//TODO:TYPE_METHOD_HINTREF(__map_inplace_xor__),
 	TYPE_METHOD_HINTREF(__map_setold__),
 	TYPE_METHOD_HINTREF(__map_setold_ex__),
 	TYPE_METHOD_HINTREF(__map_setnew__),
@@ -1165,46 +2121,46 @@ PRIVATE struct type_method_hint tpconst repeat_method_hints[] = {
 //	TODO: Dee_TMH_seq_unpack,
 //	TODO: Dee_TMH_seq_unpack_ex,
 //	TODO: Dee_TMH_seq_unpack_ub,
-//	TODO: Dee_TMH_seq_any,
-//	TODO: Dee_TMH_seq_any_with_key,
-//	TODO: Dee_TMH_seq_any_with_range,
-//	TODO: Dee_TMH_seq_any_with_range_and_key,
-//	TODO: Dee_TMH_seq_all,
-//	TODO: Dee_TMH_seq_all_with_key,
-//	TODO: Dee_TMH_seq_all_with_range,
-//	TODO: Dee_TMH_seq_all_with_range_and_key,
-//	TODO: Dee_TMH_seq_parity,
-//	TODO: Dee_TMH_seq_parity_with_key,
-//	TODO: Dee_TMH_seq_parity_with_range,
-//	TODO: Dee_TMH_seq_parity_with_range_and_key,
-//	TODO: Dee_TMH_seq_reduce,
-//	TODO: Dee_TMH_seq_reduce_with_init,
-//	TODO: Dee_TMH_seq_reduce_with_range,
-//	TODO: Dee_TMH_seq_reduce_with_range_and_init,
-//	TODO: Dee_TMH_seq_min,
-//	TODO: Dee_TMH_seq_min_with_key,
-//	TODO: Dee_TMH_seq_min_with_range,
-//	TODO: Dee_TMH_seq_min_with_range_and_key,
-//	TODO: Dee_TMH_seq_max,
-//	TODO: Dee_TMH_seq_max_with_key,
-//	TODO: Dee_TMH_seq_max_with_range,
-//	TODO: Dee_TMH_seq_max_with_range_and_key,
-//	TODO: Dee_TMH_seq_sum,
-//	TODO: Dee_TMH_seq_sum_with_key,
-//	TODO: Dee_TMH_seq_sum_with_range,
-//	TODO: Dee_TMH_seq_sum_with_range_and_key,
-//	TODO: Dee_TMH_seq_count,
-//	TODO: Dee_TMH_seq_count_with_key,
-//	TODO: Dee_TMH_seq_count_with_range,
-//	TODO: Dee_TMH_seq_count_with_range_and_key,
-//	TODO: Dee_TMH_seq_contains,
-//	TODO: Dee_TMH_seq_contains_with_key,
-//	TODO: Dee_TMH_seq_contains_with_range,
-//	TODO: Dee_TMH_seq_contains_with_range_and_key,
-//	TODO: Dee_TMH_seq_locate,
-//	TODO: Dee_TMH_seq_locate_with_range,
-//	TODO: Dee_TMH_seq_rlocate,
-//	TODO: Dee_TMH_seq_rlocate_with_range,
+	TYPE_METHOD_HINT_F(seq_any, &repeat_any, METHOD_FNOREFESCAPE),
+	TYPE_METHOD_HINT_F(seq_any_with_key, &repeat_any_with_key, METHOD_FNOREFESCAPE),
+	TYPE_METHOD_HINT_F(seq_any_with_range, &repeat_any_with_range, METHOD_FNOREFESCAPE),
+	TYPE_METHOD_HINT_F(seq_any_with_range_and_key, &repeat_any_with_range_and_key, METHOD_FNOREFESCAPE),
+	TYPE_METHOD_HINT_F(seq_all, &repeat_all, METHOD_FNOREFESCAPE),
+	TYPE_METHOD_HINT_F(seq_all_with_key, &repeat_all_with_key, METHOD_FNOREFESCAPE),
+	TYPE_METHOD_HINT_F(seq_all_with_range, &repeat_all_with_range, METHOD_FNOREFESCAPE),
+	TYPE_METHOD_HINT_F(seq_all_with_range_and_key, &repeat_all_with_range_and_key, METHOD_FNOREFESCAPE),
+	TYPE_METHOD_HINT_F(seq_parity, &repeat_parity, METHOD_FNOREFESCAPE),
+	TYPE_METHOD_HINT_F(seq_parity_with_key, &repeat_parity_with_key, METHOD_FNOREFESCAPE),
+	TYPE_METHOD_HINT_F(seq_parity_with_range, &repeat_parity_with_range, METHOD_FNOREFESCAPE),
+	TYPE_METHOD_HINT_F(seq_parity_with_range_and_key, &repeat_parity_with_range_and_key, METHOD_FNOREFESCAPE),
+	//XXX: Dee_TMH_seq_reduce,
+	//XXX: Dee_TMH_seq_reduce_with_init,
+	//XXX: Dee_TMH_seq_reduce_with_range,
+	//XXX: Dee_TMH_seq_reduce_with_range_and_init,
+	TYPE_METHOD_HINT_F(seq_min, &repeat_min, METHOD_FNOREFESCAPE),
+	TYPE_METHOD_HINT_F(seq_min_with_key, &repeat_min_with_key, METHOD_FNOREFESCAPE),
+	TYPE_METHOD_HINT_F(seq_min_with_range, &repeat_min_with_range, METHOD_FNOREFESCAPE),
+	TYPE_METHOD_HINT_F(seq_min_with_range_and_key, &repeat_min_with_range_and_key, METHOD_FNOREFESCAPE),
+	TYPE_METHOD_HINT_F(seq_max, &repeat_max, METHOD_FNOREFESCAPE),
+	TYPE_METHOD_HINT_F(seq_max_with_key, &repeat_max_with_key, METHOD_FNOREFESCAPE),
+	TYPE_METHOD_HINT_F(seq_max_with_range, &repeat_max_with_range, METHOD_FNOREFESCAPE),
+	TYPE_METHOD_HINT_F(seq_max_with_range_and_key, &repeat_max_with_range_and_key, METHOD_FNOREFESCAPE),
+	TYPE_METHOD_HINT_F(seq_sum, &repeat_sum, METHOD_FNOREFESCAPE),
+	TYPE_METHOD_HINT_F(seq_sum_with_key, &repeat_sum_with_key, METHOD_FNOREFESCAPE),
+	TYPE_METHOD_HINT_F(seq_sum_with_range, &repeat_sum_with_range, METHOD_FNOREFESCAPE),
+	TYPE_METHOD_HINT_F(seq_sum_with_range_and_key, &repeat_sum_with_range_and_key, METHOD_FNOREFESCAPE),
+	TYPE_METHOD_HINT_F(seq_count, &repeat_count, METHOD_FNOREFESCAPE),
+	TYPE_METHOD_HINT_F(seq_count_with_key, &repeat_count_with_key, METHOD_FNOREFESCAPE),
+	TYPE_METHOD_HINT_F(seq_count_with_range, &repeat_count_with_range, METHOD_FNOREFESCAPE),
+	TYPE_METHOD_HINT_F(seq_count_with_range_and_key, &repeat_count_with_range_and_key, METHOD_FNOREFESCAPE),
+	TYPE_METHOD_HINT_F(seq_contains, &repeat_contains, METHOD_FNOREFESCAPE),
+	TYPE_METHOD_HINT_F(seq_contains_with_key, &repeat_contains_with_key, METHOD_FNOREFESCAPE),
+	TYPE_METHOD_HINT_F(seq_contains_with_range, &repeat_contains_with_range, METHOD_FNOREFESCAPE),
+	TYPE_METHOD_HINT_F(seq_contains_with_range_and_key, &repeat_contains_with_range_and_key, METHOD_FNOREFESCAPE),
+	TYPE_METHOD_HINT_F(seq_locate, &repeat_locate, METHOD_FNOREFESCAPE),
+	TYPE_METHOD_HINT_F(seq_locate_with_range, &repeat_locate_with_range, METHOD_FNOREFESCAPE),
+	TYPE_METHOD_HINT_F(seq_rlocate, &repeat_rlocate, METHOD_FNOREFESCAPE),
+	TYPE_METHOD_HINT_F(seq_rlocate_with_range, &repeat_rlocate_with_range, METHOD_FNOREFESCAPE),
 //	TODO: Dee_TMH_seq_startswith,
 //	TODO: Dee_TMH_seq_startswith_with_key,
 //	TODO: Dee_TMH_seq_startswith_with_range,
@@ -1233,13 +2189,13 @@ PRIVATE struct type_method_hint tpconst repeat_method_hints[] = {
 //	TODO: Dee_TMH_seq_removeall,
 //	TODO: Dee_TMH_seq_removeall_with_key,
 //	TODO: Dee_TMH_seq_removeif,
-//	TODO: Dee_TMH_seq_resize,
+//	TODO: Dee_TMH_seq_resize,          // if (this.__num__ != 1) throw ValueError(); else this.__seq__.resize();
 //	TODO: Dee_TMH_seq_fill,
-//	TODO: Dee_TMH_seq_reverse,
+//	TODO: Dee_TMH_seq_reverse,         // if (this.__num__ != 1) throw ValueError(); else this.__seq__.reverse();
 //	TODO: Dee_TMH_seq_reversed,
-//	TODO: Dee_TMH_seq_sort,
+//	TODO: Dee_TMH_seq_sort,            // if (this.__num__ != 1) throw ValueError(); else this.__seq__.sort();
 //	TODO: Dee_TMH_seq_sort_with_key,
-//	TODO: Dee_TMH_seq_sorted,
+//	TODO: Dee_TMH_seq_sorted,          // this.__seq__.sorted().map(e -> Sequence.repeatitem(e, this.__num__)).flatten;
 //	TODO: Dee_TMH_seq_sorted_with_key,
 //	TODO: Dee_TMH_seq_bfind,
 //	TODO: Dee_TMH_seq_bfind_with_key,
@@ -1855,13 +2811,6 @@ err:
 	return -1;
 }
 
-PRIVATE ATTR_CONST WUNUSED int DCALL
-repeatitem_any_to_parity(RepeatItem *__restrict self, int any_result) {
-	if (any_result > 0 && (self->rpit_num & 1))
-		any_result = 0; /* Positive parity with uneven count before zero; negative parity stays unchanged */
-	return any_result;
-}
-
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 repeatitem_any(RepeatItem *__restrict self) {
 	return repeatitem_anyall(self, 0);
@@ -1904,26 +2853,44 @@ repeatitem_all_with_range_and_key(RepeatItem *self, size_t start, size_t end, De
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 repeatitem_parity(RepeatItem *__restrict self) {
-	int result = repeatitem_any(self);
-	return repeatitem_any_to_parity(self, result);
+	if (!(self->rpit_num & 1))
+		return 0; /* Even total -> paritiy is always = 0 */
+	return repeatitem_any(self);
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 repeatitem_parity_with_key(RepeatItem *self, DeeObject *key) {
-	int result = repeatitem_any_with_key(self, key);
-	return repeatitem_any_to_parity(self, result);
+	if (!(self->rpit_num & 1))
+		return 0; /* Even total -> paritiy is always = 0 */
+	return repeatitem_any_with_key(self, key);
 }
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 repeatitem_parity_with_range(RepeatItem *self, size_t start, size_t end) {
-	int result = repeatitem_any_with_range(self, start, end);
-	return repeatitem_any_to_parity(self, result);
+	if (end > self->rpit_num)
+		end = self->rpit_num;
+	if (start >= end)
+		return 0; /* Empty range -> paritiy is always = 0 */
+	if (!((end - start) & 1))
+		return 0; /* Even total -> paritiy is always = 0 */
+	return DeeObject_Bool(self->rpit_obj);
 }
 
 PRIVATE WUNUSED NONNULL((1, 4)) int DCALL
 repeatitem_parity_with_range_and_key(RepeatItem *self, size_t start, size_t end, DeeObject *key) {
-	int result = repeatitem_any_with_range_and_key(self, start, end, key);
-	return repeatitem_any_to_parity(self, result);
+	DREF DeeObject *keyed;
+	if (end > self->rpit_num)
+		end = self->rpit_num;
+	if (start >= end)
+		return 0; /* Empty range -> paritiy is always = 0 */
+	if (!((end - start) & 1))
+		return 0; /* Even total -> paritiy is always = 0 */
+	keyed = DeeObject_Call(key, 1, &self->rpit_obj);
+	if unlikely(!keyed)
+		goto err;
+	return DeeObject_BoolInherited(keyed);
+err:
+	return -1;
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
@@ -1948,26 +2915,6 @@ PRIVATE WUNUSED NONNULL((1, 4, 5)) DREF DeeObject *DCALL
 repeatitem_minmax_with_range_and_key(RepeatItem *self, size_t start, size_t end, DeeObject *def, DeeObject *key) {
 	(void)key;
 	return repeatitem_minmax_with_range(self, start, end, def);
-}
-
-/* Simulate the result of `obj [+ obj [+ obj [+ obj [+ obj [+ ...]]]]]`
- * Repeated `count` times. In order to keep this executing in a reasonable
- * amount of time, we always just do `obj * int(count)`, even though not
- * every object necessarily implements `operator *` in the mathematical
- * sense, this works correctly for: `Sequence`, `Bytes`, `string`, `int`,
- * `float`, `bool` */
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-generic_object_repeat_sum(DeeObject *obj, size_t count) {
-	DREF DeeObject *result;
-	DREF DeeObject *multiplier;
-	multiplier = DeeInt_NewSize(count);
-	if unlikely(!multiplier)
-		goto err;
-	result = DeeObject_Mul(obj, multiplier);
-	Dee_Decref(multiplier);
-	return result;
-err:
-	return NULL;
 }
 
 PRIVATE WUNUSED NONNULL((1, 3)) DREF DeeObject *DCALL
@@ -2489,6 +3436,7 @@ PRIVATE struct type_method tpconst repeatitem_methods[] = {
 	TYPE_METHOD_HINTREF(Sequence_any),
 	TYPE_METHOD_HINTREF(Sequence_all),
 	TYPE_METHOD_HINTREF(Sequence_parity),
+	//XXX: TYPE_METHOD_HINTREF(Sequence_reduce),
 	TYPE_METHOD_HINTREF(Sequence_min),
 	TYPE_METHOD_HINTREF(Sequence_max),
 	TYPE_METHOD_HINTREF(Sequence_sum),
@@ -2528,10 +3476,10 @@ PRIVATE struct type_method_hint tpconst repeatitem_method_hints[] = {
 	TYPE_METHOD_HINT_F(seq_parity_with_key, &repeatitem_parity_with_key, METHOD_FNOREFESCAPE),
 	TYPE_METHOD_HINT_F(seq_parity_with_range, &repeatitem_parity_with_range, METHOD_FNOREFESCAPE),
 	TYPE_METHOD_HINT_F(seq_parity_with_range_and_key, &repeatitem_parity_with_range_and_key, METHOD_FNOREFESCAPE),
-//	TODO: Dee_TMH_seq_reduce,
-//	TODO: Dee_TMH_seq_reduce_with_init,
-//	TODO: Dee_TMH_seq_reduce_with_range,
-//	TODO: Dee_TMH_seq_reduce_with_range_and_init,
+	//XXX: Dee_TMH_seq_reduce,
+	//XXX: Dee_TMH_seq_reduce_with_init,
+	//XXX: Dee_TMH_seq_reduce_with_range,
+	//XXX: Dee_TMH_seq_reduce_with_range_and_init,
 	TYPE_METHOD_HINT_F(seq_min, &repeatitem_minmax, METHOD_FNOREFESCAPE),
 	TYPE_METHOD_HINT_F(seq_min_with_key, &repeatitem_minmax_with_key, METHOD_FNOREFESCAPE),
 	TYPE_METHOD_HINT_F(seq_min_with_range, &repeatitem_minmax_with_range, METHOD_FNOREFESCAPE),

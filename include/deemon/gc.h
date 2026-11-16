@@ -285,8 +285,8 @@ struct Dee_gc_head {
 		DeeObject  **gi_pself; /* [1..1][== self][1..1][lock(INTERNAL(gc_lock))][valid_if(...)]
 		                        * Self-pointer in GC generation.
 		                        * Least significant 2 bits here have special meaning:
-		                        * - (gi_pself & 1) == 0: (outside of collect) object is part of generation#0
-		                        * - (gi_pself & 1) == 1: (outside of collect) object is part of generation#1-n
+		                        * - (gi_pself & 1) == 0: (outside of collect) Object is part of generation#0
+		                        * - (gi_pself & 1) == 1: (outside of collect) Object is part of generation#1..n
 		                        * - (gi_pself & 1) == 0: (inside of collect) Object is part of a generation that is currently being scanned
 		                        * - (gi_pself & 1) == 1: (inside of collect) Object part of some other generation
 		                        * - (gi_pself & 2) == 0: Default
@@ -350,7 +350,7 @@ DFUNDEF void DCALL DeeGC_CollectAsNecessary(void);
  * may be collected), returning the actual amount collected.
  *
  * This function really only has 2 valid use-cases:
- * - DeeGC_Collect(1)          -- Try to collect *sometime* from some generation
+ * - DeeGC_Collect(1)          -- Try to collect *something* from some generation
  * - DeeGC_Collect((size_t)-1) -- Collect *all* generations
  *
  * @return: * :         The # of objects collected

@@ -22,7 +22,7 @@
 
 #include <deemon/api.h>
 
-#include <deemon/alloc.h>              /* DeeObject_FREE, DeeObject_MALLOC */
+#include <deemon/alloc.h>              /* DeeObject_* */
 #include <deemon/arg.h>                /* DeeArg_BadArgc0, DeeArg_Unpack* */
 #include <deemon/attribute.h>          /* DeeAttributeObject, DeeAttribute_Type, DeeEnumAttr_Type */
 #include <deemon/bool.h>               /* DeeBool_Type, Dee_return_bool01, return_bool */
@@ -39,12 +39,12 @@
 #include <deemon/mro.h>                /* Dee_ATTRINFO_*, Dee_ATTRPERM_F_*, Dee_attrdesc, Dee_attrdesc_fini */
 #include <deemon/none-operator.h>      /* DeeNone_Operator* */
 #include <deemon/none.h>               /* DeeNone_Check, return_none */
-#include <deemon/object.h>             /* DREF, DeeObject, DeeObject_*, DeeTypeObject, DeeType_Extends, Dee_AsObject, Dee_BOUND_NO, Dee_BOUND_YES, Dee_Decref*, Dee_HAS_ISERR, Dee_HAS_ISNO_NO_ERR, Dee_Incref, Dee_TYPE, Dee_formatprinter_t, Dee_ssize_t, ITER_DONE, OBJECT_HEAD_INIT, return_reference, return_reference_ */
+#include <deemon/object.h>             /* DREF, DeeObject, DeeObject_*, DeeTypeObject, DeeType_Extends, Dee_AsObject, Dee_BOUND_NO, Dee_BOUND_YES, Dee_Decref*, Dee_HAS_ISERR, Dee_HAS_ISNO_NO_ERR, Dee_Incref, Dee_TYPE, Dee_formatprinter_t, Dee_ssize_t, ITER_DONE, OBJECT_HEAD, OBJECT_HEAD_INIT, return_reference, return_reference_ */
 #include <deemon/objmethod.h>          /*  */
 #include <deemon/string.h>             /* DeeString*, Dee_UNICODE_PRINTER_INIT, Dee_unicode_printer*, WSTR_LENGTH */
 #include <deemon/super.h>              /* DeeSuper* */
 #include <deemon/tuple.h>              /* DeeTupleObject, DeeTuple_Type, Dee_EmptyTuple */
-#include <deemon/type.h>               /* DeeObject_Init, DeeObject_IsDeepImmutable, DeeTypeMRO, DeeTypeMRO_Init, DeeTypeMRO_Next, DeeType_*, Dee_TYPE_CONSTRUCTOR_INIT_ALLOC_AUTO, Dee_TYPE_MEMBER_ISCONST, Dee_type_member, METHOD_FCONSTCALL, METHOD_FNOREFESCAPE, OPERATOR_*, STRUCT_*, TF_NONE, TP_F*, TYPE_*, type_* */
+#include <deemon/type.h>               /* DeeObject_*, DeeTypeMRO, DeeTypeMRO_Init, DeeTypeMRO_Next, DeeType_*, Dee_TYPE_CONSTRUCTOR_INIT_ALLOC_AUTO, Dee_TYPE_MEMBER_ISCONST, Dee_type_member, METHOD_FCONSTCALL, METHOD_FNOREFESCAPE, OPERATOR_*, STRUCT_*, TF_NONE, TP_F*, TYPE_*, type_* */
 #include <deemon/util/hash.h>          /* DeeObject_Id */
 
 #include "../runtime/method-hint-defaults.h"
@@ -2049,6 +2049,34 @@ PUBLIC DeeTypeObject DeeObject_Type = {
 	/* .tp_operators     = */ object_operators,
 	/* .tp_operators_size= */ COMPILER_LENOF(object_operators),
 };
+
+#ifndef GenericObject_DEFINED
+#define GenericObject_DEFINED
+typedef struct {
+	OBJECT_HEAD
+} GenericObject;
+#endif /* !GenericObject_DEFINED */
+
+/* Construct a new "dummy" object -- equivalent to `deemon.Object()` in user-code. */
+PUBLIC WUNUSED DREF DeeObject *DCALL DeeObject_NewDummy(void) {
+#ifdef __OPTIMIZE_SIZE__
+	return DeeObject_NewDefault(&DeeObject_Type);
+#else /* __OPTIMIZE_SIZE__ */
+	DREF GenericObject *result;
+#if 1 /* Can't use slab-allocator for raw/dummy Object-instances (runtime limitation) */
+	result = (GenericObject *)DeeObject_Malloc(sizeof(GenericObject));
+#else
+	result = DeeObject_MALLOC(GenericObject);
+#endif
+	if unlikely(!result)
+		goto err;
+	DeeObject_InitStatic(result, &DeeObject_Type);
+	return Dee_AsObject(result);
+err:
+	return NULL;
+#endif /* !__OPTIMIZE_SIZE__ */
+}
+
 
 DECL_END
 

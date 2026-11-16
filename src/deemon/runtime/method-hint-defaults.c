@@ -27,7 +27,7 @@
 #include <deemon/bool.h>                /* DeeBool*, Dee_True, return_bool, return_false, return_true */
 #include <deemon/bytes.h>               /* DeeBytes* */
 #include <deemon/class.h>               /* DeeClass_GetMember */
-#include <deemon/error-rt.h>            /* DeeRT_Err* */
+#include <deemon/error-rt.h>            /* DeeRT_Err*, DeeRT_IntegerOverflow_TryCatchSizeOverflow */
 #include <deemon/error.h>               /* DeeError_*, ERROR_PRINT_DOHANDLE */
 #include <deemon/format.h>              /* PCKdSIZ, PCKuSIZ, PRFdSIZ, PRFuSIZ */
 #include <deemon/gc.h>                  /* DeeGCObject_FREE, DeeGCObject_MALLOC, DeeGC_TRACK */
@@ -314,9 +314,6 @@ PRIVATE DEFINE_UINT8(Dee_int_SIZE_MAX, (uint8_t)-1);
 #error "Unsupported __SIZEOF_SIZE_T__"
 #endif /* __SIZEOF_SIZE_T__ != ... */
 #endif /* !Dee_int_SIZE_MAX_DEFINED */
-
-INTDEF WUNUSED DREF DeeObject *DCALL
-DeeRT_IntegerOverflow_TryCatchSizeOverflow(void);
 
 PRIVATE WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL
 default__seq_operator_getrange__with__given_size__and__seq_operator_getitem(DeeObject *self, DeeObject *start,

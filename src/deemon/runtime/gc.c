@@ -1371,7 +1371,7 @@ continue_with_iter:
  * may be collected), returning the actual amount collected.
  *
  * This function really only has 2 valid use-cases:
- * - DeeGC_Collect(1)          -- Try to collect *sometime* from some generation
+ * - DeeGC_Collect(1)          -- Try to collect *something* from some generation
  * - DeeGC_Collect((size_t)-1) -- Collect *all* generations
  *
  * @return: * :         The # of objects collected

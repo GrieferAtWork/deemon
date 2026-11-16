@@ -36,10 +36,10 @@
 #include <deemon/util/hash.h>       /* Dee_HASHOF_UNBOUND_ITEM, Dee_HashPtr, Dee_HashStr */
 #include <deemon/variant.h>         /* Dee_variant, Dee_variant_*, _Dee_variant_* */
 
-#include <hybrid/int128.h>      /* __hybrid_int128_gr128, __hybrid_int128_lo128, __hybrid_uint128_* */
+#include <hybrid/int128.h>      /* __hybrid_int128_*, __hybrid_uint128_* */
 #include <hybrid/minmax.h>      /* MIN */
 #include <hybrid/sched/yield.h> /* SCHED_YIELD */
-#include <hybrid/typecore.h>    /* __ALIGNOF_POINTER__ */
+#include <hybrid/typecore.h>    /* __ALIGNOF_POINTER__, __SIZEOF_SIZE_T__ */
 
 #include <stdbool.h> /* bool, false, true */
 #include <stddef.h>  /* NULL, offsetof, size_t */

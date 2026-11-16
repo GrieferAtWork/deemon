@@ -188,6 +188,31 @@ DFUNDEF ATTR_COLD int (DCALL DeeRT_ErrNestedOverflowU128)(Dee_uint128_t maxval);
 #endif /* __SIZEOF_SIZE_T__ < 4 */
 
 
+/* Check if the currently thrown error is an `IntegerOverflow` with:
+ * - <.value> is bound
+ * - <.minval> == 0
+ * - <.maxval> in {(size_t)-1, (size_t)-2}
+ * - <.positive> == true
+ *
+ * iow: is indicative of the runtime being unable to convert
+ *      an integer-like object into `size_t` because the value
+ *      to positive and would exceed the maximum, representable
+ *      `size_t`-value (NOTE: `(size_t)-1` isn't representable
+ *      because it is used as indicator that an exception was
+ *      thrown)
+ *
+ * Use this function to check for representation overflow errors
+ * when dealing with sequences with potentially very large sizes.
+ *
+ * @return: * :   Success. Current error was handled, and the return
+ *                value is its `io_base.ve_value` converted into an
+ *                object.
+ * @return: NULL: Current error isn't a matching IntegerOverflow
+ * @return: NULL: A different error (probably NoMemory) was thrown
+ *                while trying to decode the caught IntegerOverflow */
+DFUNDEF WUNUSED DREF DeeObject *DCALL DeeRT_IntegerOverflow_TryCatchSizeOverflow(void);
+
+
 
 /* Throws an `DeeError_DivideByZero` indicating that a zero-division attempt has taken place. */
 struct Dee_variant;
